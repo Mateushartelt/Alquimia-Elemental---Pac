@@ -1,0 +1,14 @@
+# --- Configurações de Editor e IDE ---
+.vscode/
+.claude/
+settings.local.json
+*.code-workspace
+
+# --- Arquivos Temporários e Logs ---
+*.log
+*.tmp
+*.bak
+
+# --- Correção do Claude ---
+CLAUDE.md
+.claude/

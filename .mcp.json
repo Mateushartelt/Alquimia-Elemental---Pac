@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "godot": {
+      "type": "stdio",
+      "command": "node",
+      "args": [
+        "C:/Program Files/Git/Users/jscro/godot-mcp/build/index.js"
+      ],
+      "env": {}
+    }
+  }
+}

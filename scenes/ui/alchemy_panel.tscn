@@ -1,0 +1,115 @@
+[gd_scene format=3 uid="uid://bks7q737ly4iu"]
+
+[ext_resource type="Script" path="res://scenes/ui/alchemy_panel.gd" id="1"]
+
+[node name="AlchemyPanel" type="CanvasLayer"]
+layer = 10
+script = ExtResource("1")
+
+[node name="Bg" type="ColorRect" parent="."]
+texture_filter = 2
+color = Color(0, 0, 0, 0.65)
+offset_right = 1280
+offset_bottom = 720
+mouse_filter = 0
+
+[node name="Panel" type="PanelContainer" parent="Bg"]
+offset_left = 200
+offset_top = 80
+offset_right = 1080
+offset_bottom = 600
+
+[node name="Margin" type="MarginContainer" parent="Bg/Panel"]
+layout_mode = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="VBox" type="VBoxContainer" parent="Bg/Panel/Margin"]
+layout_mode = 2
+
+[node name="TitleRow" type="HBoxContainer" parent="Bg/Panel/Margin/VBox"]
+layout_mode = 2
+
+[node name="TitleLabel" type="Label" parent="Bg/Panel/Margin/VBox/TitleRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "ALQUIMIA"
+theme_override_font_sizes/font_size = 32
+
+[node name="CloseBtn" type="Button" parent="Bg/Panel/Margin/VBox/TitleRow"]
+layout_mode = 2
+text = "X"
+theme_override_font_sizes/font_size = 28
+
+[node name="HSep" type="HSeparator" parent="Bg/Panel/Margin/VBox"]
+layout_mode = 2
+
+[node name="HBox" type="HBoxContainer" parent="Bg/Panel/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 32
+
+[node name="Left" type="VBoxContainer" parent="Bg/Panel/Margin/VBox/HBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(320, 0)
+
+[node name="InvTitle" type="Label" parent="Bg/Panel/Margin/VBox/HBox/Left"]
+layout_mode = 2
+text = "INVENTARIO"
+theme_override_font_sizes/font_size = 24
+
+[node name="InvList" type="VBoxContainer" parent="Bg/Panel/Margin/VBox/HBox/Left"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Right" type="VBoxContainer" parent="Bg/Panel/Margin/VBox/HBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(480, 0)
+
+[node name="SlotsTitle" type="Label" parent="Bg/Panel/Margin/VBox/HBox/Right"]
+layout_mode = 2
+text = "SLOTS"
+theme_override_font_sizes/font_size = 24
+
+[node name="Slots" type="HBoxContainer" parent="Bg/Panel/Margin/VBox/HBox/Right"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Slot0" type="Button" parent="Bg/Panel/Margin/VBox/HBox/Right/Slots"]
+layout_mode = 2
+custom_minimum_size = Vector2(128, 56)
+text = "[ ]"
+theme_override_font_sizes/font_size = 24
+
+[node name="Slot1" type="Button" parent="Bg/Panel/Margin/VBox/HBox/Right/Slots"]
+layout_mode = 2
+custom_minimum_size = Vector2(128, 56)
+text = "[ ]"
+theme_override_font_sizes/font_size = 24
+
+[node name="Slot2" type="Button" parent="Bg/Panel/Margin/VBox/HBox/Right/Slots"]
+layout_mode = 2
+custom_minimum_size = Vector2(128, 56)
+text = "[ ]"
+theme_override_font_sizes/font_size = 24
+
+[node name="ResultLabel" type="Label" parent="Bg/Panel/Margin/VBox/HBox/Right"]
+layout_mode = 2
+text = "-> ???"
+theme_override_font_sizes/font_size = 28
+
+[node name="Btns" type="HBoxContainer" parent="Bg/Panel/Margin/VBox/HBox/Right"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="ClearBtn" type="Button" parent="Bg/Panel/Margin/VBox/HBox/Right/Btns"]
+layout_mode = 2
+text = "LIMPAR"
+theme_override_font_sizes/font_size = 24
+
+[node name="MixBtn" type="Button" parent="Bg/Panel/Margin/VBox/HBox/Right/Btns"]
+layout_mode = 2
+text = "MISTURAR"
+disabled = true
+theme_override_font_sizes/font_size = 24

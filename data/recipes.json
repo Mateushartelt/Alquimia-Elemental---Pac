@@ -1,0 +1,87 @@
+{
+  "recipes": {
+	"H2O": {
+	  "name": "Água",
+	  "formula": "H2O",
+	  "ingredients": { "H": 2, "O": 1 },
+	  "projectile_color": "#4488ff",
+	  "projectile_size": 6,
+	  "damage": 10,
+	  "effect": "extinguish_fire",
+	  "special": "dissolves_sodium",
+	  "description": "A molécula mais importante da vida. Apaga fogo e dissolve compostos de sódio.",
+	  "curiosity": "A água é o único composto natural que existe nos três estados físicos na Terra: sólido, líquido e gasoso.",
+	  "bncc": "EF08CI06",
+	  "unlocked_in_level": 1
+	},
+	"SO2": {
+	  "name": "Dióxido de Enxofre",
+	  "formula": "SO2",
+	  "ingredients": { "S": 1, "O": 2 },
+	  "projectile_color": "#cccc00",
+	  "projectile_size": 7,
+	  "damage": 15,
+	  "effect": "toxic_cloud",
+	  "special": "slows_enemies",
+	  "description": "Gás tóxico com cheiro de ovo podre. Causa chuva ácida quando na atmosfera.",
+	  "curiosity": "As erupções vulcânicas liberam toneladas de SO₂, que pode causar chuva ácida a centenas de km de distância.",
+	  "bncc": "EF09CI13",
+	  "unlocked_in_level": 2
+	},
+	"HCl": {
+	  "name": "Ácido Clorídrico",
+	  "formula": "HCl",
+	  "ingredients": { "H": 1, "Cl": 1 },
+	  "projectile_color": "#66ff33",
+	  "projectile_size": 5,
+	  "damage": 25,
+	  "effect": "acid_burn",
+	  "special": "dissolves_metal_blocks",
+	  "description": "Ácido forte que corrói metais. Existe no suco gástrico do estômago!",
+	  "curiosity": "Seu estômago produz ácido clorídrico para digerir alimentos — mas uma camada de muco protege as paredes gástricas!",
+	  "bncc": "EM13CNT101",
+	  "unlocked_in_level": 3
+	},
+	"CO2": {
+	  "name": "Dióxido de Carbono",
+	  "formula": "CO2",
+	  "ingredients": { "C": 1, "O": 2 },
+	  "projectile_color": "#aaaaaa",
+	  "projectile_size": 8,
+	  "damage": 8,
+	  "effect": "freeze",
+	  "special": "extinguish_fire",
+	  "description": "Gás que as plantas usam na fotossíntese. Em excesso causa o efeito estufa.",
+	  "curiosity": "Os extintores de incêndio usam CO₂ líquido — ao sair, expande e resfria tanto que pode atingir -78°C!",
+	  "bncc": "EM13CNT201",
+	  "unlocked_in_level": 3
+	},
+	"NaCl": {
+	  "name": "Cloreto de Sódio",
+	  "formula": "NaCl",
+	  "ingredients": { "Na": 1, "Cl": 1 },
+	  "projectile_color": "#ffffff",
+	  "projectile_size": 5,
+	  "damage": 5,
+	  "effect": "crystal_platform",
+	  "special": "preserves_items",
+	  "description": "Sal de cozinha! Forma cristais cúbicos e é essencial para a vida.",
+	  "curiosity": "O sal foi tão valioso na história que a palavra 'salário' vem do latim 'salarium' — o pagamento em sal dos soldados romanos!",
+	  "bncc": "EF08CI06",
+	  "unlocked_in_level": 2
+	},
+	"NaOH": {
+	  "name": "Hidróxido de Sódio",
+	  "formula": "NaOH",
+	  "ingredients": { "Na": 1, "H2O": 1 },
+	  "projectile_color": "#aaddff",
+	  "projectile_size": 6,
+	  "damage": 18,
+	  "effect": "neutralize",
+	  "description": "Soda cáustica! Base forte usada em sabões e limpadores. Reage violentamente com ácidos.",
+	  "curiosity": "O NaOH é tão básico (pH 14) que dissolve gorduras — por isso é o principal ingrediente de limpadores de canos!",
+	  "bncc": "EM13CNT101",
+	  "unlocked_level": 2
+	}
+  }
+}

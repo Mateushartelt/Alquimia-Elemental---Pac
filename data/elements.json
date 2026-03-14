@@ -1,0 +1,95 @@
+{
+  "elements": {
+	"H": {
+	  "name": "Hidrogênio",
+	  "symbol": "H",
+	  "atomic_number": 1,
+	  "atomic_mass": 1.008,
+	  "family": "Não-metal",
+	  "color": "#99ccff",
+	  "description": "O elemento mais abundante do universo. Inflamável e leve.",
+	  "curiosity": "O Sol é feito de 75% de hidrogênio! Ele é transformado em hélio pela fusão nuclear.",
+	  "unlocked_in_level": 1,
+	  "max_stack": 9,
+	  "placeholder_color": "6699ff"
+	},
+	"O": {
+	  "name": "Oxigênio",
+	  "symbol": "O",
+	  "atomic_number": 8,
+	  "atomic_mass": 15.999,
+	  "family": "Não-metal",
+	  "color": "#3399ff",
+	  "description": "Essencial para a respiração e a combustão.",
+	  "curiosity": "O oxigênio representa 21% do ar que respiramos e 65% do corpo humano em massa.",
+	  "unlocked_in_level": 1,
+	  "max_stack": 9,
+	  "placeholder_color": "3399ff"
+	},
+	"Na": {
+	  "name": "Sódio",
+	  "symbol": "Na",
+	  "atomic_number": 11,
+	  "atomic_mass": 22.990,
+	  "family": "Metal Alcalino",
+	  "color": "#ffcc33",
+	  "description": "Metal mole e reativo que explode em contato com água.",
+	  "curiosity": "O sódio reage violentamente com água, produzindo hidrogênio e calor suficiente para incendiar o gás!",
+	  "unlocked_in_level": 2,
+	  "max_stack": 9,
+	  "placeholder_color": "ffcc33"
+	},
+	"S": {
+	  "name": "Enxofre",
+	  "symbol": "S",
+	  "atomic_number": 16,
+	  "atomic_mass": 32.06,
+	  "family": "Não-metal",
+	  "color": "#ffff00",
+	  "description": "Sólido amarelo com cheiro característico. Usado em pólvora e vulcões.",
+	  "curiosity": "O enxofre é encontrado em vulcões e tem sido usado por humanos há mais de 2000 anos!",
+	  "unlocked_in_level": 2,
+	  "max_stack": 9,
+	  "placeholder_color": "ffff00"
+	},
+	"Cl": {
+	  "name": "Cloro",
+	  "symbol": "Cl",
+	  "atomic_number": 17,
+	  "atomic_mass": 35.45,
+	  "family": "Halogênio",
+	  "color": "#99ff66",
+	  "description": "Gás amarelo-esverdeado tóxico. Usado para desinfetar água de piscinas.",
+	  "curiosity": "O cloro foi usado como arma química na Primeira Guerra Mundial, mas hoje trata a água potável!",
+	  "unlocked_in_level": 3,
+	  "max_stack": 9,
+	  "placeholder_color": "99ff66"
+	},
+	"C": {
+	  "name": "Carbono",
+	  "symbol": "C",
+	  "atomic_number": 6,
+	  "atomic_mass": 12.011,
+	  "family": "Não-metal",
+	  "color": "#888888",
+	  "description": "Base de toda vida orgânica. Pode ser grafite ou diamante.",
+	  "curiosity": "O carbono pode formar mais de 10 milhões de compostos diferentes — mais do que todos os outros elementos juntos!",
+	  "unlocked_in_level": 3,
+	  "max_stack": 9,
+	  "placeholder_color": "888888"
+	},
+	"Si": {
+	  "name": "Silício",
+	  "symbol": "Si",
+	  "atomic_number": 14,
+	  "atomic_mass": 28.085,
+	  "family": "Semimetal",
+	  "color": "#aa88cc",
+	  "description": "Semimetal usado em chips de computador e painéis solares.",
+	  "curiosity": "O Vale do Silício leva o nome deste elemento — 95% dos chips de computador do mundo são feitos de silício!",
+	  "unlocked_in_level": 4,
+	  "max_stack": 9,
+	  "placeholder_color": "aa88cc"
+	}
+  }
+}
