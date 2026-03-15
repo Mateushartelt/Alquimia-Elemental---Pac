@@ -10,10 +10,12 @@ const ENCYCLOPEDIA := "Enciclopédia"
 @onready var _dialog : DialogBox     = $DialogBox
 @onready var _hints  : TutorialHints = $TutorialHints
 @onready var _alchemy: AlchemyPanel  = $AlchemyPanel
+@onready var _quiz   : QuizModal     = $QuizModal
 
-var _respawning        := false
-var _h2o_dialog_done   := false
-var _enemy_dialog_done := false
+var _respawning          := false
+var _h2o_dialog_done     := false
+var _enemy_dialog_done   := false
+var _quiz_queue : Array[String] = []
 
 # Tutorial state
 var _seen_elements          : Array[String] = []
@@ -23,13 +25,13 @@ var _attack_done            := false
 var _tutorial_h2o_triggered := false
 
 func _ready() -> void:
-	GameState.player_died.connect(_respawn)
 	get_tree().create_timer(1.0).timeout.connect(_show_intro)
 	GameState.compound_created.connect(_on_compound_created)
 	GameState.checkpoint_reached.connect(_on_checkpoint_reached)
 	GameState.element_collected.connect(_on_element_first_collected)
 	_alchemy.panel_opened.connect(_on_first_alchemy_open)
 	_dialog.dialog_queue_finished.connect(_on_any_dialog_closed)
+	_quiz.quiz_closed.connect(_on_quiz_closed)
 	for enemy in get_tree().get_nodes_in_group("enemies"):
 		enemy.connect("died", _on_enemy_died)
 
@@ -63,7 +65,15 @@ func _show_intro() -> void:
 		[ELARA, "Cada elemento tem propriedades únicas. Combinados, formam compostos poderosos!"],
 	])
 
+func _on_quiz_closed() -> void:
+	_on_any_dialog_closed()
+
 func _on_any_dialog_closed() -> void:
+	# Drena a fila de quizzes antes de continuar o fluxo do tutorial
+	if not _quiz_queue.is_empty():
+		_quiz.show_quiz(_quiz_queue.pop_front())
+		return
+
 	if not _moved_done:
 		_hints.show_hint("WASD / ← →   Mover        ESPAÇO   Pular")
 		return
@@ -81,13 +91,14 @@ func _on_any_dialog_closed() -> void:
 		_hints.show_hint("J / Click — Atirar composto")
 
 func _on_element_first_collected(element_id: String, _amt: int) -> void:
-	# Dialog de primeira coleta
+	# Dialog de primeira coleta + agendamento de quiz
 	if element_id not in _seen_elements:
 		_seen_elements.append(element_id)
 		var el       := ElementDatabase.get_element(element_id)
 		var el_name  : String = el.get("name", element_id)
 		var el_desc  : String = el.get("description", "")
 		var el_curio : String = el.get("curiosity", "")
+		_quiz_queue.append(element_id)
 		_dialog.show_dialog(ENCYCLOPEDIA,
 			"%s (%s) — %s  ★ %s" % [el_name, element_id, el_desc, el_curio])
 

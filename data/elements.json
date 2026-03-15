@@ -13,7 +13,12 @@
 	  "curiosity": "O Sol é feito de 75% de hidrogênio! Ele é transformado em hélio pela fusão nuclear.",
 	  "unlocked_in_level": 1,
 	  "max_stack": 9,
-	  "placeholder_color": "6699ff"
+	  "placeholder_color": "6699ff",
+	  "quiz": {
+		"question": "Qual é o número atômico do Hidrogênio?",
+		"options": ["1", "2", "6", "8"],
+		"correct": 0
+	  }
 	},
 	"O": {
 	  "name": "Oxigênio",
@@ -28,7 +33,12 @@
 	  "curiosity": "O oxigênio representa 21% do ar que respiramos e 65% do corpo humano em massa.",
 	  "unlocked_in_level": 1,
 	  "max_stack": 9,
-	  "placeholder_color": "3399ff"
+	  "placeholder_color": "3399ff",
+	  "quiz": {
+		"question": "Que porcentagem do ar que respiramos é composta por oxigênio?",
+		"options": ["78%", "21%", "1%", "50%"],
+		"correct": 1
+	  }
 	},
 	"Na": {
 	  "name": "Sódio",
@@ -43,7 +53,12 @@
 	  "curiosity": "O sódio reage violentamente com água, produzindo hidrogênio e calor suficiente para incendiar o gás!",
 	  "unlocked_in_level": 2,
 	  "max_stack": 9,
-	  "placeholder_color": "ffcc33"
+	  "placeholder_color": "ffcc33",
+	  "quiz": {
+		"question": "O que acontece quando o sódio (Na) entra em contato com água?",
+		"options": ["Dissolve sem reação", "Congela a água", "Reage violentamente, produzindo hidrogênio", "Vira sal imediatamente"],
+		"correct": 2
+	  }
 	},
 	"S": {
 	  "name": "Enxofre",
@@ -58,7 +73,12 @@
 	  "curiosity": "O enxofre é encontrado em vulcões e tem sido usado por humanos há mais de 2000 anos!",
 	  "unlocked_in_level": 2,
 	  "max_stack": 9,
-	  "placeholder_color": "ffff00"
+	  "placeholder_color": "ffff00",
+	  "quiz": {
+		"question": "Qual é a cor característica do enxofre puro?",
+		"options": ["Vermelho", "Azul", "Cinza", "Amarelo"],
+		"correct": 3
+	  }
 	},
 	"Cl": {
 	  "name": "Cloro",
@@ -73,7 +93,12 @@
 	  "curiosity": "O cloro foi usado como arma química na Primeira Guerra Mundial, mas hoje trata a água potável!",
 	  "unlocked_in_level": 3,
 	  "max_stack": 9,
-	  "placeholder_color": "99ff66"
+	  "placeholder_color": "99ff66",
+	  "quiz": {
+		"question": "Para que o cloro é amplamente usado atualmente?",
+		"options": ["Fabricar aço", "Fazer plástico", "Iluminar lâmpadas", "Tratar água potável e piscinas"],
+		"correct": 3
+	  }
 	},
 	"C": {
 	  "name": "Carbono",
@@ -88,7 +113,12 @@
 	  "curiosity": "O carbono pode formar mais de 10 milhões de compostos diferentes — mais do que todos os outros elementos juntos!",
 	  "unlocked_in_level": 3,
 	  "max_stack": 9,
-	  "placeholder_color": "888888"
+	  "placeholder_color": "888888",
+	  "quiz": {
+		"question": "Qual destas substâncias é formada apenas por átomos de carbono?",
+		"options": ["Água", "Sal", "Diamante", "Areia"],
+		"correct": 2
+	  }
 	},
 	"Si": {
 	  "name": "Silício",
@@ -103,7 +133,12 @@
 	  "curiosity": "O Vale do Silício leva o nome deste elemento — 95% dos chips de computador do mundo são feitos de silício!",
 	  "unlocked_in_level": 4,
 	  "max_stack": 9,
-	  "placeholder_color": "aa88cc"
+	  "placeholder_color": "aa88cc",
+	  "quiz": {
+		"question": "O Silício é principalmente usado na fabricação de quê?",
+		"options": ["Cabos elétricos", "Chips de computador", "Tintas e pigmentos", "Borracha"],
+		"correct": 1
+	  }
 	}
   }
 }

@@ -1,0 +1,58 @@
+[gd_scene load_steps=2 format=3 uid="uid://mainmenu01"]
+
+[ext_resource type="Script" path="res://scenes/menus/main_menu.gd" id="1_mm"]
+
+[node name="MainMenu" type="Control"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1_mm")
+
+[node name="BG" type="ColorRect" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.05, 0.07, 0.14, 1)
+
+[node name="CenterBox" type="VBoxContainer" parent="."]
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -240.0
+offset_top = -200.0
+offset_right = 240.0
+offset_bottom = 200.0
+alignment = 1
+theme_override_constants/separation = 16
+
+[node name="Title" type="Label" parent="CenterBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "ALQUIMIA ELEMENTAL"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 48
+theme_override_colors/font_color = Color(0.4, 0.85, 1.0, 1)
+
+[node name="Subtitle" type="Label" parent="CenterBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Um jogo de química"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 22
+theme_override_colors/font_color = Color(0.7, 0.7, 0.8, 1)
+
+[node name="Spacer" type="Control" parent="CenterBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 40)
+
+[node name="PlayBtn" type="Button" parent="CenterBox"]
+layout_mode = 2
+text = "  Jogar  "
+theme_override_font_sizes/font_size = 32
+
+[node name="QuitBtn" type="Button" parent="CenterBox"]
+layout_mode = 2
+text = "  Sair  "
+theme_override_font_sizes/font_size = 28
+
+[connection signal="pressed" from="CenterBox/PlayBtn" to="." method="_on_play_pressed"]
+[connection signal="pressed" from="CenterBox/QuitBtn" to="." method="_on_quit_pressed"]

@@ -16,7 +16,7 @@ compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 
 config/name="Alquimia Elemental"
 config/description="Plataformer 2D com elementos de Metroidvania sobre química para o ensino médio"
-run/main_scene="res://scenes/levels/level_01.tscn"
+run/main_scene="res://scenes/menus/main_menu.tscn"
 config/features=PackedStringArray("4.6", "Mobile")
 config/icon="res://icon.svg"
 

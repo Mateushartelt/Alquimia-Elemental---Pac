@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://qui0modal01"]
+
+[ext_resource type="Script" path="res://scenes/ui/quiz_modal.gd" id="1_quiz"]
+
+[node name="QuizModal" type="CanvasLayer"]
+script = ExtResource("1_quiz")

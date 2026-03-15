@@ -9,6 +9,8 @@
 [ext_resource type="PackedScene" uid="uid://dialogbox001" path="res://scenes/ui/dialog_box.tscn" id="7_dialog"]
 [ext_resource type="PackedScene" uid="uid://tutor001" path="res://scenes/ui/tutorial_hints.tscn" id="8_hints"]
 [ext_resource type="PackedScene" uid="uid://periodictable01" path="res://scenes/ui/periodic_table.tscn" id="9_ptable"]
+[ext_resource type="PackedScene" uid="uid://gameover01" path="res://scenes/ui/game_over.tscn" id="10_go"]
+[ext_resource type="PackedScene" uid="uid://qui0modal01" path="res://scenes/ui/quiz_modal.tscn" id="11_quiz"]
 
 [sub_resource type="RectangleShape2D" id="floor_shape"]
 size = Vector2(1920, 32)
@@ -303,3 +305,7 @@ immune_to = null
 [node name="DialogBox" parent="." instance=ExtResource("7_dialog")]
 
 [node name="PeriodicTable" parent="." instance=ExtResource("9_ptable")]
+
+[node name="GameOver" parent="." instance=ExtResource("10_go")]
+
+[node name="QuizModal" parent="." instance=ExtResource("11_quiz")]
