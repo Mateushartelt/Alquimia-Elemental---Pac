@@ -1,7 +1,2 @@
 res://scenes/levels/level_01.gd
-res://scenes/ui/dialog_box.gd
-res://scenes/ui/alchemy_panel.gd
-res://scenes/ui/tutorial_hints.gd
-res://scenes/ui/alchemy_panel.tscn
-res://scenes/ui/tutorial_hints.tscn
-res://data/elements.json
+res://scenes/player/player.gd

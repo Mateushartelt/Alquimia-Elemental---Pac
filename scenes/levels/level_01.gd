@@ -2,7 +2,7 @@ extends Node2D
 ## Level01 — Fase de teste de plataformer.
 
 const KILL_PLANE_Y := 520.0
-const SPAWN_POS    := Vector2(70, 350)
+const SPAWN_POS    := Vector2(70, 354)
 const ELARA        := "Mestra Elara"
 const ENCYCLOPEDIA := "Enciclopédia"
 

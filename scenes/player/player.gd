@@ -1,6 +1,6 @@
 class_name Player
 extends CharacterBody2D
-## Player — Plataformer 2D com visual procedural via _draw().
+## Player — Plataformer 2D com state machine + AnimationPlayer.
 
 @export var walk_speed : float = 100.0
 @export var jump_force : float = -320.0
@@ -10,17 +10,27 @@ const MAX_FALL        := 500.0
 const COYOTE_TIME     := 0.12
 const JUMP_BUFFER     := 0.12
 const INVINCIBLE_TIME := 1.2
+const HURT_DURATION   := 0.5
 
 const PROJECTILE_SCENE := preload("res://scenes/player/projectile.tscn")
+
+enum State { IDLE, WALK, JUMP, FALL, HURT, DEAD }
+var _state := State.IDLE
 
 var _coyote_timer    : float = 0.0
 var _jump_buffer     : float = 0.0
 var _was_on_floor    : bool  = false
 var _facing_right    : bool  = true
 var _invincible_timer: float = 0.0
-var _draw_visible    : bool  = true
+var _hurt_timer      : float = 0.0
 
-@onready var attack_point: Marker2D = $AttackPoint
+@onready var attack_point : Marker2D       = $AttackPoint
+@onready var _anim        : AnimationPlayer = $AnimationPlayer
+@onready var _visual      : Node2D          = $Visual
+
+func _ready() -> void:
+	_build_animations()
+	_anim.play("idle")
 
 func _physics_process(delta: float) -> void:
 	_invincible_timer = maxf(0.0, _invincible_timer - delta)
@@ -31,8 +41,8 @@ func _physics_process(delta: float) -> void:
 	_handle_attack()
 	move_and_slide()
 	_update_coyote()
+	_update_state()
 	_update_visual()
-	queue_redraw()
 
 func _apply_gravity(delta: float) -> void:
 	if not is_on_floor():
@@ -76,62 +86,147 @@ func _update_coyote() -> void:
 func _tick_timers(delta: float) -> void:
 	_coyote_timer = maxf(0.0, _coyote_timer - delta)
 	_jump_buffer  = maxf(0.0, _jump_buffer  - delta)
+	_hurt_timer   = maxf(0.0, _hurt_timer   - delta)
+
+func _update_state() -> void:
+	if _state == State.DEAD:
+		return
+	if _state == State.HURT and _hurt_timer > 0.0:
+		return
+	if is_on_floor():
+		_set_state(State.IDLE if absf(velocity.x) < 5.0 else State.WALK)
+	elif velocity.y < 0.0:
+		_set_state(State.JUMP)
+	else:
+		_set_state(State.FALL)
 
 func _update_visual() -> void:
-	_draw_visible = not (_invincible_timer > 0.0 and int(_invincible_timer * 10) % 2 == 0)
+	_visual.scale.x = 1.0 if _facing_right else -1.0
+	var blink := _invincible_timer > 0.0 and int(_invincible_timer * 10) % 2 == 0
+	_visual.modulate.a = 0.0 if blink else 1.0
 
-func _draw() -> void:
-	# Blink de invencibilidade — early return ANTES de qualquer transform
-	if not _draw_visible:
+func _set_state(s: State) -> void:
+	if _state == s:
 		return
+	_state = s
+	match s:
+		State.IDLE: _anim.play("idle")
+		State.WALK: _anim.play("walk")
+		State.JUMP: _anim.play("jump")
+		State.FALL: _anim.play("fall")
+		State.HURT: _anim.play("hurt")
+		State.DEAD: _anim.play("dead")
 
-	if not _facing_right:
-		draw_set_transform(Vector2.ZERO, 0.0, Vector2(-1.0, 1.0))
+func _build_animations() -> void:
+	var lib := AnimationLibrary.new()
 
-	# Cor do corpo por estado
-	var col: Color
-	if _invincible_timer > 0.0:
-		col = Color.WHITE
-	elif is_on_floor():
-		col = Color(0.2, 0.6, 1.0) if absf(velocity.x) < 5.0 else Color(0.2, 0.9, 0.4)
-	elif velocity.y < 0.0:
-		col = Color(1.0, 0.9, 0.2)
-	else:
-		col = Color(1.0, 0.5, 0.1)
+	# ── idle (loop 1.2s) ──────────────────────────────────────────────────
+	var idle := Animation.new()
+	idle.loop_mode = Animation.LOOP_LINEAR
+	idle.length = 1.2
+	var t: int = idle.add_track(Animation.TYPE_VALUE)
+	idle.track_set_path(t, "Visual/Body:position:y")
+	idle.track_insert_key(t, 0.0, -5.0)
+	idle.track_insert_key(t, 0.6, -4.0)
+	idle.track_insert_key(t, 1.2, -5.0)
+	t = idle.add_track(Animation.TYPE_VALUE)
+	idle.track_set_path(t, "Visual/Body:scale")
+	idle.track_insert_key(t, 0.0, Vector2(1.0, 1.0))
+	t = idle.add_track(Animation.TYPE_VALUE)
+	idle.track_set_path(t, "Visual/LegLeft:position:y")
+	idle.track_insert_key(t, 0.0, 5.0)
+	t = idle.add_track(Animation.TYPE_VALUE)
+	idle.track_set_path(t, "Visual/LegRight:position:y")
+	idle.track_insert_key(t, 0.0, 5.0)
+	lib.add_animation("idle", idle)
 
-	var dark  := Color(0.05, 0.08, 0.15)
-	var light := Color(1.0, 1.0, 1.0, 0.5)
+	# ── walk (loop 0.4s) ──────────────────────────────────────────────────
+	var walk := Animation.new()
+	walk.loop_mode = Animation.LOOP_LINEAR
+	walk.length = 0.4
+	t = walk.add_track(Animation.TYPE_VALUE)
+	walk.track_set_path(t, "Visual/LegLeft:position:y")
+	walk.track_insert_key(t, 0.0, -1.0)
+	walk.track_insert_key(t, 0.2,  5.0)
+	walk.track_insert_key(t, 0.4, -1.0)
+	t = walk.add_track(Animation.TYPE_VALUE)
+	walk.track_set_path(t, "Visual/LegRight:position:y")
+	walk.track_insert_key(t, 0.0,  5.0)
+	walk.track_insert_key(t, 0.2, -1.0)
+	walk.track_insert_key(t, 0.4,  5.0)
+	t = walk.add_track(Animation.TYPE_VALUE)
+	walk.track_set_path(t, "Visual/Body:position:y")
+	walk.track_insert_key(t, 0.0, -5.0)
+	walk.track_insert_key(t, 0.2, -4.0)
+	walk.track_insert_key(t, 0.4, -5.0)
+	t = walk.add_track(Animation.TYPE_VALUE)
+	walk.track_set_path(t, "Visual/Body:scale")
+	walk.track_insert_key(t, 0.0, Vector2(1.0, 1.0))
+	lib.add_animation("walk", walk)
 
-	# ── Pernas (atrás do torso) ────────────────────────────────────────────
-	var la := 0.0  # leg animation offset
-	if is_on_floor() and absf(velocity.x) > 5.0:
-		la = sin(Time.get_ticks_msec() * 0.001 * 12.0) * 0.8
-	# Perna esquerda (la positivo = desce, negativo = sobe)
-	draw_rect(Rect2(-4.0, 6.0 + la,  3.0, 2.0), col)
-	# Perna direita (fase oposta)
-	draw_rect(Rect2( 1.0, 6.0 - la,  3.0, 2.0), col)
-	draw_rect(Rect2(-4.0, 6.0 + la,  3.0, 2.0), dark, false, 0.5)
-	draw_rect(Rect2( 1.0, 6.0 - la,  3.0, 2.0), dark, false, 0.5)
+	# ── jump (once 0.25s) ─────────────────────────────────────────────────
+	var jump := Animation.new()
+	jump.loop_mode = Animation.LOOP_NONE
+	jump.length = 0.25
+	t = jump.add_track(Animation.TYPE_VALUE)
+	jump.track_set_path(t, "Visual/Body:scale")
+	jump.track_insert_key(t, 0.0,  Vector2(1.0, 1.0))
+	jump.track_insert_key(t, 0.1,  Vector2(1.2, 0.8))
+	jump.track_insert_key(t, 0.25, Vector2(0.9, 1.2))
+	t = jump.add_track(Animation.TYPE_VALUE)
+	jump.track_set_path(t, "Visual/Head:position:y")
+	jump.track_insert_key(t, 0.0,  -13.0)
+	jump.track_insert_key(t, 0.1,  -15.0)
+	jump.track_insert_key(t, 0.25, -14.0)
+	lib.add_animation("jump", jump)
 
-	# ── Torso ─────────────────────────────────────────────────────────────
-	draw_rect(Rect2(-4.0, 0.0, 8.0, 6.0), col)
-	draw_rect(Rect2(-4.0, 0.0, 8.0, 6.0), dark, false, 0.5)
-	draw_rect(Rect2(-4.0, 0.0, 3.0, 1.5), light)  # highlight
+	# ── fall (loop 0.3s) ──────────────────────────────────────────────────
+	var fall := Animation.new()
+	fall.loop_mode = Animation.LOOP_LINEAR
+	fall.length = 0.3
+	t = fall.add_track(Animation.TYPE_VALUE)
+	fall.track_set_path(t, "Visual/Body:scale")
+	fall.track_insert_key(t, 0.0, Vector2(1.1, 0.9))
+	fall.track_insert_key(t, 0.3, Vector2(1.0, 1.0))
+	t = fall.add_track(Animation.TYPE_VALUE)
+	fall.track_set_path(t, "Visual/LegLeft:position:y")
+	fall.track_insert_key(t, 0.0, 5.0)
+	t = fall.add_track(Animation.TYPE_VALUE)
+	fall.track_set_path(t, "Visual/LegRight:position:y")
+	fall.track_insert_key(t, 0.0, 5.0)
+	lib.add_animation("fall", fall)
 
-	# ── Pescoço ───────────────────────────────────────────────────────────
-	draw_rect(Rect2(-1.0, -2.0, 2.0, 2.0), col)
+	# ── hurt (once 0.5s) ──────────────────────────────────────────────────
+	var hurt := Animation.new()
+	hurt.loop_mode = Animation.LOOP_NONE
+	hurt.length = 0.5
+	t = hurt.add_track(Animation.TYPE_VALUE)
+	hurt.track_set_path(t, "Visual/Body:color")
+	hurt.track_insert_key(t, 0.0, Color.WHITE)
+	hurt.track_insert_key(t, 0.5, Color(0.227, 0.431, 0.667, 1.0))
+	t = hurt.add_track(Animation.TYPE_VALUE)
+	hurt.track_set_path(t, "Visual:position:x")
+	hurt.track_insert_key(t, 0.0,   0.0)
+	hurt.track_insert_key(t, 0.125, -3.0)
+	hurt.track_insert_key(t, 0.25,  3.0)
+	hurt.track_insert_key(t, 0.5,   0.0)
+	lib.add_animation("hurt", hurt)
 
-	# ── Cabeça ────────────────────────────────────────────────────────────
-	draw_circle(Vector2(0.0, -5.5), 3.0, col)
-	draw_arc(Vector2(0.0, -5.5), 3.0, 0.0, TAU, 16, dark, 0.5)
-	draw_circle(Vector2(-1.2, -7.0), 1.0, light)  # reflexo
+	# ── dead (once 0.6s) ──────────────────────────────────────────────────
+	var dead_anim := Animation.new()
+	dead_anim.loop_mode = Animation.LOOP_NONE
+	dead_anim.length = 0.6
+	t = dead_anim.add_track(Animation.TYPE_VALUE)
+	dead_anim.track_set_path(t, "Visual:rotation_degrees")
+	dead_anim.track_insert_key(t, 0.0, 0.0)
+	dead_anim.track_insert_key(t, 0.6, 90.0)
+	t = dead_anim.add_track(Animation.TYPE_VALUE)
+	dead_anim.track_set_path(t, "Visual:modulate:a")
+	dead_anim.track_insert_key(t, 0.0, 1.0)
+	dead_anim.track_insert_key(t, 0.6, 0.0)
+	lib.add_animation("dead", dead_anim)
 
-	# ── Olho (lado direito quando facing right) ────────────────────────────
-	draw_rect(Rect2(0.5, -6.5, 1.5, 1.5), dark)
-
-	# ── Reseta transform ───────────────────────────────────────────────────
-	if not _facing_right:
-		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	_anim.add_animation_library("", lib)
 
 func reset_state() -> void:
 	velocity          = Vector2.ZERO
@@ -144,6 +239,8 @@ func receive_damage(amount: int, _direction: Vector2 = Vector2.ZERO) -> void:
 	if _invincible_timer > 0.0:
 		return
 	_invincible_timer = INVINCIBLE_TIME
+	_hurt_timer = HURT_DURATION
+	_set_state(State.HURT)
 	GameState.take_damage(amount)
 
 signal attacked(compound_id: String, direction: Vector2, origin: Vector2)
