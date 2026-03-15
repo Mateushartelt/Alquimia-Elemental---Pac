@@ -12,3 +12,4 @@ settings.local.json
 # --- Correção do Claude ---
 CLAUDE.md
 .claude/
+.godot/

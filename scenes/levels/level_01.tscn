@@ -6,6 +6,8 @@
 [ext_resource type="PackedScene" uid="uid://hud001" path="res://scenes/ui/hud.tscn" id="4_hud"]
 [ext_resource type="PackedScene" uid="uid://slime001" path="res://scenes/enemies/slime_sodio.tscn" id="5_slime"]
 [ext_resource type="PackedScene" uid="uid://bks7q737ly4iu" path="res://scenes/ui/alchemy_panel.tscn" id="6_alchemy"]
+[ext_resource type="PackedScene" uid="uid://dialogbox001" path="res://scenes/ui/dialog_box.tscn" id="7_dialog"]
+[ext_resource type="PackedScene" uid="uid://tutor001" path="res://scenes/ui/tutorial_hints.tscn" id="8_hints"]
 
 [sub_resource type="RectangleShape2D" id="floor_shape"]
 size = Vector2(1920, 32)
@@ -291,6 +293,10 @@ drop_amount = null
 weak_to = null
 immune_to = null
 
+[node name="TutorialHints" parent="." instance=ExtResource("8_hints")]
+
 [node name="HUD" parent="." unique_id=26726595 instance=ExtResource("4_hud")]
 
 [node name="AlchemyPanel" parent="." unique_id=114484862 instance=ExtResource("6_alchemy")]
+
+[node name="DialogBox" parent="." instance=ExtResource("7_dialog")]

@@ -1,13 +1,6 @@
 res://scenes/levels/level_01.gd
-res://scenes/player/player.gd
-res://scenes/world/element_pickup.gd
-res://scenes/world/element_pickup.tscn
-res://scenes/enemies/enemy_base.gd
-res://scenes/enemies/slime_sodio.gd
-res://scenes/levels/level_01.tscn
-res://data/recipes.json
-res://scenes/ui/alchemy_panel.gd
-res://scenes/ui/alchemy_panel.tscn
-res://scenes/ui/hud.tscn
-res://scenes/ui/hud.gd
 res://scenes/ui/dialog_box.gd
+res://scenes/ui/alchemy_panel.gd
+res://scenes/ui/tutorial_hints.gd
+res://scenes/ui/alchemy_panel.tscn
+res://scenes/ui/tutorial_hints.tscn

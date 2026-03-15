@@ -13,12 +13,12 @@ var _full_text  := ""
 var _shown_chars: float = 0.0
 var _hint_timer : float = 0.0
 
-@onready var _panel       : PanelContainer = $Panel
-@onready var _speaker_lbl : Label          = $Panel/VBox/SpeakerLabel
-@onready var _text_lbl    : RichTextLabel  = $Panel/VBox/TextLabel
-@onready var _hint_lbl    : Label          = $Panel/VBox/HintLabel
+@onready var _speaker_lbl : Label        = $Panel/VBox/SpeakerLabel
+@onready var _text_lbl    : RichTextLabel = $Panel/VBox/TextLabel
+@onready var _hint_lbl    : Label        = $Panel/VBox/HintLabel
 
 func _ready() -> void:
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	layer = 15
 	visible = false
 	set_process(false)
@@ -35,14 +35,12 @@ func _process(delta: float) -> void:
 		_hint_timer += delta
 		_hint_lbl.modulate.a = 0.5 + 0.5 * sin(_hint_timer * 4.0)
 
-func _unhandled_input(event: InputEvent) -> void:
+func _unhandled_input(event: InputEvent) -> void: 
 	if not visible:
 		return
-	var advance: bool = event.is_action_pressed("ui_accept") \
-	or (event is InputEventMouseButton
-		and event.button_index == MOUSE_BUTTON_LEFT
-		and event.pressed)
-	if not advance:
+	var is_space := event.is_action_pressed("ui_accept")
+	var is_click := event is InputEventMouseButton and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT and (event as InputEventMouseButton).pressed
+	if not (is_space or is_click):
 		return
 	get_viewport().set_input_as_handled()
 	if _is_typing:
@@ -66,6 +64,7 @@ func show_dialog(speaker: String, text: String) -> void:
 
 func _next() -> void:
 	if _queue.is_empty():
+		get_tree().paused = false
 		visible = false
 		set_process(false)
 		dialog_queue_finished.emit()
@@ -81,3 +80,4 @@ func _next() -> void:
 	_hint_timer  = 0.0
 	visible = true
 	set_process(true)
+	get_tree().paused = true

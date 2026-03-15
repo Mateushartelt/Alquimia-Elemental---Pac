@@ -1,0 +1,23 @@
+[gd_scene format=3 uid="uid://tutor001"]
+
+[ext_resource type="Script" path="res://scenes/ui/tutorial_hints.gd" id="1"]
+
+[node name="TutorialHints" type="CanvasLayer"]
+process_mode = 3
+layer = 6
+script = ExtResource("1")
+
+[node name="HintPanel" type="ColorRect" parent="."]
+color = Color(0, 0, 0, 0.65)
+offset_left = 340.0
+offset_top = 660.0
+offset_right = 940.0
+offset_bottom = 710.0
+
+[node name="HintLabel" type="Label" parent="HintPanel"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_font_sizes/font_size = 20
+theme_override_colors/font_color = Color(1, 1, 1, 1)

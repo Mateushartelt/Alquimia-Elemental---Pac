@@ -3,11 +3,24 @@ extends CanvasLayer
 ## AlchemyPanel — Modal de combinação de elementos.
 ## Abre/fecha com Q. Slots locais; consume GameState só ao MISTURAR.
 
+signal panel_opened
+
 const ALL_RECIPES := ["H2O", "SO2", "HCl", "CO2", "NaCl", "NaOH"]
 
 # Cada slot: {} (vazio) | {type: "element"|"compound", id: String}
 var _slots: Array = [{}, {}, {}]
 var _is_open := false
+
+enum TutStep { NONE = 0, H1 = 1, H2 = 2, ADD_O = 3, MIX = 4 }
+var _tut_step: int = TutStep.NONE
+var tutorial_unlock := false  # permite Q durante pausa forçada pelo tutorial
+
+const TUT_TEXTS := {
+	TutStep.H1:    "1/3 — Clique em [H]   Hidrogênio — número atômico 1, o mais abundante do universo!",
+	TutStep.H2:    "2/3 — Mais um [H]!   H₂O precisa de 2 átomos de Hidrogênio.",
+	TutStep.ADD_O: "3/3 — Clique em [O]   Oxigênio — número atômico 8, essencial à respiração!",
+	TutStep.MIX:   "H + H + O formam H₂O!   Clique em MISTURAR para criar a molécula da água!",
+}
 
 @onready var _panel_root: Control       = $Bg/Panel
 @onready var _inv_list: VBoxContainer   = $Bg/Panel/Margin/VBox/HBox/Left/InvList
@@ -18,10 +31,12 @@ var _is_open := false
 @onready var _mix_btn: Button           = $Bg/Panel/Margin/VBox/HBox/Right/Btns/MixBtn
 @onready var _clear_btn: Button         = $Bg/Panel/Margin/VBox/HBox/Right/Btns/ClearBtn
 @onready var _bg: ColorRect             = $Bg
+@onready var _tut_label: Label          = $Bg/Panel/Margin/VBox/TutorialLabel
 
 func _ready() -> void:
 	layer = 10
 	visible = false
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	_mix_btn.pressed.connect(_on_mix)
 	_clear_btn.pressed.connect(_on_clear)
 	_slot0.pressed.connect(_on_slot_clicked.bind(0))
@@ -38,13 +53,16 @@ func _ready() -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("open_alchemy") and not event.is_echo():
+		if get_tree().paused and not tutorial_unlock:
+			return  # não abre enquanto dialog/pausa ativa (exceto tutorial H2O)
+		if not tutorial_unlock and not _is_open and not can_craft_anything():
+			return  # nada para craftar ainda
+		tutorial_unlock = false
 		_toggle()
 		get_viewport().set_input_as_handled()
 	elif _is_open:
 		if event.is_action_pressed("ui_cancel") and not event.is_echo():
 			_close()
-		# Bloquear todo input de teclado/mouse enquanto o painel está aberto
-		# para evitar que open_wheel, attack, move, etc. sejam ativados pelo player
 		if event is InputEventKey or event is InputEventMouseButton:
 			get_viewport().set_input_as_handled()
 
@@ -58,16 +76,24 @@ func _toggle() -> void:
 func _open() -> void:
 	_is_open = true
 	visible  = true
+	get_tree().paused = true
+	panel_opened.emit()
+	_tut_label.visible = false
 	_refresh_inventory()
 	_refresh_slots_ui()
 	_refresh_result()
 
 func _close() -> void:
+	if _tut_step != TutStep.NONE:
+		return  # não pode fechar durante tutorial
 	_on_clear()   # devolve itens pendentes (sem consumir GameState)
 	_is_open = false
 	visible  = false
+	get_tree().paused = false
 
 func _on_bg_input(event: InputEvent) -> void:
+	if _tut_step != TutStep.NONE:
+		return
 	if event is InputEventMouseButton \
 			and event.button_index == MOUSE_BUTTON_LEFT \
 			and event.pressed \
@@ -109,6 +135,10 @@ func _refresh_inventory() -> void:
 		btn.pressed.connect(_on_inv_compound_pressed.bind(cid))
 		_inv_list.add_child(btn)
 
+	# Re-aplicar tutorial se ativo
+	if _tut_step != TutStep.NONE:
+		_apply_tut_ui()
+
 func _make_inv_button(txt: String, col: Color) -> Button:
 	var btn := Button.new()
 	btn.text = txt
@@ -139,6 +169,9 @@ func _add_to_slot(type: String, id: String) -> void:
 			_refresh_inventory()
 			_refresh_slots_ui()
 			_refresh_result()
+			if _tut_step in [TutStep.H1, TutStep.H2, TutStep.ADD_O]:
+				_tut_step += 1
+				_apply_tut_ui()
 			return
 
 func _on_slot_clicked(index: int) -> void:
@@ -209,6 +242,7 @@ func _on_mix() -> void:
 	var rid := _find_matching_recipe()
 	if rid == "":
 		return
+	_tut_step = TutStep.NONE
 
 	# Consumir elementos dos slots
 	for s in _slots:
@@ -230,10 +264,10 @@ func _on_mix() -> void:
 	if rid not in GameState.discovered_compounds:
 		GameState.discovered_compounds.append(rid)
 	GameState.set_active_compound(rid)
-	GameState.compound_created.emit(rid)
 
 	_slots = [{}, {}, {}]
-	_close()
+	_close()                               # fecha e despausa PRIMEIRO
+	GameState.compound_created.emit(rid)   # depois emite (dialog pode pausar)
 
 # ── Limpar ────────────────────────────────────────────────────────────────────
 func _on_clear() -> void:
@@ -259,8 +293,67 @@ func _pending_compounds() -> Array:
 			arr.append(s.get("id", ""))
 	return arr
 
+## Retorna true se o player tem ingredientes suficientes para pelo menos uma receita.
+func can_craft_anything() -> bool:
+	for rid in ALL_RECIPES:
+		var r := ElementDatabase.get_recipe(rid)
+		if r.is_empty():
+			continue
+		var ings: Dictionary = r.get("ingredients", {})
+		var ok := true
+		for el_id in ings:
+			if GameState.collected_elements.get(el_id, 0) < ings[el_id]:
+				ok = false
+				break
+		if ok:
+			return true
+	return false
+
 func _on_state_changed(_id: String, _amt: int = 0) -> void:
 	if _is_open: _refresh_inventory()
 
 func _on_compound_changed(_id: String) -> void:
 	if _is_open: _refresh_inventory()
+
+# ── Tutorial guiado ───────────────────────────────────────────────────────────
+func start_h2o_tutorial() -> void:
+	_tut_step = TutStep.H1
+	_slots = [{}, {}, {}]
+	_refresh_inventory()
+	_refresh_slots_ui()
+	_refresh_result()
+	_apply_tut_ui()
+
+func _apply_tut_ui() -> void:
+	if _tut_step == TutStep.NONE:
+		_tut_label.visible  = false
+		_mix_btn.modulate   = Color.WHITE
+		_clear_btn.disabled = false
+		for btn in _inv_list.get_children():
+			(btn as Button).modulate = Color.WHITE
+			(btn as Button).disabled = false
+		return
+
+	_tut_label.visible  = true
+	_tut_label.text     = TUT_TEXTS.get(_tut_step, "")
+	_clear_btn.disabled = true
+
+	var target := _tut_target_id()
+	for btn in _inv_list.get_children():
+		var b       := btn as Button
+		var btn_id  := b.text.split(" ")[0]
+		if btn_id == target:
+			b.modulate = Color.YELLOW
+			b.disabled = false
+		else:
+			b.modulate = Color(0.35, 0.35, 0.35)
+			b.disabled = true
+
+	_mix_btn.modulate = Color.YELLOW if _tut_step == TutStep.MIX else Color(0.35, 0.35, 0.35)
+	_mix_btn.disabled = (_tut_step != TutStep.MIX)
+
+func _tut_target_id() -> String:
+	match _tut_step:
+		TutStep.H1, TutStep.H2: return "H"
+		TutStep.ADD_O:           return "O"
+	return ""
