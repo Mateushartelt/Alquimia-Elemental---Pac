@@ -8,6 +8,7 @@
 [ext_resource type="PackedScene" uid="uid://bks7q737ly4iu" path="res://scenes/ui/alchemy_panel.tscn" id="6_alchemy"]
 [ext_resource type="PackedScene" uid="uid://dialogbox001" path="res://scenes/ui/dialog_box.tscn" id="7_dialog"]
 [ext_resource type="PackedScene" uid="uid://tutor001" path="res://scenes/ui/tutorial_hints.tscn" id="8_hints"]
+[ext_resource type="PackedScene" uid="uid://periodictable01" path="res://scenes/ui/periodic_table.tscn" id="9_ptable"]
 
 [sub_resource type="RectangleShape2D" id="floor_shape"]
 size = Vector2(1920, 32)
@@ -300,3 +301,5 @@ immune_to = null
 [node name="AlchemyPanel" parent="." unique_id=114484862 instance=ExtResource("6_alchemy")]
 
 [node name="DialogBox" parent="." instance=ExtResource("7_dialog")]
+
+[node name="PeriodicTable" parent="." instance=ExtResource("9_ptable")]

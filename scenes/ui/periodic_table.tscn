@@ -1,0 +1,8 @@
+[gd_scene format=3 uid="uid://sbfmum45d4ay"]
+
+[ext_resource type="Script" path="res://scenes/ui/periodic_table.gd" id="1"]
+
+[node name="PeriodicTable" type="CanvasLayer"]
+process_mode = 3
+layer = 20
+script = ExtResource("1")

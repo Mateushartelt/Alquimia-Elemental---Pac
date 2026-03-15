@@ -4,3 +4,4 @@ res://scenes/ui/alchemy_panel.gd
 res://scenes/ui/tutorial_hints.gd
 res://scenes/ui/alchemy_panel.tscn
 res://scenes/ui/tutorial_hints.tscn
+res://data/elements.json

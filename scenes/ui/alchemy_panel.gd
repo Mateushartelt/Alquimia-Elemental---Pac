@@ -13,7 +13,8 @@ var _is_open := false
 
 enum TutStep { NONE = 0, H1 = 1, H2 = 2, ADD_O = 3, MIX = 4 }
 var _tut_step: int = TutStep.NONE
-var tutorial_unlock := false  # permite Q durante pausa forçada pelo tutorial
+var tutorial_unlock  := false  # permite Q durante pausa forçada pelo tutorial
+var panel_unlocked   := false  # true após concluir o tutorial H2O — painel sempre acessível
 
 const TUT_TEXTS := {
 	TutStep.H1:    "1/3 — Clique em [H]   Hidrogênio — número atômico 1, o mais abundante do universo!",
@@ -53,9 +54,9 @@ func _ready() -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("open_alchemy") and not event.is_echo():
-		if get_tree().paused and not tutorial_unlock:
-			return  # não abre enquanto dialog/pausa ativa (exceto tutorial H2O)
-		if not tutorial_unlock and not _is_open and not can_craft_anything():
+		if get_tree().paused and not tutorial_unlock and not _is_open:
+			return  # não abre enquanto dialog/pausa ativa (exceto tutorial H2O ou fechar o próprio painel)
+		if not tutorial_unlock and not panel_unlocked and not _is_open and not can_craft_anything():
 			return  # nada para craftar ainda
 		tutorial_unlock = false
 		_toggle()

@@ -103,12 +103,13 @@ func _on_element_first_collected(element_id: String, _amt: int) -> void:
 func _on_first_alchemy_open() -> void:
 	_alchemy_done = true
 	_hints.hide_hint()
-	if _tutorial_h2o_triggered:
+	if _tutorial_h2o_triggered and not _h2o_dialog_done:
 		_alchemy.start_h2o_tutorial()
 
 func _on_compound_created(compound_id: String) -> void:
 	if compound_id == "H2O" and not _h2o_dialog_done:
 		_h2o_dialog_done = true
+		_alchemy.panel_unlocked = true  # painel livre a partir daqui
 		_dialog.show_dialog(ELARA,
 			"Perfeito! Você criou H₂O — Água! 2 átomos de H + 1 de O formam a molécula mais importante para a vida. Agora use-a para derrotar os Slimes!")
 
