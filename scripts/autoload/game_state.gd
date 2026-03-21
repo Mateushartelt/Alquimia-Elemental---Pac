@@ -41,6 +41,13 @@ func take_damage(amount: int) -> void:
 	health_changed.emit(player_health, player_max_health)
 	if player_health == 0:
 		player_died.emit()
+		reset_player()
+
+#reseta o personagem depois de morrer
+func reset_player() -> void:
+	player_health = player_max_health
+	player_position = last_checkpoint_position
+	health_changed.emit(player_health, player_max_health)
 
 func heal(amount: int) -> void:
 	player_health = min(player_max_health, player_health + amount)

@@ -8,10 +8,10 @@
 [ext_resource type="PackedScene" uid="uid://bks7q737ly4iu" path="res://scenes/ui/alchemy_panel.tscn" id="6_alchemy"]
 [ext_resource type="PackedScene" uid="uid://dialogbox001" path="res://scenes/ui/dialog_box.tscn" id="7_dialog"]
 [ext_resource type="PackedScene" uid="uid://tutor001" path="res://scenes/ui/tutorial_hints.tscn" id="8_hints"]
-[ext_resource type="PackedScene" uid="uid://periodictable01" path="res://scenes/ui/periodic_table.tscn" id="9_ptable"]
+[ext_resource type="PackedScene" uid="uid://sbfmum45d4ay" path="res://scenes/ui/periodic_table.tscn" id="9_ptable"]
 [ext_resource type="PackedScene" uid="uid://gameover01" path="res://scenes/ui/game_over.tscn" id="10_go"]
 [ext_resource type="PackedScene" uid="uid://qui0modal01" path="res://scenes/ui/quiz_modal.tscn" id="11_quiz"]
-[ext_resource type="PackedScene" uid="uid://leveltilemap01" path="res://scenes/world/level_tilemap.tscn" id="12_tilemap"]
+[ext_resource type="PackedScene" uid="uid://dys6l1fxtntiu" path="res://scenes/world/level_tilemap.tscn" id="12_tilemap"]
 
 [node name="Level01" type="Node2D" unique_id=422643617]
 script = ExtResource("1_lvl")
@@ -31,7 +31,7 @@ offset_right = 1920.0
 offset_bottom = 580.0
 color = Color(0.18, 0.12, 0.08, 1)
 
-[node name="LevelTileMap" parent="." instance=ExtResource("12_tilemap")]
+[node name="LevelTileMap" parent="." unique_id=2017598711 instance=ExtResource("12_tilemap")]
 
 [node name="Player" parent="." unique_id=8225461 instance=ExtResource("2_player")]
 position = Vector2(70, 350)
@@ -100,16 +100,16 @@ drop_amount = null
 weak_to = null
 immune_to = null
 
-[node name="TutorialHints" parent="." instance=ExtResource("8_hints")]
+[node name="TutorialHints" parent="." unique_id=39572193 instance=ExtResource("8_hints")]
 
 [node name="HUD" parent="." unique_id=26726595 instance=ExtResource("4_hud")]
 
 [node name="AlchemyPanel" parent="." unique_id=114484862 instance=ExtResource("6_alchemy")]
 
-[node name="DialogBox" parent="." instance=ExtResource("7_dialog")]
+[node name="DialogBox" parent="." unique_id=2116939242 instance=ExtResource("7_dialog")]
 
-[node name="PeriodicTable" parent="." instance=ExtResource("9_ptable")]
+[node name="PeriodicTable" parent="." unique_id=280424548 instance=ExtResource("9_ptable")]
 
-[node name="GameOver" parent="." instance=ExtResource("10_go")]
+[node name="GameOver" parent="." unique_id=805975702 instance=ExtResource("10_go")]
 
-[node name="QuizModal" parent="." instance=ExtResource("11_quiz")]
+[node name="QuizModal" parent="." unique_id=408407725 instance=ExtResource("11_quiz")]

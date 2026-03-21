@@ -1,15 +1,23 @@
-# --- Configurações de Editor e IDE ---
+# --- Godot ---
+.godot/
+.import/
+export.cfg
+export_presets.cfg
+
+# --- Editor / IDE ---
 .vscode/
 .claude/
 settings.local.json
 *.code-workspace
 
-# --- Arquivos Temporários e Logs ---
+# --- Sistema ---
+.DS_Store
+Thumbs.db
+
+# --- Temporários ---
 *.log
 *.tmp
 *.bak
 
-# --- Correção do Claude ---
+# --- Claude ---
 CLAUDE.md
-.claude/
-.godot/
