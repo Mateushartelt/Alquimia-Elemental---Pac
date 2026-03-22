@@ -23,8 +23,11 @@ Desenvolvido em Godot 4.6 + GDScript. PAC IV — Católica de Santa Catarina.
 | Tutorial | Legendas sequenciais guiando o jogador (movimento → alquimia → ataque) |
 | Menu Principal | Tela de título com botão Jogar |
 | Game Over | Tela de morte com reinício |
-| Tilemap | LevelTileMap procedural, chão + 7 plataformas |
+| Tilemap | LevelTileMap procedural — 500 tiles (8000px), 30 plataformas em 4 seções |
 | **Batalha de Boss** | **Combate estilo Pokémon contra Lesma Gigante (NaCl)** |
+| **Level 01 Metroidvania** | **Salas fechadas, shaft vertical wall jump, dark areas, transição para L02** |
+| **Level 02** | **Template "Caldeira Vulcânica" — S, Si, O, bg laranja** |
+| **Wall Jump** | **WALL_SLIDE state, wall jump com impulso lateral, tint azul** |
 
 ### Batalha de Boss — detalhes
 - Boss: Lesma Gigante, 6 HP, contra-ataca com 15 de dano

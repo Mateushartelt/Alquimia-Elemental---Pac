@@ -12,6 +12,25 @@
 [ext_resource type="PackedScene" uid="uid://gameover01" path="res://scenes/ui/game_over.tscn" id="10_go"]
 [ext_resource type="PackedScene" uid="uid://dys6l1fxtntiu" path="res://scenes/world/level_tilemap.tscn" id="12_tilemap"]
 [ext_resource type="PackedScene" uid="uid://bossbattle01" path="res://scenes/ui/boss_battle.tscn" id="13_boss"]
+[ext_resource type="PackedScene" path="res://scenes/world/fire_wall.tscn" id="14_fire"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_door_in"]
+size = Vector2(16, 80)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_shaft_fog"]
+size = Vector2(80, 440)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_shaft_fog_b"]
+size = Vector2(80, 480)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_cave_fog"]
+size = Vector2(3200, 200)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_barrier_wall"]
+size = Vector2(50, 700)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_barrier_check"]
+size = Vector2(80, 400)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_boss"]
 size = Vector2(40, 200)
@@ -21,57 +40,108 @@ script = ExtResource("1_lvl")
 
 [node name="BgSky" type="ColorRect" parent="." unique_id=1245262860]
 z_index = -10
-offset_left = 1.0
-offset_top = -400.0
-offset_right = 1920.0
-offset_bottom = 500.0
-color = Color(0.07, 0.09, 0.18, 1)
+offset_left = -32.0
+offset_top = -512.0
+offset_right = 3232.0
+offset_bottom = 512.0
+color = Color(0.05, 0.06, 0.14, 1)
 
 [node name="BgGround" type="ColorRect" parent="." unique_id=2130133577]
 z_index = -9
+offset_left = -32.0
 offset_top = 368.0
-offset_right = 1920.0
-offset_bottom = 580.0
-color = Color(0.18, 0.12, 0.08, 1)
+offset_right = 3232.0
+offset_bottom = 660.0
+color = Color(0.14, 0.09, 0.06, 1)
 
 [node name="LevelTileMap" parent="." unique_id=2017598711 instance=ExtResource("12_tilemap")]
 
 [node name="Player" parent="." unique_id=8225461 instance=ExtResource("2_player")]
-position = Vector2(70, 350)
+position = Vector2(950, 310)
 
 [node name="Camera2D" type="Camera2D" parent="Player" unique_id=709374873]
-offset = Vector2(0, -30)
-zoom = Vector2(6, 6)
+offset = Vector2(0, -20)
+zoom = Vector2(3, 3)
 limit_left = 0
-limit_top = -200
-limit_right = 1920
-limit_bottom = 500
+limit_top = -500
+limit_right = 3200
+limit_bottom = 680
 position_smoothing_enabled = true
 drag_horizontal_enabled = true
 
 [node name="Pickups" type="Node2D" parent="." unique_id=1493691893]
 
-[node name="H_01" parent="Pickups" unique_id=1524554541 instance=ExtResource("3_pickup")]
-position = Vector2(150, 350)
+[node name="Cave_Na" parent="Pickups" unique_id=400000023 instance=ExtResource("3_pickup")]
+position = Vector2(150, 340)
+element_id = "Na"
 
-[node name="H_02" parent="Pickups" unique_id=819713851 instance=ExtResource("3_pickup")]
-position = Vector2(250, 308)
+[node name="Cave_Cl" parent="Pickups" unique_id=400000024 instance=ExtResource("3_pickup")]
+position = Vector2(100, 340)
+element_id = "Cl"
 
-[node name="H_03" parent="Pickups" unique_id=2136096911 instance=ExtResource("3_pickup")]
-position = Vector2(710, 232)
+[node name="Cor_Na1" parent="Pickups" unique_id=400000007 instance=ExtResource("3_pickup")]
+position = Vector2(1900, 226)
+element_id = "Na"
 
-[node name="O_01" parent="Pickups" unique_id=1526938691 instance=ExtResource("3_pickup")]
-position = Vector2(390, 350)
+[node name="Cor_Cl1" parent="Pickups" unique_id=400000008 instance=ExtResource("3_pickup")]
+position = Vector2(2050, 226)
+element_id = "Cl"
+
+[node name="Cor_Na2" parent="Pickups" unique_id=400000009 instance=ExtResource("3_pickup")]
+position = Vector2(2530, 226)
+element_id = "Na"
+
+[node name="Cor_C1" parent="Pickups" unique_id=400000010 instance=ExtResource("3_pickup")]
+position = Vector2(2680, 226)
+element_id = "C"
+
+[node name="Cor_Cl2" parent="Pickups" unique_id=400000011 instance=ExtResource("3_pickup")]
+position = Vector2(2200, 340)
+element_id = "Cl"
+
+[node name="Alta_H1" parent="Pickups" unique_id=400000012 instance=ExtResource("3_pickup")]
+position = Vector2(1330, -262)
+
+[node name="Alta_O1" parent="Pickups" unique_id=400000013 instance=ExtResource("3_pickup")]
+position = Vector2(1920, -262)
 element_id = "O"
 
-[node name="O_02" parent="Pickups" unique_id=1242373391 instance=ExtResource("3_pickup")]
-position = Vector2(490, 268)
-element_id = "O"
+[node name="Sec_Na1" parent="Pickups" unique_id=400000014 instance=ExtResource("3_pickup")]
+position = Vector2(2960, -370)
+element_id = "Na"
+
+[node name="Sec_Cl1" parent="Pickups" unique_id=400000015 instance=ExtResource("3_pickup")]
+position = Vector2(3100, -370)
+element_id = "Cl"
+
+[node name="UG_Na1" parent="Pickups" unique_id=400000016 instance=ExtResource("3_pickup")]
+position = Vector2(500, 540)
+element_id = "Na"
+
+[node name="UG_Cl1" parent="Pickups" unique_id=400000017 instance=ExtResource("3_pickup")]
+position = Vector2(700, 520)
+element_id = "Cl"
+
+[node name="UG_Na2" parent="Pickups" unique_id=400000018 instance=ExtResource("3_pickup")]
+position = Vector2(1300, 550)
+element_id = "Na"
+
+[node name="UG_Cl2" parent="Pickups" unique_id=400000019 instance=ExtResource("3_pickup")]
+position = Vector2(1500, 510)
+element_id = "Cl"
+
+[node name="UG_Na3" parent="Pickups" unique_id=400000020 instance=ExtResource("3_pickup")]
+position = Vector2(2450, 540)
+element_id = "Na"
+
+[node name="UG_Cl3" parent="Pickups" unique_id=400000021 instance=ExtResource("3_pickup")]
+position = Vector2(2650, 520)
+element_id = "Cl"
 
 [node name="Enemies" type="Node2D" parent="." unique_id=1967385426]
 
-[node name="Slime01" parent="Enemies" unique_id=587189199 instance=ExtResource("5_slime")]
-position = Vector2(600, 358)
+[node name="Slime01" parent="Enemies" unique_id=400000030 instance=ExtResource("5_slime")]
+position = Vector2(1820, 330)
 max_health = null
 move_speed = null
 patrol_range = null
@@ -81,8 +151,8 @@ drop_amount = null
 weak_to = null
 immune_to = null
 
-[node name="Slime02" parent="Enemies" unique_id=1436211391 instance=ExtResource("5_slime")]
-position = Vector2(920, 276)
+[node name="Slime02" parent="Enemies" unique_id=400000031 instance=ExtResource("5_slime")]
+position = Vector2(1960, 330)
 max_health = null
 move_speed = null
 patrol_range = null
@@ -92,8 +162,8 @@ drop_amount = null
 weak_to = null
 immune_to = null
 
-[node name="Slime03" parent="Enemies" unique_id=1770778352 instance=ExtResource("5_slime")]
-position = Vector2(1130, 314)
+[node name="Slime03" parent="Enemies" unique_id=400000032 instance=ExtResource("5_slime")]
+position = Vector2(2200, 330)
 max_health = null
 move_speed = null
 patrol_range = null
@@ -103,61 +173,172 @@ drop_amount = null
 weak_to = null
 immune_to = null
 
-[node name="TutorialHints" parent="." unique_id=39572193 instance=ExtResource("8_hints")]
+[node name="Slime04" parent="Enemies" unique_id=400000033 instance=ExtResource("5_slime")]
+position = Vector2(2000, 330)
+max_health = null
+move_speed = null
+patrol_range = null
+damage_on_touch = null
+element_drop = null
+drop_amount = null
+weak_to = null
+immune_to = null
 
-[node name="HUD" parent="." unique_id=26726595 instance=ExtResource("4_hud")]
+[node name="Slime05" parent="Enemies" unique_id=400000034 instance=ExtResource("5_slime")]
+position = Vector2(2600, 330)
+max_health = null
+move_speed = null
+patrol_range = null
+damage_on_touch = null
+element_drop = null
+drop_amount = null
+weak_to = null
+immune_to = null
 
-[node name="AlchemyPanel" parent="." unique_id=114484862 instance=ExtResource("6_alchemy")]
+[node name="Slime06" parent="Enemies" unique_id=400000035 instance=ExtResource("5_slime")]
+position = Vector2(1200, 600)
+max_health = null
+move_speed = null
+patrol_range = null
+damage_on_touch = null
+element_drop = null
+drop_amount = null
+weak_to = null
+immune_to = null
 
-[node name="DialogBox" parent="." unique_id=2116939242 instance=ExtResource("7_dialog")]
+[node name="DoorIn" type="Area2D" parent="." unique_id=500000010]
+position = Vector2(250, 328)
+collision_layer = 0
 
-[node name="PeriodicTable" parent="." unique_id=280424548 instance=ExtResource("9_ptable")]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DoorIn" unique_id=500000011]
+shape = SubResource("RectangleShape2D_door_in")
 
-[node name="GameOver" parent="." unique_id=805975702 instance=ExtResource("10_go")]
+[node name="DoorVisual" type="ColorRect" parent="DoorIn" unique_id=500000012]
+z_index = 2
+offset_left = -8.0
+offset_top = -40.0
+offset_right = 8.0
+offset_bottom = 40.0
+color = Color(0.3, 0.8, 1, 0.7)
 
-[node name="BossBattle" parent="." unique_id=316740001 instance=ExtResource("13_boss")]
+[node name="FireWall" parent="." unique_id=500000001 instance=ExtResource("14_fire")]
+position = Vector2(1400, 112)
 
-[node name="Na_01" parent="Pickups" unique_id=316740010 instance=ExtResource("3_pickup")]
-position = Vector2(1320, 358)
-element_id = "Na"
+[node name="DarkAreas" type="Node2D" parent="." unique_id=316740070]
 
-[node name="Na_02" parent="Pickups" unique_id=316740012 instance=ExtResource("3_pickup")]
-position = Vector2(1355, 272)
-element_id = "Na"
+[node name="ShaftFog" type="ColorRect" parent="DarkAreas" unique_id=316740071]
+z_index = 5
+offset_left = 1264.0
+offset_top = -340.0
+offset_right = 1408.0
+offset_bottom = 128.0
+mouse_filter = 2
+color = Color(0, 0, 0, 0.88)
 
-[node name="Na_03" parent="Pickups" unique_id=316740013 instance=ExtResource("3_pickup")]
-position = Vector2(1590, 224)
-element_id = "Na"
+[node name="ShaftFogDetect" type="Area2D" parent="DarkAreas" unique_id=316740072]
+position = Vector2(1328, -106)
+collision_layer = 0
 
-[node name="Cl_01" parent="Pickups" unique_id=316740011 instance=ExtResource("3_pickup")]
-position = Vector2(1460, 358)
-element_id = "Cl"
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DarkAreas/ShaftFogDetect" unique_id=316740073]
+shape = SubResource("RectangleShape2D_shaft_fog")
 
-[node name="Cl_02" parent="Pickups" unique_id=316740014 instance=ExtResource("3_pickup")]
-position = Vector2(1385, 272)
-element_id = "Cl"
+[node name="ShaftFogB" type="ColorRect" parent="DarkAreas" unique_id=400000040]
+z_index = 5
+offset_left = 2784.0
+offset_top = -340.0
+offset_right = 2928.0
+offset_bottom = 176.0
+mouse_filter = 2
+color = Color(0, 0, 0, 0.88)
 
-[node name="Cl_03" parent="Pickups" unique_id=316740015 instance=ExtResource("3_pickup")]
-position = Vector2(1615, 224)
-element_id = "Cl"
+[node name="ShaftFogBDetect" type="Area2D" parent="DarkAreas" unique_id=400000041]
+position = Vector2(2848, -82)
+collision_layer = 0
 
-[node name="H_04" parent="Pickups" unique_id=316740016 instance=ExtResource("3_pickup")]
-position = Vector2(1250, 352)
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DarkAreas/ShaftFogBDetect" unique_id=400000042]
+shape = SubResource("RectangleShape2D_shaft_fog_b")
 
-[node name="O_03" parent="Pickups" unique_id=316740017 instance=ExtResource("3_pickup")]
-position = Vector2(1275, 352)
-element_id = "O"
+[node name="CaveFog" type="ColorRect" parent="DarkAreas" unique_id=316740074]
+z_index = 5
+offset_top = 432.0
+offset_right = 3200.0
+offset_bottom = 660.0
+mouse_filter = 2
+color = Color(0, 0, 0, 0.88)
 
-[node name="C_01" parent="Pickups" unique_id=316740018 instance=ExtResource("3_pickup")]
-position = Vector2(1480, 352)
-element_id = "C"
+[node name="CaveFogDetect" type="Area2D" parent="DarkAreas" unique_id=316740075]
+position = Vector2(1600, 546)
+collision_layer = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DarkAreas/CaveFogDetect" unique_id=316740076]
+shape = SubResource("RectangleShape2D_cave_fog")
+
+[node name="BarrierWall" type="StaticBody2D" parent="." unique_id=316740050]
+position = Vector2(900, -440)
+collision_layer = 2
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="BarrierWall" unique_id=316740051]
+shape = SubResource("RectangleShape2D_barrier_wall")
+
+[node name="Visual" type="ColorRect" parent="BarrierWall" unique_id=316740060]
+z_index = 1
+offset_left = -25.0
+offset_top = -350.0
+offset_right = 25.0
+offset_bottom = 350.0
+color = Color(1, 0.45, 0, 0.85)
+
+[node name="BarrierCheck" type="Area2D" parent="." unique_id=316740052]
+visible = false
+position = Vector2(820, -410)
+collision_layer = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="BarrierCheck" unique_id=316740053]
+shape = SubResource("RectangleShape2D_barrier_check")
 
 [node name="BossTrigger" type="Area2D" parent="." unique_id=316740020]
-position = Vector2(1700, 358)
+visible = false
+position = Vector2(1000, -390)
 collision_layer = 0
-collision_mask = 1
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="BossTrigger" unique_id=316740021]
 shape = SubResource("RectangleShape2D_boss")
 
+[node name="FadeOverlay" type="ColorRect" parent="." unique_id=316740080]
+visible = false
+z_index = 100
+offset_left = -32.0
+offset_top = -512.0
+offset_right = 3232.0
+offset_bottom = 700.0
+mouse_filter = 2
+color = Color(0, 0, 0, 0)
+
+[node name="TutorialHints" parent="." unique_id=39572193 instance=ExtResource("8_hints")]
+visible = false
+
+[node name="HUD" parent="." unique_id=26726595 instance=ExtResource("4_hud")]
+visible = false
+
+[node name="AlchemyPanel" parent="." unique_id=114484862 instance=ExtResource("6_alchemy")]
+visible = false
+
+[node name="DialogBox" parent="." unique_id=2116939242 instance=ExtResource("7_dialog")]
+visible = false
+
+[node name="PeriodicTable" parent="." unique_id=280424548 instance=ExtResource("9_ptable")]
+visible = false
+
+[node name="GameOver" parent="." unique_id=805975702 instance=ExtResource("10_go")]
+
+[node name="BossBattle" parent="." unique_id=316740001 instance=ExtResource("13_boss")]
+visible = false
+
+[connection signal="body_entered" from="DoorIn" to="." method="_on_door_in_entered"]
+[connection signal="extinguished" from="FireWall" to="." method="_on_fire_extinguished"]
+[connection signal="body_entered" from="DarkAreas/ShaftFogDetect" to="." method="_on_shaft_fog_entered"]
+[connection signal="body_entered" from="DarkAreas/ShaftFogBDetect" to="." method="_on_shaft_b_fog_entered"]
+[connection signal="body_entered" from="DarkAreas/CaveFogDetect" to="." method="_on_cave_fog_entered"]
+[connection signal="body_entered" from="BarrierCheck" to="." method="_on_barrier_check_entered"]
 [connection signal="body_entered" from="BossTrigger" to="." method="_on_boss_trigger_entered"]
