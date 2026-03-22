@@ -29,6 +29,8 @@ var _cinematic_done      := false
 var _portal_hint_done    := false
 var _in_tunnel           := false
 var _zoom_tween          : Tween = null
+var _cam_look_x          := 0.0
+var _portal_exploded     := false
 
 # Tutorial state
 var _seen_elements          : Array[String] = []
@@ -38,12 +40,14 @@ var _attack_done            := false
 var _tutorial_h2o_triggered := false
 
 func _ready() -> void:
-	_cam.limit_left   = 0
-	_cam.limit_right  = 1600
-	_cam.limit_top    = 80
-	_cam.limit_bottom = 400
-	_cam.zoom         = Vector2(3, 3)  # zoom inicial do hub (espaço aberto)
-	_cam.limit_left   = 800            # bloqueia esquerda no step wall
+	_make_debug_label()
+	_cam.limit_left                 = 800
+	_cam.limit_right                = 1600
+	_cam.limit_top                  = 80
+	_cam.limit_bottom               = 400
+	_cam.zoom                       = Vector2(3, 3)
+	_cam.drag_horizontal_enabled    = false   # POV fixo: sem drag acumulado
+	_cam.position_smoothing_enabled = false   # POV fixo: sem lag de smoothing
 	if "H2O" in GameState.discovered_compounds:
 		_came_from_tutorial = true
 		_cinematic_done     = true
@@ -62,7 +66,18 @@ func _ready() -> void:
 	for enemy in get_tree().get_nodes_in_group("enemies"):
 		enemy.connect("died", _on_enemy_died)
 
-func _process(_delta: float) -> void:
+var _debug_zoom : Label
+
+func _make_debug_label() -> void:
+	var layer := CanvasLayer.new()
+	add_child(layer)
+	_debug_zoom = Label.new()
+	_debug_zoom.position = Vector2(8, 8)
+	_debug_zoom.add_theme_font_size_override("font_size", 16)
+	layer.add_child(_debug_zoom)
+
+func _process(delta: float) -> void:
+	_debug_zoom.text = "zoom: %.0f  %s" % [_cam.zoom.x, "TUNEL" if _in_tunnel else "HUB"]
 	if get_tree().paused:
 		return
 	if not _respawning and player.global_position.y > KILL_PLANE_Y:
@@ -75,36 +90,44 @@ func _process(_delta: float) -> void:
 		_portal_hint_done = true
 		_dialog.show_dialog(ELARA,
 			"Um portal de emergência! Entre por ele — lá você poderá criar H₂O para apagar o fogo!")
-	# Zoom túnel ↔ hub (sempre ativo; limit_left só muda antes do fogo ser extinto)
+	# Zoom + limites por sala (sempre ativo)
 	if player.global_position.x > 820.0 and _in_tunnel:
 		_in_tunnel = false
-		if not _fire_cleared:
-			_cam.limit_left = 800
+		_cam.limit_left   = 800   # hub: travado no step wall
+		_cam.limit_top    = 80
+		_cam.limit_bottom = 400
 		_set_zoom(Vector2(3, 3), 0.5)
 	elif player.global_position.x <= 780.0 and not _in_tunnel:
 		_in_tunnel = true
-		if not _fire_cleared:
-			_cam.limit_left = 250
-		_set_zoom(Vector2(8, 8), 0.5)
+		_cam.limit_left   = 0 if _portal_exploded else 226  # para no portal até ele explodir
+		_cam.limit_top    = -500
+		_cam.limit_bottom = 680
+		_set_zoom(Vector2(4, 4), 0.5)
+	# Lookahead horizontal no túnel
+	var target_look_x := 0.0
+	if _in_tunnel:
+		if player.velocity.x < -5.0 and _portal_exploded:
+			target_look_x = -80.0  # esquerda só após portal explodir
+		elif player.velocity.x > 5.0:
+			target_look_x = 80.0
+	_cam_look_x = lerp(_cam_look_x, target_look_x, delta * 3.0)
+	_cam.offset = Vector2(_cam_look_x, -20)
 
-func _make_cine_cam(start_pos: Vector2, zoom: Vector2) -> Camera2D:
-	var cc        := Camera2D.new()
-	cc.position    = start_pos
-	cc.zoom        = zoom
-	cc.limit_left  = _cam.limit_left
-	cc.limit_right = _cam.limit_right
-	cc.limit_top   = _cam.limit_top
-	cc.limit_bottom = _cam.limit_bottom
-	add_child(cc)
-	_cam.enabled = false
-	return cc
+func _cine_begin() -> void:
+	if _zoom_tween:
+		_zoom_tween.kill()
+		_zoom_tween = null
 
-func _end_cine_cam(cc: Camera2D) -> void:
-	cc.enabled    = false
-	_cam.offset   = Vector2(0, -20)
-	_cam.enabled  = true
-	_cam.reset_smoothing()
-	cc.queue_free()
+func _cine_end() -> void:
+	if _zoom_tween:
+		_zoom_tween.kill()
+		_zoom_tween = null
+	_cam_look_x       = 0.0
+	_cam.zoom         = Vector2(4, 4) if _in_tunnel else Vector2(3, 3)
+	_cam.limit_left   = (0 if _portal_exploded else 226) if _in_tunnel else 800
+	_cam.limit_top    = -500 if _in_tunnel else 80
+	_cam.limit_bottom = 680  if _in_tunnel else 400
+	_cam.offset       = Vector2(0, -20)
 
 func _set_zoom(target: Vector2, duration: float) -> void:
 	if _zoom_tween:
@@ -138,8 +161,8 @@ func _show_intro() -> void:
 	])
 
 func _run_opening_cinematic() -> void:
-	var start_pos := Vector2(player.global_position.x, player.global_position.y - 20)
-	var cine_cam  := _make_cine_cam(start_pos, _cam.zoom)
+	_cine_begin()
+	var offset_to_fire := 1400.0 - player.global_position.x
 
 	player.process_mode = Node.PROCESS_MODE_PAUSABLE
 	process_mode        = Node.PROCESS_MODE_ALWAYS
@@ -147,15 +170,15 @@ func _run_opening_cinematic() -> void:
 
 	var tw := create_tween()
 	tw.set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
-	tw.tween_property(cine_cam, "position", Vector2(1400.0, start_pos.y), 2.0)
+	tw.tween_property(_cam, "offset", Vector2(offset_to_fire, -20), 2.0)
 	tw.tween_interval(1.5)
-	tw.tween_property(cine_cam, "position", start_pos, 2.0)
+	tw.tween_property(_cam, "offset", Vector2(0, -20), 2.0)
 	await tw.finished
 
 	get_tree().paused   = false
 	process_mode        = Node.PROCESS_MODE_INHERIT
 	player.process_mode = Node.PROCESS_MODE_INHERIT
-	_end_cine_cam(cine_cam)
+	_cine_end()
 	_hints.show_hint("WASD / ← →   Mover        ESPAÇO   Pular")
 
 func _on_any_dialog_closed() -> void:
@@ -253,30 +276,26 @@ func _on_fire_extinguished() -> void:
 	_run_portal_explosion()
 
 func _run_portal_explosion() -> void:
-	# Expande limites da câmera para o mapa completo
-	_cam.limit_left   = 0
-	_cam.limit_right  = 3200
-	_cam.limit_top    = -500
-	_cam.limit_bottom = 680
+	_portal_exploded = true
+	_cam.limit_left  = 0
+	_cam.limit_right = 3200
+	_cam.zoom        = Vector2(3, 3)
 
-	var start_pos := Vector2(player.global_position.x, player.global_position.y - 20)
-	var cine_cam  := _make_cine_cam(start_pos, Vector2(3, 3))
+	_cine_begin()
+	var offset_to_portal := 250.0 - player.global_position.x
 
 	player.process_mode = Node.PROCESS_MODE_PAUSABLE
 	process_mode        = Node.PROCESS_MODE_ALWAYS
 	get_tree().paused   = true
 
-	# Pan câmera esquerda até o portal (x=250)
 	var tw := create_tween()
 	tw.set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
-	tw.tween_property(cine_cam, "position", Vector2(250.0, start_pos.y), 1.5)
+	tw.tween_property(_cam, "offset", Vector2(offset_to_portal, -20), 1.5)
 	await tw.finished
 
-	# Remove portal
 	if is_instance_valid(_door_in):
 		_door_in.queue_free()
 
-	# Flash de explosão
 	var flash := ColorRect.new()
 	flash.z_index  = 10
 	flash.position = Vector2(226, 288)
@@ -292,16 +311,15 @@ func _run_portal_explosion() -> void:
 	await flash_tw.finished
 	flash.queue_free()
 
-	# Pan volta ao player
 	var tw2 := create_tween()
 	tw2.set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
-	tw2.tween_property(cine_cam, "position", start_pos, 1.0)
+	tw2.tween_property(_cam, "offset", Vector2(0, -20), 1.0)
 	await tw2.finished
 
 	get_tree().paused   = false
 	process_mode        = Node.PROCESS_MODE_INHERIT
 	player.process_mode = Node.PROCESS_MODE_INHERIT
-	_end_cine_cam(cine_cam)
+	_cine_end()
 
 func _on_shaft_b_fog_entered(body: Node2D) -> void:
 	if _shaft_b_fog_cleared or not body.is_in_group("player"):
