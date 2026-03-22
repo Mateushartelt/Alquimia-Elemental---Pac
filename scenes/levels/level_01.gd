@@ -6,16 +6,15 @@ const SPAWN_POS    := Vector2(70, 354)
 const ELARA        := "Mestra Elara"
 const ENCYCLOPEDIA := "Enciclopédia"
 
-@onready var player  : Player        = $Player
-@onready var _dialog : DialogBox     = $DialogBox
-@onready var _hints  : TutorialHints = $TutorialHints
-@onready var _alchemy: AlchemyPanel  = $AlchemyPanel
-@onready var _quiz   : QuizModal     = $QuizModal
+@onready var player       : Player        = $Player
+@onready var _dialog      : DialogBox     = $DialogBox
+@onready var _hints       : TutorialHints = $TutorialHints
+@onready var _alchemy     : AlchemyPanel  = $AlchemyPanel
+@onready var _boss_battle : BossBattle    = $BossBattle
 
-var _respawning          := false
-var _h2o_dialog_done     := false
-var _enemy_dialog_done   := false
-var _quiz_queue : Array[String] = []
+var _respawning        := false
+var _h2o_dialog_done   := false
+var _enemy_dialog_done := false
 
 # Tutorial state
 var _seen_elements          : Array[String] = []
@@ -31,7 +30,6 @@ func _ready() -> void:
 	GameState.element_collected.connect(_on_element_first_collected)
 	_alchemy.panel_opened.connect(_on_first_alchemy_open)
 	_dialog.dialog_queue_finished.connect(_on_any_dialog_closed)
-	_quiz.quiz_closed.connect(_on_quiz_closed)
 	for enemy in get_tree().get_nodes_in_group("enemies"):
 		enemy.connect("died", _on_enemy_died)
 
@@ -65,15 +63,7 @@ func _show_intro() -> void:
 		[ELARA, "Cada elemento tem propriedades únicas. Combinados, formam compostos poderosos!"],
 	])
 
-func _on_quiz_closed() -> void:
-	_on_any_dialog_closed()
-
 func _on_any_dialog_closed() -> void:
-	# Drena a fila de quizzes antes de continuar o fluxo do tutorial
-	if not _quiz_queue.is_empty():
-		_quiz.show_quiz(_quiz_queue.pop_front())
-		return
-
 	if not _moved_done:
 		_hints.show_hint("WASD / ← →   Mover        ESPAÇO   Pular")
 		return
@@ -91,14 +81,13 @@ func _on_any_dialog_closed() -> void:
 		_hints.show_hint("J / Click — Atirar composto")
 
 func _on_element_first_collected(element_id: String, _amt: int) -> void:
-	# Dialog de primeira coleta + agendamento de quiz
+	# Dialog de primeira coleta do elemento
 	if element_id not in _seen_elements:
 		_seen_elements.append(element_id)
 		var el       := ElementDatabase.get_element(element_id)
 		var el_name  : String = el.get("name", element_id)
 		var el_desc  : String = el.get("description", "")
 		var el_curio : String = el.get("curiosity", "")
-		_quiz_queue.append(element_id)
 		_dialog.show_dialog(ENCYCLOPEDIA,
 			"%s (%s) — %s  ★ %s" % [el_name, element_id, el_desc, el_curio])
 
@@ -132,4 +121,18 @@ func _on_enemy_died(_enemy: Node) -> void:
 
 func _on_checkpoint_reached(_checkpoint_id: String) -> void:
 	_dialog.show_dialog(ELARA,
-		"Você chegou longe, Kael. Hora de provar seus conhecimentos. Responda o quiz para continuar!")
+		"Bom trabalho, Kael! Continue avançando — algo grande te espera mais à frente...")
+
+func _on_boss_trigger_entered(_body: Node2D) -> void:
+	_boss_battle.show_battle("snail")
+	_boss_battle.battle_finished.connect(_on_boss_battle_finished, CONNECT_ONE_SHOT)
+
+func _on_boss_battle_finished(won: bool) -> void:
+	if won:
+		_dialog.queue_dialogs([
+			[ELARA, "Incrível, Kael! O NaCl — Cloreto de Sódio — dissolveu a Lesma!"],
+			[ELARA, "Sal de cozinha é fatal para lesmas porque dissolve o muco que protege o corpo delas. Química na prática!"],
+		])
+		GameState.complete_level(1)
+	else:
+		_dialog.show_dialog(ELARA, "A Lesma foi forte demais... Colete mais Na e Cl e tente de novo!")

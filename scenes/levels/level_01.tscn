@@ -10,8 +10,11 @@
 [ext_resource type="PackedScene" uid="uid://tutor001" path="res://scenes/ui/tutorial_hints.tscn" id="8_hints"]
 [ext_resource type="PackedScene" uid="uid://sbfmum45d4ay" path="res://scenes/ui/periodic_table.tscn" id="9_ptable"]
 [ext_resource type="PackedScene" uid="uid://gameover01" path="res://scenes/ui/game_over.tscn" id="10_go"]
-[ext_resource type="PackedScene" uid="uid://qui0modal01" path="res://scenes/ui/quiz_modal.tscn" id="11_quiz"]
 [ext_resource type="PackedScene" uid="uid://dys6l1fxtntiu" path="res://scenes/world/level_tilemap.tscn" id="12_tilemap"]
+[ext_resource type="PackedScene" uid="uid://bossbattle01" path="res://scenes/ui/boss_battle.tscn" id="13_boss"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_boss"]
+size = Vector2(40, 200)
 
 [node name="Level01" type="Node2D" unique_id=422643617]
 script = ExtResource("1_lvl")
@@ -112,4 +115,49 @@ immune_to = null
 
 [node name="GameOver" parent="." unique_id=805975702 instance=ExtResource("10_go")]
 
-[node name="QuizModal" parent="." unique_id=408407725 instance=ExtResource("11_quiz")]
+[node name="BossBattle" parent="." unique_id=316740001 instance=ExtResource("13_boss")]
+
+[node name="Na_01" parent="Pickups" unique_id=316740010 instance=ExtResource("3_pickup")]
+position = Vector2(1320, 358)
+element_id = "Na"
+
+[node name="Na_02" parent="Pickups" unique_id=316740012 instance=ExtResource("3_pickup")]
+position = Vector2(1355, 272)
+element_id = "Na"
+
+[node name="Na_03" parent="Pickups" unique_id=316740013 instance=ExtResource("3_pickup")]
+position = Vector2(1590, 224)
+element_id = "Na"
+
+[node name="Cl_01" parent="Pickups" unique_id=316740011 instance=ExtResource("3_pickup")]
+position = Vector2(1460, 358)
+element_id = "Cl"
+
+[node name="Cl_02" parent="Pickups" unique_id=316740014 instance=ExtResource("3_pickup")]
+position = Vector2(1385, 272)
+element_id = "Cl"
+
+[node name="Cl_03" parent="Pickups" unique_id=316740015 instance=ExtResource("3_pickup")]
+position = Vector2(1615, 224)
+element_id = "Cl"
+
+[node name="H_04" parent="Pickups" unique_id=316740016 instance=ExtResource("3_pickup")]
+position = Vector2(1250, 352)
+
+[node name="O_03" parent="Pickups" unique_id=316740017 instance=ExtResource("3_pickup")]
+position = Vector2(1275, 352)
+element_id = "O"
+
+[node name="C_01" parent="Pickups" unique_id=316740018 instance=ExtResource("3_pickup")]
+position = Vector2(1480, 352)
+element_id = "C"
+
+[node name="BossTrigger" type="Area2D" parent="." unique_id=316740020]
+position = Vector2(1700, 358)
+collision_layer = 0
+collision_mask = 1
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="BossTrigger" unique_id=316740021]
+shape = SubResource("RectangleShape2D_boss")
+
+[connection signal="body_entered" from="BossTrigger" to="." method="_on_boss_trigger_entered"]
