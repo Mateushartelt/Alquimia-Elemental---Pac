@@ -1,0 +1,34 @@
+[gd_scene format=3 uid="uid://mucuswall01"]
+
+[ext_resource type="Script" path="res://scenes/world/mucus_wall.gd" id="1_mw"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
+size = Vector2(96, 32)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_detect"]
+size = Vector2(112, 48)
+
+[node name="MucusWall" type="Node2D"]
+script = ExtResource("1_mw")
+groups=["organic_wall"]
+
+[node name="MucusBody" type="StaticBody2D" parent="."]
+collision_layer = 2
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="MucusBody"]
+position = Vector2(48, 16)
+shape = SubResource("RectangleShape2D_body")
+
+[node name="Visual" type="ColorRect" parent="."]
+z_index = 2
+size = Vector2(96, 32)
+color = Color(0.2, 0.75, 0.15, 0.92)
+
+[node name="MucusDetect" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 16
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="MucusDetect"]
+position = Vector2(48, 16)
+shape = SubResource("RectangleShape2D_detect")

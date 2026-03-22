@@ -28,9 +28,13 @@ var _cave_fog_cleared    := false
 var _cinematic_done      := false
 var _portal_hint_done    := false
 var _in_tunnel           := false
+var _mucus_hint_done     := false
 var _zoom_tween          : Tween = null
 var _cam_look_x          := 0.0
-var _portal_exploded     := false
+var _portal_exploded           := false
+var _hub_invaded               := false
+var _entered_tunnel_after_fire := false
+const SLIME_SCENE = preload("res://scenes/enemies/slime_sodio.tscn")
 
 # Tutorial state
 var _seen_elements          : Array[String] = []
@@ -40,6 +44,7 @@ var _attack_done            := false
 var _tutorial_h2o_triggered := false
 
 func _ready() -> void:
+	$HUD.visible = true
 	_make_debug_label()
 	_cam.limit_left                 = 800
 	_cam.limit_right                = 1600
@@ -53,6 +58,15 @@ func _ready() -> void:
 		_cinematic_done     = true
 		_h2o_dialog_done    = true
 		_portal_hint_done   = true
+		# Spawn próximo ao portal no túnel (não no hub)
+		player.global_position = Vector2(300, 310)
+		_in_tunnel = true
+		_cam.limit_left   = 226
+		_cam.limit_top    = -500
+		_cam.limit_bottom = 680
+		_cam.zoom         = Vector2(4, 4)
+		# Spawna inimigos no túnel para o player treinar a arma de água
+		_spawn_tutorial_enemies()
 		get_tree().create_timer(0.4).timeout.connect(func() -> void:
 			_dialog.show_dialog(ELARA,
 				"H₂O pronto! Equipe o composto (Scroll do mouse) e atire (J) na Parede de Fogo!"))
@@ -97,8 +111,13 @@ func _process(delta: float) -> void:
 		_cam.limit_top    = 80
 		_cam.limit_bottom = 400
 		_set_zoom(Vector2(3, 3), 0.5)
+		if _fire_cleared and _entered_tunnel_after_fire and not _hub_invaded:
+			_hub_invaded = true
+			_spawn_hub_invasion()
 	elif player.global_position.x <= 780.0 and not _in_tunnel:
 		_in_tunnel = true
+		if _fire_cleared:
+			_entered_tunnel_after_fire = true
 		_cam.limit_left   = 0 if _portal_exploded else 226  # para no portal até ele explodir
 		_cam.limit_top    = -500
 		_cam.limit_bottom = 680
@@ -321,12 +340,42 @@ func _run_portal_explosion() -> void:
 	player.process_mode = Node.PROCESS_MODE_INHERIT
 	_cine_end()
 
+func _spawn_tutorial_enemies() -> void:
+	for pos: Vector2 in [Vector2(450, 310), Vector2(620, 310)]:
+		var slime := SLIME_SCENE.instantiate()
+		slime.global_position = pos
+		add_child(slime)
+		slime.connect("died", _on_enemy_died)
+
+func _spawn_hub_invasion() -> void:
+	$Pickups/Hub_Na1.visible = true
+	$Pickups/Hub_Cl1.visible = true
+	$Pickups/Hub_Na2.visible = true
+	for pos: Vector2 in [Vector2(950, 330), Vector2(1100, 330), Vector2(1250, 330)]:
+		var slime := SLIME_SCENE.instantiate()
+		slime.global_position = pos
+		add_child(slime)
+		slime.connect("died", _on_enemy_died)
+	_dialog.show_dialog(ELARA,
+		"Kael! Criaturas invadiram o hub enquanto você explorava — elimine-as!")
+
 func _on_shaft_b_fog_entered(body: Node2D) -> void:
 	if _shaft_b_fog_cleared or not body.is_in_group("player"):
 		return
 	_shaft_b_fog_cleared = true
 	var tw := create_tween()
 	tw.tween_property($DarkAreas/ShaftFogB, "color", Color(0, 0, 0, 0), 0.8)
+
+func _on_mucus_hint_entered(body: Node2D) -> void:
+	if _mucus_hint_done or not body.is_in_group("player"):
+		return
+	_mucus_hint_done = true
+	_dialog.show_dialog(ELARA,
+		"Isso parece matéria orgânica resistente... Água não vai funcionar aqui. Preciso de algo mais corrosivo!")
+
+func _on_mucus_dissolved() -> void:
+	_dialog.show_dialog(ELARA,
+		"HCl corroeu o muco! Ácido clorídrico dissolve matéria orgânica — química ácida em ação!")
 
 func _on_barrier_check_entered(body: Node2D) -> void:
 	if _barrier_opened or not body.is_in_group("player"):
