@@ -3,6 +3,8 @@ extends CanvasLayer
 
 @onready var health_bar: ProgressBar = $MarginContainer/VBox/HealthBar
 @onready var health_label: Label     = $MarginContainer/VBox/HealthLabel
+@onready var _charge_bar:  ProgressBar = $MarginContainer/VBox/ChargeBar
+@onready var _charge_label: Label      = $MarginContainer/VBox/ChargeLabel
 @onready var elements_container: HBoxContainer = $ElementsContainer
 @onready var active_compound_panel: Panel = $ActiveCompound
 @onready var active_compound_label: Label = $ActiveCompound/Label
@@ -10,10 +12,12 @@ extends CanvasLayer
 
 func _ready() -> void:
 	GameState.health_changed.connect(_on_health_changed)
+	GameState.charge_changed.connect(_on_charge_changed)
 	GameState.element_collected.connect(_on_elements_changed)
 	GameState.element_consumed.connect(_on_elements_changed)
 	GameState.compound_created.connect(_on_compound_created)
 	_on_health_changed(GameState.player_health, GameState.player_max_health)
+	_on_charge_changed(GameState.charge, GameState.charge_max)
 	_update_elements()
 	_update_active_compound()
 
@@ -29,6 +33,12 @@ func _on_health_changed(current: int, maximum: int) -> void:
 		health_bar.modulate = Color(1.0, 0.7, 0.0)
 	else:
 		health_bar.modulate = Color(1.0, 0.2, 0.2)
+
+func _on_charge_changed(current: float, maximum: float) -> void:
+	_charge_bar.max_value = maximum
+	_charge_bar.value     = current
+	_charge_label.text    = "Especial: %d/%d" % [int(current), int(maximum)]
+	_charge_bar.modulate  = Color(0.4, 0.8, 1.0) if current >= maximum else Color(0.27, 0.53, 1.0)
 
 func _on_elements_changed(_id: String, _amt: int = 0) -> void:
 	_update_elements()

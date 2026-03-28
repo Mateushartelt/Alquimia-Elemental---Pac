@@ -8,9 +8,14 @@ signal element_collected(element_id: String, amount: int)
 signal element_consumed(element_id: String, amount: int)
 signal compound_created(compound_id: String)
 signal health_changed(current: int, maximum: int)
+signal charge_changed(current: float, maximum: float)
 signal player_died()
 signal checkpoint_reached(checkpoint_id: String)
 signal level_completed(level_id: int)
+
+# ── Carga do Especial ───────────────────────────────────────────────────────
+var charge: float     = 0.0
+var charge_max: float = 100.0
 
 # ── Estado do Jogador ───────────────────────────────────────────────────────
 var player_max_health: int = 100
@@ -52,6 +57,14 @@ func reset_player() -> void:
 func heal(amount: int) -> void:
 	player_health = min(player_max_health, player_health + amount)
 	health_changed.emit(player_health, player_max_health)
+
+func add_charge(amount: float) -> void:
+	charge = minf(charge + amount, charge_max)
+	charge_changed.emit(charge, charge_max)
+
+func use_charge() -> void:
+	charge = 0.0
+	charge_changed.emit(charge, charge_max)
 
 func set_max_health(new_max: int) -> void:
 	player_max_health = new_max

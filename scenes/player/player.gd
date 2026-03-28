@@ -91,6 +91,24 @@ func _handle_attack() -> void:
 	proj.global_position = attack_point.global_position
 	get_tree().current_scene.add_child(proj)
 
+func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventKey and event.physical_keycode == KEY_E \
+			and event.pressed and not event.echo:
+		_try_special()
+
+func _try_special() -> void:
+	if GameState.active_compound != "H2O":
+		return
+	if GameState.charge < GameState.charge_max:
+		return
+	var proj: Area2D = PROJECTILE_SCENE.instantiate()
+	proj.compound_id     = "H2O"
+	proj.is_special      = true
+	proj.direction       = Vector2.RIGHT if _facing_right else Vector2.LEFT
+	proj.global_position = attack_point.global_position
+	get_tree().current_scene.add_child(proj)
+	GameState.use_charge()
+
 func _update_coyote() -> void:
 	if _was_on_floor and not is_on_floor() and velocity.y >= 0.0:
 		_coyote_timer = COYOTE_TIME
