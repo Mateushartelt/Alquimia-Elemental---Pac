@@ -4,7 +4,7 @@
 [ext_resource type="PackedScene" uid="uid://player001" path="res://scenes/player/player.tscn" id="2_player"]
 [ext_resource type="PackedScene" uid="uid://pickup001" path="res://scenes/world/element_pickup.tscn" id="3_pickup"]
 [ext_resource type="PackedScene" uid="uid://hud001" path="res://scenes/ui/hud.tscn" id="4_hud"]
-[ext_resource type="PackedScene" uid="uid://slime001" path="res://scenes/enemies/slime_sodio.tscn" id="5_slime"]
+[ext_resource type="PackedScene" uid="uid://fire001" path="res://scenes/enemies/fire_spirit.tscn" id="5_fire"]
 [ext_resource type="PackedScene" uid="uid://bks7q737ly4iu" path="res://scenes/ui/alchemy_panel.tscn" id="6_alchemy"]
 [ext_resource type="PackedScene" uid="uid://dialogbox001" path="res://scenes/ui/dialog_box.tscn" id="7_dialog"]
 [ext_resource type="PackedScene" uid="uid://tutor001" path="res://scenes/ui/tutorial_hints.tscn" id="8_hints"]
@@ -167,71 +167,23 @@ element_id = "Cl"
 
 [node name="Enemies" type="Node2D" parent="." unique_id=1967385426]
 
-[node name="Slime01" parent="Enemies" unique_id=400000030 instance=ExtResource("5_slime")]
+[node name="Fire01" parent="Enemies" unique_id=400000030 instance=ExtResource("5_fire")]
 position = Vector2(1820, 330)
-max_health = null
-move_speed = null
-patrol_range = null
-damage_on_touch = null
-element_drop = null
-drop_amount = null
-weak_to = null
-immune_to = null
 
-[node name="Slime02" parent="Enemies" unique_id=400000031 instance=ExtResource("5_slime")]
+[node name="Fire02" parent="Enemies" unique_id=400000031 instance=ExtResource("5_fire")]
 position = Vector2(1960, 330)
-max_health = null
-move_speed = null
-patrol_range = null
-damage_on_touch = null
-element_drop = null
-drop_amount = null
-weak_to = null
-immune_to = null
 
-[node name="Slime03" parent="Enemies" unique_id=400000032 instance=ExtResource("5_slime")]
+[node name="Fire03" parent="Enemies" unique_id=400000032 instance=ExtResource("5_fire")]
 position = Vector2(2200, 330)
-max_health = null
-move_speed = null
-patrol_range = null
-damage_on_touch = null
-element_drop = null
-drop_amount = null
-weak_to = null
-immune_to = null
 
-[node name="Slime04" parent="Enemies" unique_id=400000033 instance=ExtResource("5_slime")]
+[node name="Fire04" parent="Enemies" unique_id=400000033 instance=ExtResource("5_fire")]
 position = Vector2(2000, 330)
-max_health = null
-move_speed = null
-patrol_range = null
-damage_on_touch = null
-element_drop = null
-drop_amount = null
-weak_to = null
-immune_to = null
 
-[node name="Slime05" parent="Enemies" unique_id=400000034 instance=ExtResource("5_slime")]
+[node name="Fire05" parent="Enemies" unique_id=400000034 instance=ExtResource("5_fire")]
 position = Vector2(2600, 330)
-max_health = null
-move_speed = null
-patrol_range = null
-damage_on_touch = null
-element_drop = null
-drop_amount = null
-weak_to = null
-immune_to = null
 
-[node name="Slime06" parent="Enemies" unique_id=400000035 instance=ExtResource("5_slime")]
+[node name="Fire06" parent="Enemies" unique_id=400000035 instance=ExtResource("5_fire")]
 position = Vector2(1200, 600)
-max_health = null
-move_speed = null
-patrol_range = null
-damage_on_touch = null
-element_drop = null
-drop_amount = null
-weak_to = null
-immune_to = null
 
 [node name="DoorIn" type="Area2D" parent="." unique_id=500000010]
 position = Vector2(250, 328)
