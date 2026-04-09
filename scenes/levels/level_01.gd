@@ -36,6 +36,15 @@ var _hub_invaded               := false
 var _entered_tunnel_after_fire := false
 const SLIME_SCENE = preload("res://scenes/enemies/slime_sodio.tscn")
 
+# Fire propagation
+const FIRE_SPREAD_INTERVAL := 3.5    # segundos entre cada avanço do fogo
+const FIRE_STOP_X          := 450.0  # não passa do portal
+const FIRE_SEG_W           := 48     # largura de cada segmento (px)
+var _fire_timer       : float = 0.0
+var _fire_next_x      : float = 1400.0 - FIRE_SEG_W
+var _fire_segments    : Array = []
+var _fire_alert_shown := false
+
 # Tutorial state
 var _seen_elements          : Array[String] = []
 var _moved_done             := false
@@ -92,8 +101,20 @@ func _make_debug_label() -> void:
 
 func _process(delta: float) -> void:
 	_debug_zoom.text = "zoom: %.0f  %s" % [_cam.zoom.x, "TUNEL" if _in_tunnel else "HUB"]
+	# Pulso suave nos segmentos de fogo (roda mesmo pausado)
+	var t := Time.get_ticks_msec() * 0.001
+	for seg in _fire_segments:
+		if is_instance_valid(seg):
+			var ph := float(seg.get_meta("phase", 0.0))
+			seg.modulate.a = 0.85 + sin(t * 2.5 + ph) * 0.15
 	if get_tree().paused:
 		return
+	# Propagação do fogo
+	if not _fire_cleared:
+		_fire_timer += delta
+		if _fire_timer >= FIRE_SPREAD_INTERVAL and _fire_next_x > FIRE_STOP_X:
+			_fire_timer = 0.0
+			_spawn_fire_segment()
 	if not _respawning and player.global_position.y > KILL_PLANE_Y:
 		_respawn()
 	if not _moved_done and abs(player.velocity.x) > 5.0:
@@ -190,7 +211,11 @@ func _run_opening_cinematic() -> void:
 	var tw := create_tween()
 	tw.set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
 	tw.tween_property(_cam, "offset", Vector2(offset_to_fire, -20), 2.0)
-	tw.tween_interval(1.5)
+	tw.tween_interval(0.30)
+	tw.tween_callback(_spawn_fire_segment)   # jogador VÊ o fogo crescer
+	tw.tween_interval(0.65)
+	tw.tween_callback(_spawn_fire_segment)   # e mais uma vez
+	tw.tween_interval(0.55)
 	tw.tween_property(_cam, "offset", Vector2(0, -20), 2.0)
 	await tw.finished
 
@@ -287,6 +312,10 @@ func _on_door_in_entered(body: Node2D) -> void:
 
 func _on_fire_extinguished() -> void:
 	_fire_cleared = true
+	for seg in _fire_segments:
+		if is_instance_valid(seg):
+			seg.queue_free()
+	_fire_segments.clear()
 	# Não toca no zoom nem em _in_tunnel — _process continua gerindo as transições
 	_dialog.queue_dialogs([
 		[ELARA, "Excelente! H₂O absorveu o calor e extinguiu o fogo — reação endotérmica!"],
@@ -340,6 +369,58 @@ func _run_portal_explosion() -> void:
 	process_mode        = Node.PROCESS_MODE_INHERIT
 	player.process_mode = Node.PROCESS_MODE_INHERIT
 	_cine_end()
+
+func _spawn_fire_segment() -> void:
+	var seg := Node2D.new()
+	seg.set_meta("phase", randf() * TAU)
+	seg.add_child(_create_fire_particles(FIRE_SEG_W))
+
+	var area := Area2D.new()
+	area.collision_layer = 32
+	area.collision_mask  = 1
+	var cs := CollisionShape2D.new()
+	var rs := RectangleShape2D.new()
+	rs.size     = Vector2(FIRE_SEG_W, 256)
+	cs.position = Vector2(FIRE_SEG_W / 2.0, 128)
+	cs.shape    = rs
+	area.add_child(cs)
+	seg.add_child(area)
+	area.body_entered.connect(func(body: Node) -> void:
+		if body.has_method("receive_damage"):
+			body.receive_damage(20))
+
+	seg.position = Vector2(_fire_next_x, 112)
+	add_child(seg)
+	_fire_segments.append(seg)
+	_fire_next_x -= FIRE_SEG_W
+
+	if not _fire_alert_shown and not get_tree().paused:
+		_fire_alert_shown = true
+		_dialog.show_dialog(ELARA, "O fogo está se espalhando! Corra!")
+
+func _create_fire_particles(w: int) -> CPUParticles2D:
+	var p := CPUParticles2D.new()
+	p.emitting              = true
+	p.amount                = 50
+	p.lifetime              = 1.5
+	p.randomness            = 0.5
+	p.preprocess            = 1.0
+	p.local_coords          = true
+	p.emission_shape        = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
+	p.emission_rect_extents = Vector2(float(w) * 0.5, 3.0)
+	p.position              = Vector2(float(w) * 0.5, 256.0)
+	p.direction             = Vector2(0.0, -1.0)
+	p.spread                = 22.0
+	p.gravity               = Vector2(0.0, 0.0)
+	p.initial_velocity_min  = 80.0
+	p.initial_velocity_max  = 180.0
+	p.scale_amount_min      = 3.0
+	p.scale_amount_max      = 7.0
+	var grad := Gradient.new()
+	grad.set_color(0, Color(1.0, 0.85, 0.1, 1.0))
+	grad.set_color(1, Color(0.75, 0.05, 0.0, 0.0))
+	p.color_ramp = grad
+	return p
 
 func _spawn_tutorial_enemies() -> void:
 	for pos: Vector2 in [Vector2(450, 310), Vector2(620, 310)]:
