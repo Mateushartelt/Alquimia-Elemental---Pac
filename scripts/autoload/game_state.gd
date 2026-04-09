@@ -38,6 +38,9 @@ var active_compound: String = ""
 # ── Habilidades Desbloqueadas ───────────────────────────────────────────────
 var unlocked_abilities: Array[String] = []   # ex: ["double_jump", "dash"]
 
+# ── Estado do Fogo (Level 01) ────────────────────────────────────────────────
+var fire_next_x: float = -1.0  # -1 = fogo ainda não iniciou
+
 # ══════════════════════════════════════════════════════════════════════════════
 #  Saúde
 # ══════════════════════════════════════════════════════════════════════════════

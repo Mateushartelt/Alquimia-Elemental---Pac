@@ -76,6 +76,12 @@ func _ready() -> void:
 		_cam.zoom         = Vector2(4, 4)
 		# Spawna inimigos no túnel para o player treinar a arma de água
 		_spawn_tutorial_enemies()
+		# Restaurar segmentos de fogo que existiam antes de ir ao módulo de síntese
+		if GameState.fire_next_x >= 0.0:
+			_fire_alert_shown = true  # suprime dialog de alerta
+			var target_x := GameState.fire_next_x
+			while _fire_next_x > target_x:
+				_spawn_fire_segment()
 		get_tree().create_timer(0.4).timeout.connect(func() -> void:
 			_dialog.show_dialog(ELARA,
 				"H₂O pronto! Equipe o composto (Scroll do mouse) e atire (J) na Parede de Fogo!"))
@@ -312,6 +318,7 @@ func _on_door_in_entered(body: Node2D) -> void:
 
 func _on_fire_extinguished() -> void:
 	_fire_cleared = true
+	GameState.fire_next_x = -1.0  # fogo extinto, não restaurar na próxima visita
 	for seg in _fire_segments:
 		if is_instance_valid(seg):
 			seg.queue_free()
@@ -377,7 +384,7 @@ func _spawn_fire_segment() -> void:
 
 	var area := Area2D.new()
 	area.collision_layer = 32
-	area.collision_mask  = 1
+	area.collision_mask  = 1 | 16  # player + projectiles
 	var cs := CollisionShape2D.new()
 	var rs := RectangleShape2D.new()
 	rs.size     = Vector2(FIRE_SEG_W, 256)
@@ -388,15 +395,33 @@ func _spawn_fire_segment() -> void:
 	area.body_entered.connect(func(body: Node) -> void:
 		if body.has_method("receive_damage"):
 			body.receive_damage(20))
+	area.area_entered.connect(func(proj_area: Area2D) -> void:
+		if proj_area.get("compound_id") == "H2O":
+			_extinguish_segment(seg)
+			proj_area.queue_free())
 
 	seg.position = Vector2(_fire_next_x, 112)
 	add_child(seg)
 	_fire_segments.append(seg)
 	_fire_next_x -= FIRE_SEG_W
+	GameState.fire_next_x = _fire_next_x  # persiste para sobreviver à troca de cena
 
 	if not _fire_alert_shown and not get_tree().paused:
 		_fire_alert_shown = true
 		_dialog.show_dialog(ELARA, "O fogo está se espalhando! Corra!")
+
+func _extinguish_segment(seg: Node2D) -> void:
+	if not is_instance_valid(seg):
+		return
+	_fire_segments.erase(seg)
+	for child in seg.get_children():
+		if child is Area2D:
+			for cs2 in child.get_children():
+				if cs2 is CollisionShape2D:
+					cs2.set_deferred("disabled", true)
+	var tw := seg.create_tween()
+	tw.tween_property(seg, "modulate", Color(1.0, 1.0, 1.0, 0.0), 0.5)
+	tw.tween_callback(seg.queue_free)
 
 func _create_fire_particles(w: int) -> CPUParticles2D:
 	var p := CPUParticles2D.new()
