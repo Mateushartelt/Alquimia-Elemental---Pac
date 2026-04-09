@@ -50,15 +50,14 @@ func _add_strip(frames: SpriteFrames, anim: String, file: String,
 		atlas.region = Rect2(i * fh, 0, fh, fh)
 		frames.add_frame(anim, atlas)
 
-## Chase persegue o player diretamente (base usa _patrol que só patrulha)
-func _chase(delta: float) -> void:
+## Chase persegue o player diretamente com velocidade dobrada
+func _chase(_delta: float) -> void:
 	var players := get_tree().get_nodes_in_group("player")
 	if players.is_empty():
-		super._chase(delta)
 		return
-	var p: Node = players[0]
+	var p: Node2D = players[0]
 	facing_right = p.global_position.x > global_position.x
-	velocity.x   = move_speed * (1.0 if facing_right else -1.0)
+	velocity.x   = move_speed * 2.0 * (1.0 if facing_right else -1.0)
 
 func _physics_process(delta: float) -> void:
 	if _exploding:
