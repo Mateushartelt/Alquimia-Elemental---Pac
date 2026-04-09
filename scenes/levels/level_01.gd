@@ -239,6 +239,7 @@ func _on_element_first_collected(element_id: String, _amt: int) -> void:
 		var o : int = GameState.collected_elements.get("O", 0)
 		if h >= 2 and o >= 1:
 			_tutorial_h2o_triggered = true
+			_hints.show_hint("Pressione  Q  para abrir o Painel de Alquimia!")
 			_dialog.show_dialog(ELARA,
 				"Kael! Você tem H×2 e O×1 — ingredientes da ÁGUA (H₂O)! Abra o Painel de Alquimia para misturá-los!")
 

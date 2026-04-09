@@ -48,6 +48,7 @@ func _on_element_collected(element_id: String, _amt: int) -> void:
 		var o : int = GameState.collected_elements.get("O", 0)
 		if h >= 2 and o >= 1:
 			_tutorial_h2o_triggered = true
+			_hints.show_hint("Pressione  Q  para abrir o Painel de Alquimia!")
 			_dialog.show_dialog(ELARA,
 				"Você tem H×2 e O×1 — os ingredientes da ÁGUA (H₂O)! Abra o Painel de Alquimia (Q) para combiná-los!")
 
@@ -55,7 +56,6 @@ func _on_dialog_closed() -> void:
 	if _tutorial_h2o_triggered and not _alchemy_done:
 		_alchemy.tutorial_unlock = true
 		_hints.show_hint("Q — Abrir o Painel de Alquimia e misture seus elementos!")
-		get_tree().paused = true
 
 func _on_alchemy_open() -> void:
 	_alchemy_done = true

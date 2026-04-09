@@ -41,9 +41,9 @@ const TILES: Array = [
 	[110, 10,  65,  2],  # teto cor esq  col110-175 x:1760-2800 (gap shaft B)
 	[181, 10,  19,  2],  # teto cor dir  col181-200 x:2896-3200
 	[110, 23,  35,  2],  # chão cor esq  col110-145 x:1760-2320
-	# gap drop B: col145-150 (x:2320-2400, 80px)
+	[145, 23,   5,  2],  # fill drop B   col145-150 x:2320-2400 (FECHADO para demo)
 	[150, 23,  25,  2],  # chão cor mid  col150-175 x:2400-2800
-	# gap drop C: col175-180 (x:2800-2880, 80px)
+	[175, 23,   5,  2],  # fill drop C   col175-180 x:2800-2880 (FECHADO para demo)
 	[180, 23,  20,  2],  # chão cor dir  col180-200 x:2880-3200
 	[200, 10,   1,  16], # parede dir total  col200
 	[115, 16,  20,  1],  # plat cor A    x:1840-2160 y=256 (Na, Cl)
