@@ -166,6 +166,13 @@ func _process(delta: float) -> void:
 					for body in area.get_overlapping_bodies():
 						if body.is_in_group("player"):
 							GameState.take_damage(_fire_damage())
+	# Ativa inimigos por proximidade após o fogo ser apagado
+	if _fire_cleared:
+		for enemy in $Enemies.get_children():
+			if not enemy.visible and is_instance_valid(enemy):
+				if enemy.global_position.distance_to(player.global_position) < 300.0:
+					enemy.visible = true
+					enemy.process_mode = Node.PROCESS_MODE_INHERIT
 	if not _respawning and player.global_position.y > KILL_PLANE_Y:
 		_respawn()
 	if not _moved_done and abs(player.velocity.x) > 5.0:
@@ -374,6 +381,9 @@ func _on_fire_extinguished() -> void:
 			seg.queue_free()
 	_fire_segments.clear()
 	_fire_occupied.clear()
+	# Revela todos os pickups do corredor
+	for pickup in $Pickups.get_children():
+		pickup.visible = true
 	# Não toca no zoom nem em _in_tunnel — _process continua gerindo as transições
 	_dialog.queue_dialogs([
 		[ELARA, "Excelente! H₂O absorveu o calor e extinguiu o fogo — reação endotérmica!"],

@@ -9,6 +9,9 @@ const BOSSES: Dictionary = {
 	"snail": {
 		"name":        "Lesma Gigante",
 		"color":       Color(0.18, 0.55, 0.12),
+		"sprite":      "res://scenes/enemies/assets/snail/idle snail.jpg",
+		"sprite_cols": 4,
+		"sprite_rows": 2,
 		"max_hp":      6,
 		"attack_dmg":  15,
 		"intro":       "Uma enorme Lesma Gigante bloqueia o caminho!",
@@ -64,7 +67,9 @@ const BOSSES: Dictionary = {
 # ── UI refs ────────────────────────────────────────────────────────────────────
 var _boss_hp_bar     : ProgressBar
 var _player_hp_bar   : ProgressBar
-var _boss_sprite     : ColorRect
+var _boss_sprite       : Control   # TextureRect se tiver sprite, ColorRect se não
+var _boss_anim_frames  : Array[AtlasTexture] = []
+var _boss_anim_idx     : int = 0
 var _boss_name_lbl   : Label
 var _dialog_lbl      : Label
 var _compound_row    : HBoxContainer   # botões dos compostos disponíveis
@@ -120,30 +125,13 @@ func _build_ui() -> void:
 	hp_row.add_theme_constant_override("separation", 40)
 	top_mc.add_child(hp_row)
 
-	var boss_vb := VBoxContainer.new()
-	boss_vb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	hp_row.add_child(boss_vb)
-
-	_boss_name_lbl = Label.new()
-	_boss_name_lbl.add_theme_font_size_override("font_size", 22)
-	_boss_name_lbl.add_theme_color_override("font_color", Color(1.0, 0.45, 0.2))
-	boss_vb.add_child(_boss_name_lbl)
-
-	_boss_hp_bar = ProgressBar.new()
-	_boss_hp_bar.custom_minimum_size = Vector2(0, 20)
-	_boss_hp_bar.show_percentage = false
-	var boss_fill := StyleBoxFlat.new()
-	boss_fill.bg_color = Color(0.85, 0.2, 0.1)
-	_boss_hp_bar.add_theme_stylebox_override("fill", boss_fill)
-	boss_vb.add_child(_boss_hp_bar)
-
+	# Kael (esquerda) — corresponde ao sprite do player no campo (bottom-left)
 	var player_vb := VBoxContainer.new()
 	player_vb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	hp_row.add_child(player_vb)
 
 	var player_name_lbl := Label.new()
 	player_name_lbl.text = "Kael"
-	player_name_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	player_name_lbl.add_theme_font_size_override("font_size", 22)
 	player_name_lbl.add_theme_color_override("font_color", Color(0.4, 0.8, 1.0))
 	player_vb.add_child(player_name_lbl)
@@ -155,6 +143,25 @@ func _build_ui() -> void:
 	player_fill.bg_color = Color(0.2, 0.75, 0.25)
 	_player_hp_bar.add_theme_stylebox_override("fill", player_fill)
 	player_vb.add_child(_player_hp_bar)
+
+	# Boss (direita) — corresponde ao sprite do boss no campo (top-right)
+	var boss_vb := VBoxContainer.new()
+	boss_vb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hp_row.add_child(boss_vb)
+
+	_boss_name_lbl = Label.new()
+	_boss_name_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_boss_name_lbl.add_theme_font_size_override("font_size", 22)
+	_boss_name_lbl.add_theme_color_override("font_color", Color(1.0, 0.45, 0.2))
+	boss_vb.add_child(_boss_name_lbl)
+
+	_boss_hp_bar = ProgressBar.new()
+	_boss_hp_bar.custom_minimum_size = Vector2(0, 20)
+	_boss_hp_bar.show_percentage = false
+	var boss_fill := StyleBoxFlat.new()
+	boss_fill.bg_color = Color(0.85, 0.2, 0.1)
+	_boss_hp_bar.add_theme_stylebox_override("fill", boss_fill)
+	boss_vb.add_child(_boss_hp_bar)
 
 	# ─ Campo de batalha ───────────────────────────────────────────────────────
 	var field := HBoxContainer.new()
@@ -191,13 +198,17 @@ func _build_ui() -> void:
 	boss_side.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	field.add_child(boss_side)
 
-	_boss_sprite = ColorRect.new()
-	_boss_sprite.set_anchors_preset(Control.PRESET_TOP_RIGHT)
-	_boss_sprite.offset_left   = -320
-	_boss_sprite.offset_right  = -60
-	_boss_sprite.offset_top    = 10
-	_boss_sprite.offset_bottom = 210
-	boss_side.add_child(_boss_sprite)
+	var tr := TextureRect.new()
+	tr.name = "BossSprite"
+	tr.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	tr.offset_left   = -320
+	tr.offset_right  = -60
+	tr.offset_top    = 10
+	tr.offset_bottom = 210
+	tr.stretch_mode  = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	tr.expand_mode   = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+	boss_side.add_child(tr)
+	_boss_sprite = tr
 
 	# ─ Caixa de diálogo ───────────────────────────────────────────────────────
 	var dialog_bg := ColorRect.new()
@@ -442,7 +453,14 @@ func show_battle(boss_id: String) -> void:
 	_player_hp_bar.value     = GameState.player_health
 
 	_boss_name_lbl.text = _boss_data["name"]
-	_boss_sprite.color  = _boss_data["color"]
+	# Carrega sprite do boss (ou usa cor de fallback)
+	var sprite_path: String = _boss_data.get("sprite", "")
+	if sprite_path != "" and ResourceLoader.exists(sprite_path):
+		_start_boss_animation(sprite_path,
+			int(_boss_data.get("sprite_cols", 1)),
+			int(_boss_data.get("sprite_rows", 1)))
+	else:
+		(_boss_sprite as TextureRect).modulate = _boss_data.get("color", Color.WHITE)
 
 	# Atualiza texto de dica no popup
 	_hint_text_lbl.text = _boss_data.get("hint_detail", _boss_data.get("hint", ""))
@@ -766,6 +784,30 @@ func _end_battle(won: bool) -> void:
 	get_tree().paused = false
 	visible = false
 	battle_finished.emit(won)
+
+func _start_boss_animation(path: String, cols: int, rows: int) -> void:
+	var tex: Texture2D = load(path)
+	var fw: float = tex.get_width()  / float(cols)
+	var fh: float = tex.get_height() / float(rows)
+	_boss_anim_frames.clear()
+	for row in rows:
+		for col in cols:
+			var at := AtlasTexture.new()
+			at.atlas  = tex
+			at.region = Rect2(col * fw, row * fh, fw, fh)
+			_boss_anim_frames.append(at)
+	(_boss_sprite as TextureRect).texture = _boss_anim_frames[0]
+	var t := Timer.new()
+	t.wait_time = 0.18
+	t.autostart = true
+	t.timeout.connect(_next_boss_frame)
+	add_child(t)
+
+func _next_boss_frame() -> void:
+	if _boss_anim_frames.is_empty() or not is_instance_valid(_boss_sprite):
+		return
+	_boss_anim_idx = (_boss_anim_idx + 1) % _boss_anim_frames.size()
+	(_boss_sprite as TextureRect).texture = _boss_anim_frames[_boss_anim_idx]
 
 func _set_dialog(text: String) -> void:
 	_dialog_lbl.text = text

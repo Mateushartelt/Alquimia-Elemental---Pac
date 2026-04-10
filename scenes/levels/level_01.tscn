@@ -91,90 +91,119 @@ element_id = "Na"
 
 [node name="Rwd_Cl1" parent="Pickups" unique_id=400000028 instance=ExtResource("3_pickup")]
 position = Vector2(1520, 300)
+visible = false
 element_id = "Cl"
 
 [node name="Rwd_H1" parent="Pickups" unique_id=400000029 instance=ExtResource("3_pickup")]
 position = Vector2(1620, 300)
+visible = false
 element_id = "H"
 
 [node name="Cor_Na1" parent="Pickups" unique_id=400000007 instance=ExtResource("3_pickup")]
 position = Vector2(1900, 226)
+visible = false
 element_id = "Na"
 
 [node name="Cor_Cl1" parent="Pickups" unique_id=400000008 instance=ExtResource("3_pickup")]
 position = Vector2(2050, 226)
+visible = false
 element_id = "Cl"
 
 [node name="Cor_Na2" parent="Pickups" unique_id=400000009 instance=ExtResource("3_pickup")]
 position = Vector2(2530, 226)
+visible = false
 element_id = "Na"
 
 [node name="Cor_C1" parent="Pickups" unique_id=400000010 instance=ExtResource("3_pickup")]
 position = Vector2(2680, 226)
+visible = false
 element_id = "C"
 
 [node name="Cor_Cl2" parent="Pickups" unique_id=400000011 instance=ExtResource("3_pickup")]
 position = Vector2(2200, 340)
+visible = false
 element_id = "Cl"
 
 [node name="Alta_H1" parent="Pickups" unique_id=400000012 instance=ExtResource("3_pickup")]
 position = Vector2(1330, -262)
+visible = false
 
 [node name="Alta_O1" parent="Pickups" unique_id=400000013 instance=ExtResource("3_pickup")]
 position = Vector2(1920, -262)
+visible = false
 element_id = "O"
 
 [node name="Sec_Na1" parent="Pickups" unique_id=400000014 instance=ExtResource("3_pickup")]
 position = Vector2(2960, -370)
+visible = false
 element_id = "Na"
 
 [node name="Sec_Cl1" parent="Pickups" unique_id=400000015 instance=ExtResource("3_pickup")]
 position = Vector2(3100, -370)
+visible = false
 element_id = "Cl"
 
 [node name="UG_Na1" parent="Pickups" unique_id=400000016 instance=ExtResource("3_pickup")]
 position = Vector2(500, 540)
+visible = false
 element_id = "Na"
 
 [node name="UG_Cl1" parent="Pickups" unique_id=400000017 instance=ExtResource("3_pickup")]
 position = Vector2(700, 520)
+visible = false
 element_id = "Cl"
 
 [node name="UG_Na2" parent="Pickups" unique_id=400000018 instance=ExtResource("3_pickup")]
 position = Vector2(1300, 550)
+visible = false
 element_id = "Na"
 
 [node name="UG_Cl2" parent="Pickups" unique_id=400000019 instance=ExtResource("3_pickup")]
 position = Vector2(1500, 510)
+visible = false
 element_id = "Cl"
 
 [node name="UG_Na3" parent="Pickups" unique_id=400000020 instance=ExtResource("3_pickup")]
 position = Vector2(2450, 540)
+visible = false
 element_id = "Na"
 
 [node name="UG_Cl3" parent="Pickups" unique_id=400000021 instance=ExtResource("3_pickup")]
 position = Vector2(2650, 520)
+visible = false
 element_id = "Cl"
 
 [node name="Enemies" type="Node2D" parent="." unique_id=1967385426]
 
 [node name="Fire01" parent="Enemies" unique_id=400000030 instance=ExtResource("5_fire")]
 position = Vector2(1820, 330)
+visible = false
+process_mode = 4
 
 [node name="Fire02" parent="Enemies" unique_id=400000031 instance=ExtResource("5_fire")]
 position = Vector2(1960, 330)
+visible = false
+process_mode = 4
 
 [node name="Fire03" parent="Enemies" unique_id=400000032 instance=ExtResource("5_fire")]
 position = Vector2(2200, 330)
+visible = false
+process_mode = 4
 
 [node name="Fire04" parent="Enemies" unique_id=400000033 instance=ExtResource("5_fire")]
 position = Vector2(2000, 330)
+visible = false
+process_mode = 4
 
 [node name="Fire05" parent="Enemies" unique_id=400000034 instance=ExtResource("5_fire")]
 position = Vector2(2600, 330)
+visible = false
+process_mode = 4
 
 [node name="Fire06" parent="Enemies" unique_id=400000035 instance=ExtResource("5_fire")]
 position = Vector2(1200, 600)
+visible = false
+process_mode = 4
 
 [node name="DoorIn" type="Area2D" parent="." unique_id=500000010]
 position = Vector2(250, 328)
@@ -184,6 +213,21 @@ collision_layer = 0
 shape = SubResource("RectangleShape2D_door_in")
 
 [node name="DoorVisual" type="ColorRect" parent="DoorIn" unique_id=500000012]
+z_index = 2
+offset_left = -8.0
+offset_top = -40.0
+offset_right = 8.0
+offset_bottom = 40.0
+color = Color(0.3, 0.8, 1, 0.7)
+
+[node name="DoorBoss" type="Area2D" parent="." unique_id=500000020]
+position = Vector2(3150, 328)
+collision_layer = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DoorBoss" unique_id=500000021]
+shape = SubResource("RectangleShape2D_door_in")
+
+[node name="DoorVisual" type="ColorRect" parent="DoorBoss" unique_id=500000022]
 z_index = 2
 offset_left = -8.0
 offset_top = -40.0
@@ -283,6 +327,7 @@ visible = false
 visible = false
 
 [connection signal="body_entered" from="DoorIn" to="." method="_on_door_in_entered"]
+[connection signal="body_entered" from="DoorBoss" to="." method="_on_boss_trigger_entered"]
 [connection signal="body_entered" from="DarkAreas/ShaftFogDetect" to="." method="_on_shaft_fog_entered"]
 [connection signal="body_entered" from="DarkAreas/ShaftFogBDetect" to="." method="_on_shaft_b_fog_entered"]
 [connection signal="body_entered" from="DarkAreas/CaveFogDetect" to="." method="_on_cave_fog_entered"]
