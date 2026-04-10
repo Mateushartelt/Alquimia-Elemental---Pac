@@ -30,6 +30,9 @@ var _kill_count: int = 0
 @onready var active_compound_icon: ColorRect = $ActiveCompound/Icon
 
 func _ready() -> void:
+	var player := get_tree().get_first_node_in_group("player")
+	if player:
+		player.attacked.connect(_on_player_attacked)
 	GameState.health_changed.connect(_on_health_changed)
 	GameState.charge_changed.connect(_on_charge_changed)
 	GameState.element_collected.connect(_on_elements_changed)
@@ -119,6 +122,13 @@ func _update_active_compound() -> void:
 	var recipe := ElementDatabase.get_recipe(cid)
 	active_compound_label.text = recipe.get("formula", cid)
 	active_compound_icon.color = Color(recipe.get("projectile_color", "#ffffff"))
+
+func _on_player_attacked(_compound_id: String, _dir: Vector2, _origin: Vector2) -> void:
+	if not active_compound_panel.visible:
+		return
+	var tw := create_tween()
+	tw.tween_property(active_compound_panel, "modulate", Color(0.3, 0.3, 0.3), 0.05)
+	tw.tween_property(active_compound_panel, "modulate", Color.WHITE, 0.55)
 
 func _flash_active() -> void:
 	var tween := create_tween()

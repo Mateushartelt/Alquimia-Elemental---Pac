@@ -14,6 +14,7 @@ const HURT_DURATION   := 0.5
 const WALL_SLIDE_SPEED := 50.0
 const WALL_JUMP_VX     := 140.0
 const WALL_JUMP_VY     := -300.0
+const ATTACK_COOLDOWN  := 0.6
 
 const PROJECTILE_SCENE := preload("res://scenes/player/projectile.tscn")
 
@@ -27,6 +28,7 @@ var _facing_right    : bool    = true
 var _invincible_timer: float   = 0.0
 var _hurt_timer      : float   = 0.0
 var _wall_normal     : Vector2 = Vector2.ZERO
+var _attack_cooldown : float   = 0.0
 var input_locked     : bool    = false
 
 @onready var attack_point : Marker2D       = $AttackPoint
@@ -91,6 +93,8 @@ func _handle_attack() -> void:
 		return
 	if not Input.is_action_just_pressed("attack"):
 		return
+	if _attack_cooldown > 0.0:
+		return
 	if GameState.active_compound == "":
 		return
 	var proj: Area2D = PROJECTILE_SCENE.instantiate()
@@ -98,6 +102,8 @@ func _handle_attack() -> void:
 	proj.direction       = Vector2.RIGHT if _facing_right else Vector2.LEFT
 	proj.global_position = attack_point.global_position
 	get_tree().current_scene.add_child(proj)
+	_attack_cooldown = ATTACK_COOLDOWN
+	attacked.emit(GameState.active_compound, proj.direction, attack_point.global_position)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.physical_keycode == KEY_E \
@@ -123,9 +129,10 @@ func _update_coyote() -> void:
 	_was_on_floor = is_on_floor()
 
 func _tick_timers(delta: float) -> void:
-	_coyote_timer = maxf(0.0, _coyote_timer - delta)
-	_jump_buffer  = maxf(0.0, _jump_buffer  - delta)
-	_hurt_timer   = maxf(0.0, _hurt_timer   - delta)
+	_coyote_timer    = maxf(0.0, _coyote_timer    - delta)
+	_jump_buffer     = maxf(0.0, _jump_buffer     - delta)
+	_hurt_timer      = maxf(0.0, _hurt_timer      - delta)
+	_attack_cooldown = maxf(0.0, _attack_cooldown - delta)
 
 func _update_state() -> void:
 	if _state == State.DEAD:
