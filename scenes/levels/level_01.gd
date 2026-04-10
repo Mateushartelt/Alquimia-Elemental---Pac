@@ -11,7 +11,6 @@ const ENCYCLOPEDIA := "Enciclopédia"
 @onready var _hints        : TutorialHints = $TutorialHints
 @onready var _alchemy      : AlchemyPanel  = $AlchemyPanel
 @onready var _boss_battle  : BossBattle    = $BossBattle
-@onready var _barrier_wall : StaticBody2D  = $BarrierWall
 @onready var _fire_wall    : Node2D        = $FireWall
 @onready var _door_in      : Area2D        = $DoorIn
 @onready var _cam          : Camera2D      = $Player/Camera2D
@@ -19,7 +18,6 @@ const ENCYCLOPEDIA := "Enciclopédia"
 var _respawning             := false
 var _h2o_dialog_done   := false
 var _enemy_dialog_done := false
-var _barrier_opened    := false
 var _fire_cleared        := false
 var _came_from_tutorial  := false
 var _shaft_fog_cleared   := false
@@ -28,7 +26,6 @@ var _cave_fog_cleared    := false
 var _cinematic_done      := false
 var _portal_hint_done    := false
 var _in_tunnel           := false
-var _mucus_hint_done     := false
 var _zoom_tween          : Tween = null
 var _cam_look_x          := 0.0
 var _portal_exploded           := false
@@ -39,12 +36,15 @@ const SLIME_SCENE = preload("res://scenes/enemies/slime_sodio.tscn")
 # Fire propagation
 const FIRE_SPREAD_INTERVAL := 3.5    # segundos entre cada avanço do fogo
 const FIRE_STOP_X          := 450.0  # não passa do portal
-const FIRE_SEG_W           := 48     # largura de cada segmento (px)
+const FIRE_SEG_W           := 48
+const FIRE_ORIGIN_X        := 1352.0   # = 1400 - FIRE_SEG_W
 var _fire_timer       : float = 0.0
 var _fire_dmg_timer   : float = 0.0
-var _fire_next_x      : float = 1400.0 - FIRE_SEG_W
+var _fire_next_x      : float = FIRE_ORIGIN_X   # fronteira esquerda
+var _fire_right_x     : float = FIRE_ORIGIN_X   # fronteira direita
 var _fire_segments    : Array = []
-var _fire_alert_shown := false
+var _fire_alert_shown    := false
+var _player_fire_count   : int = 0
 
 # Tutorial state
 var _seen_elements          : Array[String] = []
@@ -57,7 +57,7 @@ func _ready() -> void:
 	$HUD.visible = true
 	_make_debug_label()
 	_cam.limit_left                 = 800
-	_cam.limit_right                = 1600
+	_cam.limit_right                = 3200
 	_cam.limit_top                  = 80
 	_cam.limit_bottom               = 400
 	_cam.zoom                       = Vector2(3, 3)
@@ -121,9 +121,13 @@ func _process(delta: float) -> void:
 		_fire_timer += delta
 		if _fire_timer >= FIRE_SPREAD_INTERVAL and _fire_next_x > FIRE_STOP_X:
 			_fire_timer = 0.0
-			_spawn_fire_segment()
+			_spawn_fire_segment()           # expande esquerda
+			_fire_right_x += FIRE_SEG_W
+			_spawn_fire_segment(_fire_right_x)  # expande direita
 		_fire_dmg_timer += delta
-		if _fire_dmg_timer >= 1.35:
+		if _player_fire_count > 0:
+			player.velocity.x = clamp(player.velocity.x, -50.0, 50.0)
+		if _fire_dmg_timer >= 0.5:
 			_fire_dmg_timer = 0.0
 			for seg in _fire_segments:
 				if not is_instance_valid(seg):
@@ -131,8 +135,8 @@ func _process(delta: float) -> void:
 				var area: Area2D = seg.get_node_or_null("FireDmg") as Area2D
 				if is_instance_valid(area):
 					for body in area.get_overlapping_bodies():
-						if body.has_method("receive_damage"):
-							body.receive_damage(20)
+						if body.is_in_group("player"):
+							GameState.take_damage(_fire_damage())
 	if not _respawning and player.global_position.y > KILL_PLANE_Y:
 		_respawn()
 	if not _moved_done and abs(player.velocity.x) > 5.0:
@@ -205,6 +209,7 @@ func _respawn() -> void:
 	if _respawning:
 		return
 	_respawning = true
+	_player_fire_count = 0
 	player.global_position = SPAWN_POS
 	player.reset_state()
 	GameState.heal(GameState.player_max_health)
@@ -230,9 +235,15 @@ func _run_opening_cinematic() -> void:
 	tw.set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
 	tw.tween_property(_cam, "offset", Vector2(offset_to_fire, -20), 2.0)
 	tw.tween_interval(0.30)
-	tw.tween_callback(_spawn_fire_segment)   # jogador VÊ o fogo crescer
+	tw.tween_callback(func() -> void:
+		_spawn_fire_segment()
+		_fire_right_x += FIRE_SEG_W
+		_spawn_fire_segment(_fire_right_x))
 	tw.tween_interval(0.65)
-	tw.tween_callback(_spawn_fire_segment)   # e mais uma vez
+	tw.tween_callback(func() -> void:
+		_spawn_fire_segment()
+		_fire_right_x += FIRE_SEG_W
+		_spawn_fire_segment(_fire_right_x))
 	tw.tween_interval(0.55)
 	tw.tween_property(_cam, "offset", Vector2(0, -20), 2.0)
 	await tw.finished
@@ -389,7 +400,10 @@ func _run_portal_explosion() -> void:
 	player.process_mode = Node.PROCESS_MODE_INHERIT
 	_cine_end()
 
-func _spawn_fire_segment() -> void:
+func _fire_damage() -> int:
+	return 25
+
+func _spawn_fire_segment(at_x: float = -1.0) -> void:
 	var seg := Node2D.new()
 	seg.set_meta("phase", randf() * TAU)
 	seg.add_child(_create_fire_particles(FIRE_SEG_W))
@@ -406,18 +420,25 @@ func _spawn_fire_segment() -> void:
 	area.add_child(cs)
 	seg.add_child(area)
 	area.body_entered.connect(func(body: Node) -> void:
+		if body.is_in_group("player"):
+			_player_fire_count += 1
 		if body.has_method("receive_damage"):
-			body.receive_damage(20))
+			body.receive_damage(_fire_damage()))
+	area.body_exited.connect(func(body: Node) -> void:
+		if body.is_in_group("player"):
+			_player_fire_count = max(0, _player_fire_count - 1))
 	area.area_entered.connect(func(proj_area: Area2D) -> void:
 		if proj_area.get("compound_id") == "H2O":
 			_extinguish_segment(seg)
 			proj_area.queue_free())
 
-	seg.position = Vector2(_fire_next_x, 112)
+	var spawn_x := at_x if at_x >= 0.0 else _fire_next_x
+	seg.position = Vector2(spawn_x, 112)
 	add_child(seg)
 	_fire_segments.append(seg)
-	_fire_next_x -= FIRE_SEG_W
-	GameState.fire_next_x = _fire_next_x  # persiste para sobreviver à troca de cena
+	if at_x < 0.0:
+		_fire_next_x -= FIRE_SEG_W
+		GameState.fire_next_x = _fire_next_x
 
 	if not _fire_alert_shown and not get_tree().paused:
 		_fire_alert_shown = true
@@ -427,6 +448,7 @@ func _extinguish_segment(seg: Node2D) -> void:
 	if not is_instance_valid(seg):
 		return
 	_fire_segments.erase(seg)
+	_player_fire_count = 0
 	for child in seg.get_children():
 		if child is Area2D:
 			for cs2 in child.get_children():
@@ -486,31 +508,6 @@ func _on_shaft_b_fog_entered(body: Node2D) -> void:
 	var tw := create_tween()
 	tw.tween_property($DarkAreas/ShaftFogB, "color", Color(0, 0, 0, 0), 0.8)
 
-func _on_mucus_hint_entered(body: Node2D) -> void:
-	if _mucus_hint_done or not body.is_in_group("player"):
-		return
-	_mucus_hint_done = true
-	_dialog.show_dialog(ELARA,
-		"Isso parece matéria orgânica resistente... Água não vai funcionar aqui. Preciso de algo mais corrosivo!")
-
-func _on_mucus_dissolved() -> void:
-	_dialog.show_dialog(ELARA,
-		"HCl corroeu o muco! Ácido clorídrico dissolve matéria orgânica — química ácida em ação!")
-
-func _on_barrier_check_entered(body: Node2D) -> void:
-	if _barrier_opened or not body.is_in_group("player"):
-		return
-	var has_na := GameState.get_element_count("Na") >= 1
-	var has_cl := GameState.get_element_count("Cl") >= 1
-	if has_na and has_cl:
-		_barrier_opened = true
-		_barrier_wall.get_node("CollisionShape2D").disabled = true
-		_barrier_wall.visible = false
-		_dialog.show_dialog(ELARA,
-			"Você tem Na e Cl! Combine-os para criar NaCl — a lesma teme o sal!")
-	else:
-		_dialog.show_dialog(ELARA,
-			"Perigoso! Você precisa de ao menos 1 Na e 1 Cl. Volte e colete mais — a lesma resseca com NaCl!")
 
 func _on_boss_trigger_entered(_body: Node2D) -> void:
 	_boss_battle.show_battle("snail")

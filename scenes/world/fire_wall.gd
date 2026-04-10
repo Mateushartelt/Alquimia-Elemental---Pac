@@ -6,6 +6,7 @@ signal extinguished
 
 func _ready() -> void:
 	$FireDetect.area_entered.connect(_on_area_entered)
+	$FireBody/CollisionShape2D.disabled = true
 	$Visual.hide()
 	var p := CPUParticles2D.new()
 	p.emitting              = true

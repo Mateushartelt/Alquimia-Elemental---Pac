@@ -27,17 +27,8 @@ size = Vector2(80, 480)
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_cave_fog"]
 size = Vector2(3200, 200)
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_barrier_wall"]
-size = Vector2(50, 700)
-
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_barrier_check"]
-size = Vector2(80, 400)
-
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_boss"]
 size = Vector2(40, 200)
-
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_mucus_hint"]
-size = Vector2(300, 200)
 
 [node name="Level01" type="Node2D" unique_id=422643617]
 script = ExtResource("1_lvl")
@@ -252,29 +243,6 @@ collision_layer = 0
 [node name="CollisionShape2D" type="CollisionShape2D" parent="DarkAreas/CaveFogDetect" unique_id=316740076]
 shape = SubResource("RectangleShape2D_cave_fog")
 
-[node name="BarrierWall" type="StaticBody2D" parent="." unique_id=316740050]
-position = Vector2(900, -440)
-collision_layer = 2
-collision_mask = 0
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="BarrierWall" unique_id=316740051]
-shape = SubResource("RectangleShape2D_barrier_wall")
-
-[node name="Visual" type="ColorRect" parent="BarrierWall" unique_id=316740060]
-z_index = 1
-offset_left = -25.0
-offset_top = -350.0
-offset_right = 25.0
-offset_bottom = 350.0
-color = Color(1, 0.45, 0, 0.85)
-
-[node name="BarrierCheck" type="Area2D" parent="." unique_id=316740052]
-visible = false
-position = Vector2(820, -410)
-collision_layer = 0
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="BarrierCheck" unique_id=316740053]
-shape = SubResource("RectangleShape2D_barrier_check")
 
 [node name="BossTrigger" type="Area2D" parent="." unique_id=316740020]
 visible = false
@@ -314,23 +282,9 @@ visible = false
 [node name="BossBattle" parent="." unique_id=316740001 instance=ExtResource("13_boss")]
 visible = false
 
-[node name="MucusWall" parent="." unique_id=400000030 instance=ExtResource("15_mucus")]
-position = Vector2(1280, 112)
-
-[node name="MucusHintTrigger" type="Area2D" parent="." unique_id=400000031]
-position = Vector2(1328, 200)
-collision_layer = 0
-collision_mask = 1
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="MucusHintTrigger" unique_id=400000032]
-shape = SubResource("RectangleShape2D_mucus_hint")
-
 [connection signal="body_entered" from="DoorIn" to="." method="_on_door_in_entered"]
 [connection signal="extinguished" from="FireWall" to="." method="_on_fire_extinguished"]
 [connection signal="body_entered" from="DarkAreas/ShaftFogDetect" to="." method="_on_shaft_fog_entered"]
 [connection signal="body_entered" from="DarkAreas/ShaftFogBDetect" to="." method="_on_shaft_b_fog_entered"]
 [connection signal="body_entered" from="DarkAreas/CaveFogDetect" to="." method="_on_cave_fog_entered"]
-[connection signal="body_entered" from="BarrierCheck" to="." method="_on_barrier_check_entered"]
 [connection signal="body_entered" from="BossTrigger" to="." method="_on_boss_trigger_entered"]
-[connection signal="dissolved" from="MucusWall" to="." method="_on_mucus_dissolved"]
-[connection signal="body_entered" from="MucusHintTrigger" to="." method="_on_mucus_hint_entered"]
