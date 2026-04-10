@@ -41,6 +41,7 @@ const FIRE_SPREAD_INTERVAL := 3.5    # segundos entre cada avanço do fogo
 const FIRE_STOP_X          := 450.0  # não passa do portal
 const FIRE_SEG_W           := 48     # largura de cada segmento (px)
 var _fire_timer       : float = 0.0
+var _fire_dmg_timer   : float = 0.0
 var _fire_next_x      : float = 1400.0 - FIRE_SEG_W
 var _fire_segments    : Array = []
 var _fire_alert_shown := false
@@ -121,6 +122,17 @@ func _process(delta: float) -> void:
 		if _fire_timer >= FIRE_SPREAD_INTERVAL and _fire_next_x > FIRE_STOP_X:
 			_fire_timer = 0.0
 			_spawn_fire_segment()
+		_fire_dmg_timer += delta
+		if _fire_dmg_timer >= 1.35:
+			_fire_dmg_timer = 0.0
+			for seg in _fire_segments:
+				if not is_instance_valid(seg):
+					continue
+				var area: Area2D = seg.get_node_or_null("FireDmg") as Area2D
+				if is_instance_valid(area):
+					for body in area.get_overlapping_bodies():
+						if body.has_method("receive_damage"):
+							body.receive_damage(20)
 	if not _respawning and player.global_position.y > KILL_PLANE_Y:
 		_respawn()
 	if not _moved_done and abs(player.velocity.x) > 5.0:
@@ -383,6 +395,7 @@ func _spawn_fire_segment() -> void:
 	seg.add_child(_create_fire_particles(FIRE_SEG_W))
 
 	var area := Area2D.new()
+	area.name            = "FireDmg"
 	area.collision_layer = 32
 	area.collision_mask  = 1 | 16  # player + projectiles
 	var cs := CollisionShape2D.new()
