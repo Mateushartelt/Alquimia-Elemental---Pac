@@ -40,9 +40,8 @@ const FIRE_SEG_W           := 48
 const FIRE_ORIGIN_X        := 1352.0   # = 1400 - FIRE_SEG_W
 var _fire_timer       : float = 0.0
 var _fire_dmg_timer   : float = 0.0
-var _fire_next_x      : float = FIRE_ORIGIN_X   # fronteira esquerda
-var _fire_right_x     : float = FIRE_ORIGIN_X   # fronteira direita
 var _fire_segments    : Array = []
+var _fire_occupied    : Dictionary = {}   # float(x) → true, posições com fogo ativo
 var _fire_alert_shown    := false
 var _player_fire_count   : int = 0
 
@@ -79,10 +78,17 @@ func _ready() -> void:
 		_spawn_tutorial_enemies()
 		# Restaurar segmentos de fogo que existiam antes de ir ao módulo de síntese
 		if GameState.fire_next_x >= 0.0:
-			_fire_alert_shown = true  # suprime dialog de alerta
-			var target_x := GameState.fire_next_x
-			while _fire_next_x > target_x:
-				_spawn_fire_segment()
+			_fire_alert_shown = true
+			var target_x := GameState.fire_next_x  # salva antes do loop alterar
+			var left_x := FIRE_ORIGIN_X
+			var right_x := FIRE_ORIGIN_X + float(FIRE_SEG_W)
+			_spawn_fire_segment(left_x)
+			_spawn_fire_segment(right_x)
+			while left_x - float(FIRE_SEG_W) >= target_x:
+				left_x -= float(FIRE_SEG_W)
+				right_x += float(FIRE_SEG_W)
+				_spawn_fire_segment(left_x)
+				_spawn_fire_segment(right_x)
 		get_tree().create_timer(0.4).timeout.connect(func() -> void:
 			_dialog.show_dialog(ELARA,
 				"H₂O pronto! Equipe o composto (Scroll do mouse) e atire (J) na Parede de Fogo!"))
@@ -119,11 +125,33 @@ func _process(delta: float) -> void:
 	# Propagação do fogo
 	if not _fire_cleared:
 		_fire_timer += delta
-		if _fire_timer >= FIRE_SPREAD_INTERVAL and _fire_next_x > FIRE_STOP_X:
+		if _fire_timer >= FIRE_SPREAD_INTERVAL:
 			_fire_timer = 0.0
-			_spawn_fire_segment()           # expande esquerda
-			_fire_right_x += FIRE_SEG_W
-			_spawn_fire_segment(_fire_right_x)  # expande direita
+			# Coleta candidatos adjacentes a fogos existentes
+			var gaps  : Array[float] = []
+			var edges : Array[float] = []
+			var seen  : Dictionary  = {}
+			for x_var in _fire_occupied:
+				var x := float(x_var)
+				for dx in [-float(FIRE_SEG_W), float(FIRE_SEG_W)]:
+					var nx: float = x + float(dx)
+					if nx < FIRE_STOP_X or _fire_occupied.has(nx) or seen.has(nx):
+						continue
+					seen[nx] = true
+					var has_l := _fire_occupied.has(nx - float(FIRE_SEG_W))
+					var has_r := _fire_occupied.has(nx + float(FIRE_SEG_W))
+					if has_l and has_r:
+						gaps.append(nx)   # lacuna: fogo dos dois lados
+					else:
+						edges.append(nx)  # fronteira normal
+			if gaps.size() > 0:
+				for gx in gaps:
+					_spawn_fire_segment(gx)   # preenche todas lacunas
+			elif edges.size() > 0:
+				edges.sort()
+				_spawn_fire_segment(edges[0])          # expande esquerda
+				if edges.size() > 1:
+					_spawn_fire_segment(edges[-1])     # expande direita
 		_fire_dmg_timer += delta
 		if _player_fire_count > 0:
 			player.velocity.x = clamp(player.velocity.x, -50.0, 50.0)
@@ -236,14 +264,12 @@ func _run_opening_cinematic() -> void:
 	tw.tween_property(_cam, "offset", Vector2(offset_to_fire, -20), 2.0)
 	tw.tween_interval(0.30)
 	tw.tween_callback(func() -> void:
-		_spawn_fire_segment()
-		_fire_right_x += FIRE_SEG_W
-		_spawn_fire_segment(_fire_right_x))
+		_spawn_fire_segment(FIRE_ORIGIN_X)
+		_spawn_fire_segment(FIRE_ORIGIN_X + float(FIRE_SEG_W)))
 	tw.tween_interval(0.65)
 	tw.tween_callback(func() -> void:
-		_spawn_fire_segment()
-		_fire_right_x += FIRE_SEG_W
-		_spawn_fire_segment(_fire_right_x))
+		_spawn_fire_segment(FIRE_ORIGIN_X - float(FIRE_SEG_W))
+		_spawn_fire_segment(FIRE_ORIGIN_X + 2.0 * float(FIRE_SEG_W)))
 	tw.tween_interval(0.55)
 	tw.tween_property(_cam, "offset", Vector2(0, -20), 2.0)
 	await tw.finished
@@ -346,6 +372,7 @@ func _on_fire_extinguished() -> void:
 		if is_instance_valid(seg):
 			seg.queue_free()
 	_fire_segments.clear()
+	_fire_occupied.clear()
 	# Não toca no zoom nem em _in_tunnel — _process continua gerindo as transições
 	_dialog.queue_dialogs([
 		[ELARA, "Excelente! H₂O absorveu o calor e extinguiu o fogo — reação endotérmica!"],
@@ -403,7 +430,7 @@ func _run_portal_explosion() -> void:
 func _fire_damage() -> int:
 	return 25
 
-func _spawn_fire_segment(at_x: float = -1.0) -> void:
+func _spawn_fire_segment(at_x: float) -> void:
 	var seg := Node2D.new()
 	seg.set_meta("phase", randf() * TAU)
 	seg.add_child(_create_fire_particles(FIRE_SEG_W))
@@ -432,13 +459,14 @@ func _spawn_fire_segment(at_x: float = -1.0) -> void:
 			_extinguish_segment(seg)
 			proj_area.queue_free())
 
-	var spawn_x := at_x if at_x >= 0.0 else _fire_next_x
-	seg.position = Vector2(spawn_x, 112)
+	seg.position = Vector2(at_x, 112)
 	add_child(seg)
 	_fire_segments.append(seg)
-	if at_x < 0.0:
-		_fire_next_x -= FIRE_SEG_W
-		GameState.fire_next_x = _fire_next_x
+	_fire_occupied[at_x] = true
+	# Persiste fronteira esquerda para restaurar após módulo de síntese
+	var keys := _fire_occupied.keys()
+	keys.sort()
+	GameState.fire_next_x = float(keys[0])
 
 	if not _fire_alert_shown and not get_tree().paused:
 		_fire_alert_shown = true
@@ -447,7 +475,9 @@ func _spawn_fire_segment(at_x: float = -1.0) -> void:
 func _extinguish_segment(seg: Node2D) -> void:
 	if not is_instance_valid(seg):
 		return
+	_fire_occupied.erase(seg.position.x)
 	_fire_segments.erase(seg)
+	_fire_timer = 0.0   # reseta o intervalo — dá mais tempo antes da próxima expansão
 	_player_fire_count = 0
 	for child in seg.get_children():
 		if child is Area2D:
