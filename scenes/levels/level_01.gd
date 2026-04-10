@@ -35,7 +35,8 @@ const SLIME_SCENE = preload("res://scenes/enemies/slime_sodio.tscn")
 
 # Fire propagation
 const FIRE_SPREAD_INTERVAL := 3.5    # segundos entre cada avanço do fogo
-const FIRE_STOP_X          := 450.0  # não passa do portal
+const FIRE_STOP_X          := 450.0   # não passa do portal (esquerda)
+const FIRE_STOP_RIGHT_X    := 1750.0  # não passa dos inimigos (direita)
 const FIRE_SEG_W           := 48
 const FIRE_ORIGIN_X        := 1352.0   # = 1400 - FIRE_SEG_W
 var _fire_timer       : float = 0.0
@@ -56,7 +57,7 @@ func _ready() -> void:
 	$HUD.visible = true
 	_make_debug_label()
 	_cam.limit_left                 = 800
-	_cam.limit_right                = 3200
+	_cam.limit_right                = int(FIRE_ORIGIN_X) + FIRE_SEG_W
 	_cam.limit_top                  = 80
 	_cam.limit_bottom               = 400
 	_cam.zoom                       = Vector2(3, 3)
@@ -135,7 +136,7 @@ func _process(delta: float) -> void:
 				var x := float(x_var)
 				for dx in [-float(FIRE_SEG_W), float(FIRE_SEG_W)]:
 					var nx: float = x + float(dx)
-					if nx < FIRE_STOP_X or _fire_occupied.has(nx) or seen.has(nx):
+					if nx < FIRE_STOP_X or nx > FIRE_STOP_RIGHT_X or _fire_occupied.has(nx) or seen.has(nx):
 						continue
 					seen[nx] = true
 					var has_l := _fire_occupied.has(nx - float(FIRE_SEG_W))
@@ -463,6 +464,10 @@ func _spawn_fire_segment(at_x: float) -> void:
 	add_child(seg)
 	_fire_segments.append(seg)
 	_fire_occupied[at_x] = true
+	# Limita câmera ao edge direito do fogo
+	var right_edge := int(at_x) + FIRE_SEG_W
+	if right_edge > _cam.limit_right:
+		_cam.limit_right = right_edge
 	# Persiste fronteira esquerda para restaurar após módulo de síntese
 	var keys := _fire_occupied.keys()
 	keys.sort()
@@ -487,6 +492,8 @@ func _extinguish_segment(seg: Node2D) -> void:
 	var tw := seg.create_tween()
 	tw.tween_property(seg, "modulate", Color(1.0, 1.0, 1.0, 0.0), 0.5)
 	tw.tween_callback(seg.queue_free)
+	if _fire_segments.is_empty() and not _fire_cleared:
+		_on_fire_extinguished()
 
 func _create_fire_particles(w: int) -> CPUParticles2D:
 	var p := CPUParticles2D.new()

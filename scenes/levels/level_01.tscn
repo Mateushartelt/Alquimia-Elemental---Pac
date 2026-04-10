@@ -283,7 +283,6 @@ visible = false
 visible = false
 
 [connection signal="body_entered" from="DoorIn" to="." method="_on_door_in_entered"]
-[connection signal="extinguished" from="FireWall" to="." method="_on_fire_extinguished"]
 [connection signal="body_entered" from="DarkAreas/ShaftFogDetect" to="." method="_on_shaft_fog_entered"]
 [connection signal="body_entered" from="DarkAreas/ShaftFogBDetect" to="." method="_on_shaft_b_fog_entered"]
 [connection signal="body_entered" from="DarkAreas/CaveFogDetect" to="." method="_on_cave_fog_entered"]
