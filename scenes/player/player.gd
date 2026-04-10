@@ -27,6 +27,7 @@ var _facing_right    : bool    = true
 var _invincible_timer: float   = 0.0
 var _hurt_timer      : float   = 0.0
 var _wall_normal     : Vector2 = Vector2.ZERO
+var input_locked     : bool    = false
 
 @onready var attack_point : Marker2D       = $AttackPoint
 @onready var _anim        : AnimationPlayer = $AnimationPlayer
@@ -54,6 +55,9 @@ func _apply_gravity(delta: float) -> void:
 		velocity.y = minf(velocity.y + GRAVITY * delta, max_v)
 
 func _handle_horizontal() -> void:
+	if input_locked:
+		velocity.x = move_toward(velocity.x, 0.0, walk_speed)
+		return
 	var dir := Input.get_axis("move_left", "move_right")
 	if dir != 0.0:
 		velocity.x    = dir * walk_speed
@@ -62,6 +66,8 @@ func _handle_horizontal() -> void:
 		velocity.x = move_toward(velocity.x, 0.0, walk_speed)
 
 func _handle_jump() -> void:
+	if input_locked:
+		return
 	if Input.is_action_just_pressed("jump"):
 		_jump_buffer = JUMP_BUFFER
 	# Wall jump — tem prioridade sobre o pulo normal
@@ -81,6 +87,8 @@ func _handle_jump() -> void:
 		velocity.y *= 0.45
 
 func _handle_attack() -> void:
+	if input_locked:
+		return
 	if not Input.is_action_just_pressed("attack"):
 		return
 	if GameState.active_compound == "":
@@ -123,6 +131,9 @@ func _update_state() -> void:
 	if _state == State.DEAD:
 		return
 	if _state == State.HURT and _hurt_timer > 0.0:
+		return
+	if input_locked:
+		_set_state(State.FALL if not is_on_floor() else State.IDLE)
 		return
 	if is_on_floor():
 		_wall_normal = Vector2.ZERO

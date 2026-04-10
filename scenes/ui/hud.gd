@@ -1,11 +1,30 @@
 extends CanvasLayer
 ## HUD — Interface in-game: barra de vida, inventário de elementos e composto ativo.
 
+class ElementIcon extends Control:
+	var element_id : String = ""
+	var base_color  : Color  = Color.WHITE
+
+	func _draw() -> void:
+		var c := Vector2(9.0, 9.0)
+		draw_circle(c, 9.0, Color(base_color.r, base_color.g, base_color.b, 0.25))
+		draw_circle(c, 7.0, base_color)
+		draw_arc(c, 7.0, 0.0, TAU, 24, Color(0, 0, 0, 0.35), 0.75)
+		draw_arc(c, 4.5, 3.5, 5.5, 10, Color(1, 1, 1, 0.5), 1.5)
+		var font    := ThemeDB.fallback_font
+		var lum     := base_color.get_luminance()
+		var txt_col := Color(0.05, 0.05, 0.05) if lum > 0.5 else Color.WHITE
+		var x_off   := 7.0 if element_id.length() == 1 else 4.5
+		draw_string(font, Vector2(x_off, 13.0), element_id,
+					HORIZONTAL_ALIGNMENT_LEFT, -1, 7, txt_col)
+
 @onready var health_bar: ProgressBar = $MarginContainer/VBox/HealthBar
 @onready var health_label: Label     = $MarginContainer/VBox/HealthLabel
 @onready var _charge_bar:  ProgressBar = $MarginContainer/VBox/ChargeBar
 @onready var _charge_label: Label      = $MarginContainer/VBox/ChargeLabel
-@onready var elements_container: HBoxContainer = $ElementsContainer
+@onready var elements_container: HBoxContainer = $MarginContainer/VBox/ElementsContainer
+
+var _kill_count: int = 0
 @onready var active_compound_panel: Panel = $ActiveCompound
 @onready var active_compound_label: Label = $ActiveCompound/Label
 @onready var active_compound_icon: ColorRect = $ActiveCompound/Icon
@@ -20,6 +39,13 @@ func _ready() -> void:
 	_on_charge_changed(GameState.charge, GameState.charge_max)
 	_update_elements()
 	_update_active_compound()
+	# Conecta ao died de todos os inimigos presentes e futuros
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		if enemy.has_signal("died") and not enemy.died.is_connected(_on_enemy_died):
+			enemy.died.connect(_on_enemy_died)
+	get_tree().node_added.connect(func(node: Node) -> void:
+		if node.is_in_group("enemies") and node.has_signal("died"):
+			node.died.connect(_on_enemy_died))
 
 func _on_health_changed(current: int, maximum: int) -> void:
 	health_bar.max_value = maximum
@@ -37,14 +63,14 @@ func _on_health_changed(current: int, maximum: int) -> void:
 func _on_charge_changed(current: float, maximum: float) -> void:
 	_charge_bar.max_value = maximum
 	_charge_bar.value     = current
-	_charge_label.text    = "Especial: %d/%d" % [int(current), int(maximum)]
+	var key_hint := " [E]" if _charge_label.visible else ""
+	_charge_label.text    = "Especial%s: %d/%d" % [key_hint, int(current), int(maximum)]
 	_charge_bar.modulate  = Color(0.4, 0.8, 1.0) if current >= maximum else Color(0.27, 0.53, 1.0)
 
 func _on_elements_changed(_id: String, _amt: int = 0) -> void:
 	_update_elements()
 
 func _update_elements() -> void:
-	# Limpa filhos anteriores
 	for c in elements_container.get_children():
 		c.queue_free()
 
@@ -52,22 +78,33 @@ func _update_elements() -> void:
 		var count: int = GameState.collected_elements[element_id]
 		if count <= 0:
 			continue
-		var el := ElementDatabase.get_element(element_id)
+		var el    := ElementDatabase.get_element(element_id)
 		var color := Color(el.get("color", "#ffffff"))
 
-		var container := HBoxContainer.new()
-		var icon := ColorRect.new()
-		icon.size = Vector2(32, 32)
-		icon.color = color
-		icon.custom_minimum_size = Vector2(32, 32)
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 2)
+
+		var icon := ElementIcon.new()
+		icon.element_id          = element_id
+		icon.base_color          = color
+		icon.custom_minimum_size = Vector2(22, 22)
 
 		var lbl := Label.new()
-		lbl.text = "%s×%d" % [element_id, count]
-		lbl.add_theme_font_size_override("font_size", 24)
+		lbl.text = "×%d" % count
+		lbl.add_theme_font_size_override("font_size", 12)
+		lbl.add_theme_color_override("font_color", Color(0.9, 0.9, 0.9))
+		lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 
-		container.add_child(icon)
-		container.add_child(lbl)
-		elements_container.add_child(container)
+		row.add_child(icon)
+		row.add_child(lbl)
+		elements_container.add_child(row)
+
+func _on_enemy_died(_enemy: Node) -> void:
+	_kill_count += 1
+	if _kill_count >= 2:
+		_charge_label.text    = "Especial [E]: 0/100"
+		_charge_label.visible = true
+		_charge_bar.visible   = true
 
 func _on_compound_created(compound_id: String) -> void:
 	_update_active_compound()

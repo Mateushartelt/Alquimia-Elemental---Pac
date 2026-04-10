@@ -18,6 +18,8 @@ const ENCYCLOPEDIA := "Enciclopédia"
 var _respawning             := false
 var _h2o_dialog_done   := false
 var _enemy_dialog_done := false
+var _enemy_kill_count  := 0
+var _special_hint_shown := false
 var _fire_cleared        := false
 var _came_from_tutorial  := false
 var _shaft_fog_cleared   := false
@@ -94,6 +96,7 @@ func _ready() -> void:
 			_dialog.show_dialog(ELARA,
 				"H₂O pronto! Equipe o composto (Scroll do mouse) e atire (J) na Parede de Fogo!"))
 	else:
+		player.input_locked = true
 		get_tree().create_timer(1.0).timeout.connect(_show_intro)
 	GameState.compound_created.connect(_on_compound_created)
 	GameState.checkpoint_reached.connect(_on_checkpoint_reached)
@@ -282,9 +285,10 @@ func _run_opening_cinematic() -> void:
 	tw.tween_property(_cam, "offset", Vector2(0, -20), 2.0)
 	await tw.finished
 
-	get_tree().paused   = false
-	process_mode        = Node.PROCESS_MODE_INHERIT
-	player.process_mode = Node.PROCESS_MODE_INHERIT
+	get_tree().paused    = false
+	process_mode         = Node.PROCESS_MODE_INHERIT
+	player.process_mode  = Node.PROCESS_MODE_INHERIT
+	player.input_locked  = false
 	_cine_end()
 	_hints.show_hint("WASD / ← →   Mover        ESPAÇO   Pular")
 
@@ -345,10 +349,15 @@ func _on_compound_created(compound_id: String) -> void:
 			"Perfeito! H₂O criado! 2H + 1O = água — a molécula mais importante da vida. Equipe o composto (Scroll) e atire (J) na Parede de Fogo para abrir o caminho!")
 
 func _on_enemy_died(_enemy: Node) -> void:
+	_enemy_kill_count += 1
 	if not _enemy_dialog_done:
 		_enemy_dialog_done = true
 		_dialog.show_dialog(ELARA,
 			"Muito bem! Fogo é derrotado pela água — reação de extinção térmica!")
+	if _enemy_kill_count >= 2 and not _special_hint_shown:
+		_special_hint_shown = true
+		get_tree().create_timer(1.5).timeout.connect(func() -> void:
+			_hints.show_hint("E — Especial  (barra cheia)"))
 
 func _on_checkpoint_reached(_checkpoint_id: String) -> void:
 	_dialog.show_dialog(ELARA,
