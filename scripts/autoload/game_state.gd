@@ -30,6 +30,9 @@ var last_checkpoint_position: Vector2 = Vector2.ZERO
 ## { "H": 3, "O": 2, ... }
 var collected_elements: Dictionary = {}
 
+# ── Elementos Descobertos (permanente — não reseta ao consumir) ─────────────
+var discovered_elements: Array[String] = []
+
 # ── Compostos Descobertos ───────────────────────────────────────────────────
 var discovered_compounds: Array[String] = []
 
@@ -89,6 +92,8 @@ func collect_element(element_id: String, amount: int = 1) -> void:
 	if added <= 0:
 		return
 	collected_elements[element_id] = current + added
+	if element_id not in discovered_elements:
+		discovered_elements.append(element_id)
 	element_collected.emit(element_id, added)
 
 func consume_elements(recipe: Dictionary) -> bool:
@@ -170,6 +175,7 @@ func to_dict() -> Dictionary:
 		"last_checkpoint_id": last_checkpoint_id,
 		"last_checkpoint_position": {"x": last_checkpoint_position.x, "y": last_checkpoint_position.y},
 		"collected_elements": collected_elements.duplicate(),
+		"discovered_elements": discovered_elements.duplicate(),
 		"discovered_compounds": discovered_compounds.duplicate(),
 		"active_compound": active_compound,
 		"unlocked_abilities": unlocked_abilities.duplicate(),
@@ -183,6 +189,8 @@ func from_dict(data: Dictionary) -> void:
 	var pos_dict: Dictionary = data.get("last_checkpoint_position", {"x": 0.0, "y": 0.0})
 	last_checkpoint_position = Vector2(pos_dict.get("x", 0.0), pos_dict.get("y", 0.0))
 	collected_elements = data.get("collected_elements", {})
+	var de: Array = data.get("discovered_elements", [])
+	discovered_elements.assign(de)
 	var dc: Array = data.get("discovered_compounds", [])
 	discovered_compounds.assign(dc)
 	active_compound = data.get("active_compound", "")

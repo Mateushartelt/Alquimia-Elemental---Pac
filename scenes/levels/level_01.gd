@@ -97,7 +97,7 @@ func _ready() -> void:
 				_spawn_fire_segment(right_x)
 		get_tree().create_timer(0.4).timeout.connect(func() -> void:
 			_dialog.show_dialog(ELARA,
-				"H₂O pronto! Equipe o composto (Scroll do mouse) e atire (J) na Parede de Fogo!"))
+				"H₂O pronto! Equipe o composto (1) e atire (J) ou (Botão esquerdo do mouse) na Parede de Fogo!"))
 	else:
 		player.input_locked = true
 		get_tree().create_timer(1.0).timeout.connect(_show_intro)
