@@ -80,6 +80,8 @@ func _ready() -> void:
 		_cam.zoom         = Vector2(4, 4)
 		# Spawna inimigos no túnel para o player treinar a arma de água
 		_spawn_tutorial_enemies()
+		if is_instance_valid(_door_in):
+			_door_in.set_deferred("monitoring", false)
 		# Restaurar segmentos de fogo que existiam antes de ir ao módulo de síntese
 		if GameState.fire_next_x >= 0.0:
 			_fire_alert_shown = true
@@ -313,7 +315,7 @@ func _on_any_dialog_closed() -> void:
 		if _alchemy.can_craft_anything():
 			_hints.show_hint("Q — Painel de Alquimia")
 	elif not _attack_done and GameState.active_compound != "":
-		_hints.show_hint("J / Click — Atirar composto")
+		_hints.show_hint("J / Botão Esquerdo — Atirar composto")
 
 func _on_element_first_collected(element_id: String, _amt: int) -> void:
 	# Dialog de primeira coleta do elemento

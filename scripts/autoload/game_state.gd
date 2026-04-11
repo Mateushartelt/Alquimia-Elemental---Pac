@@ -7,6 +7,7 @@ extends Node
 signal element_collected(element_id: String, amount: int)
 signal element_consumed(element_id: String, amount: int)
 signal compound_created(compound_id: String)
+signal active_compound_changed(compound_id: String)
 signal health_changed(current: int, maximum: int)
 signal charge_changed(current: float, maximum: float)
 signal player_died()
@@ -134,6 +135,7 @@ func try_craft(recipe_id: String) -> bool:
 func set_active_compound(recipe_id: String) -> void:
 	if recipe_id == "" or not ElementDatabase.get_recipe(recipe_id).is_empty():
 		active_compound = recipe_id
+		active_compound_changed.emit(recipe_id)
 
 # ══════════════════════════════════════════════════════════════════════════════
 #  Progresso

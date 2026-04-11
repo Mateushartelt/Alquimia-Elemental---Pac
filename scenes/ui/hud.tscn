@@ -46,28 +46,11 @@ modulate = Color(0.27, 0.53, 1, 1)
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="ActiveCompound" type="Panel" parent="." unique_id=441374423]
-texture_filter = 2
-anchors_preset = 1
+[node name="CompoundBar" type="HBoxContainer" parent="." unique_id=441374423]
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -144.0
+grow_horizontal = 0
 offset_top = 8.0
 offset_right = -8.0
 offset_bottom = 72.0
-
-[node name="Icon" type="ColorRect" parent="ActiveCompound" unique_id=685085696]
-layout_mode = 0
-offset_left = 8.0
-offset_top = 8.0
-offset_right = 48.0
-offset_bottom = 56.0
-
-[node name="Label" type="Label" parent="ActiveCompound" unique_id=1369520333]
-layout_mode = 0
-offset_left = 56.0
-offset_top = 8.0
-offset_right = 136.0
-offset_bottom = 56.0
-theme_override_font_sizes/font_size = 24
-text = "H2O"
+theme_override_constants/separation = 4

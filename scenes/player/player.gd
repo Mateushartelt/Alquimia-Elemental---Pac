@@ -106,9 +106,14 @@ func _handle_attack() -> void:
 	attacked.emit(GameState.active_compound, proj.direction, attack_point.global_position)
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event is InputEventKey and event.physical_keycode == KEY_E \
-			and event.pressed and not event.echo:
+	if not (event is InputEventKey and event.pressed and not event.echo):
+		return
+	if event.physical_keycode == KEY_E:
 		_try_special()
+		return
+	var num: int = event.physical_keycode - KEY_1
+	if num >= 0 and num < GameState.discovered_compounds.size():
+		GameState.set_active_compound(GameState.discovered_compounds[num])
 
 func _try_special() -> void:
 	if GameState.active_compound != "H2O":
