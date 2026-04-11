@@ -179,9 +179,34 @@ func _on_slot_clicked(index: int) -> void:
 	if _slots[index].is_empty():
 		return
 	_slots[index] = {}
+	_sync_tut_step()
 	_refresh_inventory()
 	_refresh_slots_ui()
 	_refresh_result()
+
+## Recalcula _tut_step com base nos elementos realmente nos slots.
+## Evita que remover um item deixe o tutorial travado num passo errado.
+func _sync_tut_step() -> void:
+	if _tut_step == TutStep.NONE:
+		return
+	var h := 0
+	var o := 0
+	for s in _slots:
+		if s.get("id", "") == "H":
+			h += 1
+		elif s.get("id", "") == "O":
+			o += 1
+	if h == 0:
+		_tut_step = TutStep.H1
+	elif h == 1 and o == 0:
+		_tut_step = TutStep.H2
+	elif h == 2 and o == 0:
+		_tut_step = TutStep.ADD_O
+	elif h == 2 and o >= 1:
+		_tut_step = TutStep.MIX
+	else:
+		# h==1, o==1: falta o segundo H
+		_tut_step = TutStep.H2
 
 func _refresh_slots_ui() -> void:
 	var slot_nodes := [_slot0, _slot1, _slot2]

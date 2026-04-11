@@ -6,9 +6,11 @@ extends Area2D
 @export var direction: Vector2  = Vector2.RIGHT
 @export var speed: float        = 200.0
 @export var lifetime: float     = 2.0
+@export var is_special: bool    = false
 
-@onready var sprite: ColorRect  = $Sprite
-@onready var anim: AnimationPlayer = $AnimationPlayer
+@onready var sprite: ColorRect       = $Sprite
+@onready var anim: AnimationPlayer   = $AnimationPlayer
+@onready var _anim_sprite: AnimatedSprite2D = $AnimatedSprite2D
 
 var _timer := 0.0
 
@@ -32,6 +34,11 @@ func _apply_recipe_visuals() -> void:
 	var size: float = recipe.get("projectile_size", 6)
 	sprite.size = Vector2(size, size)
 	sprite.position = -sprite.size / 2.0
+	if compound_id == "H2O":
+		if is_special:
+			_setup_water_spell()
+		else:
+			_setup_water_ball()
 
 func _on_body_entered(body: Node) -> void:
 	if body.is_in_group("player"):
@@ -55,7 +62,9 @@ func _apply_effect(target: Node) -> void:
 
 	# Dano em inimigos
 	if target.has_method("take_damage"):
-		target.take_damage(damage, compound_id)
+		var final_damage := damage * 3 if is_special else damage
+		target.take_damage(final_damage, compound_id)
+		GameState.add_charge(25.0)
 
 	# Efeitos especiais de ambiente
 	match effect:
@@ -82,6 +91,34 @@ func _apply_effect(target: Node) -> void:
 		"dissolves_metal_blocks":
 			if target.is_in_group("metal_block"):
 				target.queue_free()
+
+func _setup_water_ball() -> void:
+	var frames := SpriteFrames.new()
+	frames.add_animation("fly")
+	frames.set_animation_speed("fly", 12.0)
+	frames.set_animation_loop("fly", true)
+	for i in range(1, 13):
+		frames.add_frame("fly", load("res://scenes/player/assets/water_ball/water_ball_%02d.png" % i))
+	_anim_sprite.sprite_frames = frames
+	_anim_sprite.scale  = Vector2(0.02, 0.02)
+	_anim_sprite.flip_h = direction.x < 0.0
+	_anim_sprite.visible = true
+	_anim_sprite.play("fly")
+	sprite.visible = false
+
+func _setup_water_spell() -> void:
+	var frames := SpriteFrames.new()
+	frames.add_animation("fly")
+	frames.set_animation_speed("fly", 12.0)
+	frames.set_animation_loop("fly", true)
+	for i in range(1, 9):
+		frames.add_frame("fly", load("res://scenes/player/assets/water_spell/water_spell_%02d.png" % i))
+	_anim_sprite.sprite_frames = frames
+	_anim_sprite.scale  = Vector2(0.04, 0.04)
+	_anim_sprite.flip_h = direction.x > 0.0
+	_anim_sprite.visible = true
+	_anim_sprite.play("fly")
+	sprite.visible = false
 
 func _spawn_cloud(pos: Vector2) -> void:
 	var cloud := ColorRect.new()

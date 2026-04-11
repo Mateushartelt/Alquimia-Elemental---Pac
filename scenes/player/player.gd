@@ -11,18 +11,25 @@ const COYOTE_TIME     := 0.12
 const JUMP_BUFFER     := 0.12
 const INVINCIBLE_TIME := 1.2
 const HURT_DURATION   := 0.5
+const WALL_SLIDE_SPEED := 50.0
+const WALL_JUMP_VX     := 140.0
+const WALL_JUMP_VY     := -300.0
+const ATTACK_COOLDOWN  := 0.6
 
 const PROJECTILE_SCENE := preload("res://scenes/player/projectile.tscn")
 
-enum State { IDLE, WALK, JUMP, FALL, HURT, DEAD }
+enum State { IDLE, WALK, JUMP, FALL, WALL_SLIDE, HURT, DEAD }
 var _state := State.IDLE
 
-var _coyote_timer    : float = 0.0
-var _jump_buffer     : float = 0.0
-var _was_on_floor    : bool  = false
-var _facing_right    : bool  = true
-var _invincible_timer: float = 0.0
-var _hurt_timer      : float = 0.0
+var _coyote_timer    : float   = 0.0
+var _jump_buffer     : float   = 0.0
+var _was_on_floor    : bool    = false
+var _facing_right    : bool    = true
+var _invincible_timer: float   = 0.0
+var _hurt_timer      : float   = 0.0
+var _wall_normal     : Vector2 = Vector2.ZERO
+var _attack_cooldown : float   = 0.0
+var input_locked     : bool    = false
 
 @onready var attack_point : Marker2D       = $AttackPoint
 @onready var _anim        : AnimationPlayer = $AnimationPlayer
@@ -46,9 +53,13 @@ func _physics_process(delta: float) -> void:
 
 func _apply_gravity(delta: float) -> void:
 	if not is_on_floor():
-		velocity.y = minf(velocity.y + GRAVITY * delta, MAX_FALL)
+		var max_v := WALL_SLIDE_SPEED if _state == State.WALL_SLIDE else MAX_FALL
+		velocity.y = minf(velocity.y + GRAVITY * delta, max_v)
 
 func _handle_horizontal() -> void:
+	if input_locked:
+		velocity.x = move_toward(velocity.x, 0.0, walk_speed)
+		return
 	var dir := Input.get_axis("move_left", "move_right")
 	if dir != 0.0:
 		velocity.x    = dir * walk_speed
@@ -57,8 +68,18 @@ func _handle_horizontal() -> void:
 		velocity.x = move_toward(velocity.x, 0.0, walk_speed)
 
 func _handle_jump() -> void:
+	if input_locked:
+		return
 	if Input.is_action_just_pressed("jump"):
 		_jump_buffer = JUMP_BUFFER
+	# Wall jump — tem prioridade sobre o pulo normal
+	if _jump_buffer > 0.0 and _state == State.WALL_SLIDE:
+		velocity.x    =  _wall_normal.x * WALL_JUMP_VX
+		velocity.y    =  WALL_JUMP_VY
+		_jump_buffer  =  0.0
+		_coyote_timer =  0.0
+		_set_state(State.JUMP)
+		return
 	var can_jump := is_on_floor() or _coyote_timer > 0.0
 	if _jump_buffer > 0.0 and can_jump:
 		velocity.y    = jump_force
@@ -68,7 +89,11 @@ func _handle_jump() -> void:
 		velocity.y *= 0.45
 
 func _handle_attack() -> void:
+	if input_locked:
+		return
 	if not Input.is_action_just_pressed("attack"):
+		return
+	if _attack_cooldown > 0.0:
 		return
 	if GameState.active_compound == "":
 		return
@@ -77,6 +102,31 @@ func _handle_attack() -> void:
 	proj.direction       = Vector2.RIGHT if _facing_right else Vector2.LEFT
 	proj.global_position = attack_point.global_position
 	get_tree().current_scene.add_child(proj)
+	_attack_cooldown = ATTACK_COOLDOWN
+	attacked.emit(GameState.active_compound, proj.direction, attack_point.global_position)
+
+func _unhandled_input(event: InputEvent) -> void:
+	if not (event is InputEventKey and event.pressed and not event.echo):
+		return
+	if event.physical_keycode == KEY_E:
+		_try_special()
+		return
+	var num: int = event.physical_keycode - KEY_1
+	if num >= 0 and num < GameState.discovered_compounds.size():
+		GameState.set_active_compound(GameState.discovered_compounds[num])
+
+func _try_special() -> void:
+	if GameState.active_compound != "H2O":
+		return
+	if GameState.charge < GameState.charge_max:
+		return
+	var proj: Area2D = PROJECTILE_SCENE.instantiate()
+	proj.compound_id     = "H2O"
+	proj.is_special      = true
+	proj.direction       = Vector2.RIGHT if _facing_right else Vector2.LEFT
+	proj.global_position = attack_point.global_position
+	get_tree().current_scene.add_child(proj)
+	GameState.use_charge()
 
 func _update_coyote() -> void:
 	if _was_on_floor and not is_on_floor() and velocity.y >= 0.0:
@@ -84,38 +134,57 @@ func _update_coyote() -> void:
 	_was_on_floor = is_on_floor()
 
 func _tick_timers(delta: float) -> void:
-	_coyote_timer = maxf(0.0, _coyote_timer - delta)
-	_jump_buffer  = maxf(0.0, _jump_buffer  - delta)
-	_hurt_timer   = maxf(0.0, _hurt_timer   - delta)
+	_coyote_timer    = maxf(0.0, _coyote_timer    - delta)
+	_jump_buffer     = maxf(0.0, _jump_buffer     - delta)
+	_hurt_timer      = maxf(0.0, _hurt_timer      - delta)
+	_attack_cooldown = maxf(0.0, _attack_cooldown - delta)
 
 func _update_state() -> void:
 	if _state == State.DEAD:
 		return
 	if _state == State.HURT and _hurt_timer > 0.0:
 		return
+	if input_locked:
+		_set_state(State.FALL if not is_on_floor() else State.IDLE)
+		return
 	if is_on_floor():
+		_wall_normal = Vector2.ZERO
 		_set_state(State.IDLE if absf(velocity.x) < 5.0 else State.WALK)
-	elif velocity.y < 0.0:
-		_set_state(State.JUMP)
+	elif is_on_wall():
+		var dir     := int(Input.get_axis("move_left", "move_right"))
+		var wnormal := get_wall_normal()
+		var into_w  := (dir > 0 and wnormal.x < 0) or (dir < 0 and wnormal.x > 0)
+		if into_w:
+			_wall_normal = wnormal
+			_set_state(State.WALL_SLIDE)
+		else:
+			_wall_normal = Vector2.ZERO
+			_set_state(State.JUMP if velocity.y < 0.0 else State.FALL)
 	else:
-		_set_state(State.FALL)
+		_wall_normal = Vector2.ZERO
+		_set_state(State.JUMP if velocity.y < 0.0 else State.FALL)
 
 func _update_visual() -> void:
 	_visual.scale.x = 1.0 if _facing_right else -1.0
-	var blink := _invincible_timer > 0.0 and int(_invincible_timer * 10) % 2 == 0
-	_visual.modulate.a = 0.0 if blink else 1.0
+	var blink  := _invincible_timer > 0.0 and int(_invincible_timer * 10) % 2 == 0
+	var alpha  := 0.0 if blink else 1.0
+	if _state == State.WALL_SLIDE:
+		_visual.modulate = Color(0.55, 0.85, 1.0, alpha)
+	else:
+		_visual.modulate = Color(1.0, 1.0, 1.0, alpha)
 
 func _set_state(s: State) -> void:
 	if _state == s:
 		return
 	_state = s
 	match s:
-		State.IDLE: _anim.play("idle")
-		State.WALK: _anim.play("walk")
-		State.JUMP: _anim.play("jump")
-		State.FALL: _anim.play("fall")
-		State.HURT: _anim.play("hurt")
-		State.DEAD: _anim.play("dead")
+		State.IDLE:       _anim.play("idle")
+		State.WALK:       _anim.play("walk")
+		State.JUMP:       _anim.play("jump")
+		State.FALL:       _anim.play("fall")
+		State.WALL_SLIDE: _anim.play("wall_slide")
+		State.HURT:       _anim.play("hurt")
+		State.DEAD:       _anim.play("dead")
 
 func _build_animations() -> void:
 	var lib := AnimationLibrary.new()
@@ -195,6 +264,25 @@ func _build_animations() -> void:
 	fall.track_set_path(t, "Visual/LegRight:position:y")
 	fall.track_insert_key(t, 0.0, 5.0)
 	lib.add_animation("fall", fall)
+
+	# ── wall_slide (loop 0.5s) ────────────────────────────────────────────
+	var wall_slide := Animation.new()
+	wall_slide.loop_mode = Animation.LOOP_LINEAR
+	wall_slide.length = 0.5
+	t = wall_slide.add_track(Animation.TYPE_VALUE)
+	wall_slide.track_set_path(t, "Visual/LegLeft:position:y")
+	wall_slide.track_insert_key(t, 0.0, 8.0)
+	wall_slide.track_insert_key(t, 0.5, 8.0)
+	t = wall_slide.add_track(Animation.TYPE_VALUE)
+	wall_slide.track_set_path(t, "Visual/LegRight:position:y")
+	wall_slide.track_insert_key(t, 0.0, 8.0)
+	wall_slide.track_insert_key(t, 0.5, 8.0)
+	t = wall_slide.add_track(Animation.TYPE_VALUE)
+	wall_slide.track_set_path(t, "Visual/Body:scale")
+	wall_slide.track_insert_key(t, 0.0,  Vector2(0.85, 1.1))
+	wall_slide.track_insert_key(t, 0.25, Vector2(0.88, 1.08))
+	wall_slide.track_insert_key(t, 0.5,  Vector2(0.85, 1.1))
+	lib.add_animation("wall_slide", wall_slide)
 
 	# ── hurt (once 0.5s) ──────────────────────────────────────────────────
 	var hurt := Animation.new()

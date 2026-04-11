@@ -53,6 +53,8 @@ func _draw() -> void:
 				HORIZONTAL_ALIGNMENT_LEFT, -1, fsize, txt_col)
 
 func _on_body_entered(body: Node) -> void:
+	if not visible:
+		return
 	if _collected:
 		return
 	if not body is Player:
