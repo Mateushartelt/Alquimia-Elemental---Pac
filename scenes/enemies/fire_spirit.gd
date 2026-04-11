@@ -11,7 +11,7 @@ const _TARGET_H    := 48.0   # altura visual alvo em px do mundo (normaliza qual
 var _exploding := false
 
 func _ready() -> void:
-	max_health      = 15
+	max_health      = 50
 	move_speed      = 60.0
 	patrol_range    = 64.0
 	damage_on_touch = 0      # dano só via explosão
@@ -78,6 +78,13 @@ func _check_player_touch() -> void:
 		if global_position.distance_to(p.global_position) < 30.0:
 			_explode(p)
 			return
+
+## Quando em CHASE (prestes a explodir), qualquer hit mata instantaneamente
+func take_damage(amount: int, compound_id: String = "") -> void:
+	if estate == EState.CHASE or _exploding:
+		super.take_damage(current_health, compound_id)
+	else:
+		super.take_damage(amount, compound_id)
 
 ## Morte por projétil à distância — some sem explosão
 func _die() -> void:

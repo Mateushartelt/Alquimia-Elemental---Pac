@@ -25,6 +25,7 @@ var _came_from_tutorial  := false
 var _shaft_fog_cleared   := false
 var _shaft_b_fog_cleared := false
 var _cave_fog_cleared    := false
+var _cave_exited_once    := false
 var _cinematic_done      := false
 var _portal_hint_done    := false
 var _in_tunnel           := false
@@ -378,6 +379,18 @@ func _on_cave_fog_entered(body: Node2D) -> void:
 	tw.tween_property($DarkAreas/CaveFog, "color", Color(0, 0, 0, 0), 0.8)
 	_dialog.show_dialog(ELARA, "Que lugar sombrio... mas sinto energia química escondida aqui!")
 
+func _on_cave_fog_exited(body: Node2D) -> void:
+	if not body.is_in_group("player") or _cave_exited_once:
+		return
+	_cave_exited_once = true
+	if _fire_cleared:
+		_reveal_corridor_pickups()
+
+func _reveal_corridor_pickups() -> void:
+	for pickup in $Pickups.get_children():
+		if is_instance_valid(pickup):
+			pickup.visible = true
+
 func _on_door_in_entered(body: Node2D) -> void:
 	if body.is_in_group("player"):
 		get_tree().change_scene_to_file("res://scenes/levels/tutorial_room.tscn")
@@ -390,9 +403,9 @@ func _on_fire_extinguished() -> void:
 			seg.queue_free()
 	_fire_segments.clear()
 	_fire_occupied.clear()
-	# Revela todos os pickups do corredor
-	for pickup in $Pickups.get_children():
-		pickup.visible = true
+	# Revela pickups só se o jogador já saiu da caverna
+	if _cave_exited_once:
+		_reveal_corridor_pickups()
 	# Não toca no zoom nem em _in_tunnel — _process continua gerindo as transições
 	_dialog.queue_dialogs([
 		[ELARA, "Excelente! H₂O absorveu o calor e extinguiu o fogo — reação endotérmica!"],
