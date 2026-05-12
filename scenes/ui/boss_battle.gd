@@ -77,6 +77,7 @@ const BOSSES: Dictionary = {
 		"no_reaction": "O composto não causou reação perceptível no vírus...",
 		"win":         "Vitória! Etanol desnaturou as proteínas virais — o vírus se desintegrou!",
 		"lose":        "O Vírus Mutante foi forte demais... Crie Etanol (C+H+H+O) no painel!",
+		"draw_mode":   "virus_proc",
 		"drops":       ["C", "Cl"],
 		"drop_msg":    "O vírus liberou %s ao se desintegrar! (+1 %s)",
 		"reactions": {
@@ -578,11 +579,23 @@ func show_battle(boss_id: String) -> void:
 			int(_boss_data.get("sprite_cols", 1)),
 			int(_boss_data.get("sprite_rows", 1)))
 	else:
-		# Sem sprite: gera textura 1×1 branca e aplica a cor do boss como modulate
-		var img := Image.create(1, 1, false, Image.FORMAT_RGB8)
-		img.fill(Color.WHITE)
-		(_boss_sprite as TextureRect).texture = ImageTexture.create_from_image(img)
-		(_boss_sprite as TextureRect).modulate = _boss_data.get("color", Color.WHITE)
+		var draw_mode: String = _boss_data.get("draw_mode", "")
+		if draw_mode == "virus_proc":
+			var parent := _boss_sprite.get_parent()
+			_boss_sprite.queue_free()
+			var vbv := VirusBossVisual.new()
+			vbv.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+			vbv.offset_left   = -320
+			vbv.offset_right  = -60
+			vbv.offset_top    = 10
+			vbv.offset_bottom = 210
+			parent.add_child(vbv)
+			_boss_sprite = vbv
+		else:
+			var img := Image.create(1, 1, false, Image.FORMAT_RGB8)
+			img.fill(Color.WHITE)
+			(_boss_sprite as TextureRect).texture = ImageTexture.create_from_image(img)
+			(_boss_sprite as TextureRect).modulate = _boss_data.get("color", Color.WHITE)
 
 	# Atualiza texto de dica no popup
 	_hint_text_lbl.text = _boss_data.get("hint_detail", _boss_data.get("hint", ""))
@@ -815,17 +828,11 @@ func _on_attack_pressed() -> void:
 	if dmg > 0:
 		_boss_hp = max(0, _boss_hp - dmg)
 		_boss_hp_bar.value = _boss_hp
-		var tw := create_tween()
-		tw.tween_property(_boss_sprite, "modulate", flash, 0.12)
-		tw.tween_property(_boss_sprite, "modulate", Color.WHITE, 0.15)
-		await tw.finished
+		await _flash_boss(flash)
 	elif dmg < 0:
 		_boss_hp = min(_boss_max_hp, _boss_hp + abs(dmg))
 		_boss_hp_bar.value = _boss_hp
-		var tw := create_tween()
-		tw.tween_property(_boss_sprite, "modulate", flash, 0.12)
-		tw.tween_property(_boss_sprite, "modulate", Color.WHITE, 0.15)
-		await tw.finished
+		await _flash_boss(flash)
 
 	if effect == "stun":
 		_boss_stunned = true
@@ -885,6 +892,16 @@ func _next_player_turn() -> void:
 	_busy = false
 	_set_dialog("O que você vai fazer?")
 
+func _flash_boss(color: Color) -> void:
+	if _boss_sprite is VirusBossVisual:
+		(_boss_sprite as VirusBossVisual).apply_flash(color)
+		await get_tree().create_timer(0.27).timeout
+	else:
+		var tw := create_tween()
+		tw.tween_property(_boss_sprite, "modulate", color, 0.12)
+		tw.tween_property(_boss_sprite, "modulate", Color.WHITE, 0.15)
+		await tw.finished
+
 # ── Fim de batalha ─────────────────────────────────────────────────────────────
 func _end_battle(won: bool) -> void:
 	_battle_over = true
@@ -893,10 +910,9 @@ func _end_battle(won: bool) -> void:
 
 	if won:
 		_set_dialog(_boss_data["win"])
-		var tw := create_tween()
 		for _i: int in 3:
-			tw.tween_property(_boss_sprite, "modulate", Color(2.0, 0.1, 0.1), 0.12)
-			tw.tween_property(_boss_sprite, "modulate", Color.WHITE, 0.12)
+			await _flash_boss(Color(2.0, 0.1, 0.1))
+		var tw := create_tween()
 		tw.tween_property(_boss_sprite, "modulate", Color(1, 1, 1, 0), 0.5)
 		await tw.finished
 	else:
