@@ -78,7 +78,7 @@ const BOSSES: Dictionary = {
 		"win":         "Vitória! Etanol desnaturou as proteínas virais — o vírus se desintegrou!",
 		"lose":        "O Vírus Mutante foi forte demais... Crie Etanol (C+H+H+O) no painel!",
 		"draw_mode":   "virus_proc",
-		"drops":       ["C", "Cl"],
+		"drops":       ["C", "H", "O"],
 		"drop_msg":    "O vírus liberou %s ao se desintegrar! (+1 %s)",
 		"reactions": {
 			"Etanol": {
