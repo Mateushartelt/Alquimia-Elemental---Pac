@@ -209,7 +209,7 @@ var _boss_stunned     : bool = false
 var _battle_compounds : Dictionary = {}   # compound_id -> usos restantes
 var _selected_compound: String = ""
 var _craft_panel_open : bool = false
-var _slots            : Array = [{}, {}, {}]
+var _slots            : Array = [{}, {}, {}, {}]
 var _busy             : bool = false
 var _battle_over      : bool = false
 
@@ -476,7 +476,7 @@ func _build_craft_panel() -> Control:
 	_slot_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	slot_header.add_child(_slot_row)
 
-	for i: int in 3:
+	for i: int in 4:
 		var slot_btn := Button.new()
 		slot_btn.text = "[  ]"
 		slot_btn.add_theme_font_size_override("font_size", 20)
@@ -555,7 +555,7 @@ func show_battle(boss_id: String) -> void:
 	_boss_max_hp      = _boss_data["max_hp"]
 	_boss_hp          = _boss_max_hp
 	_boss_stunned     = false
-	_slots            = [{}, {}, {}]
+	_slots            = [{}, {}, {}, {}]
 	_selected_compound= ""
 	_craft_panel_open = false
 	_busy             = false
@@ -712,7 +712,7 @@ func _refresh_element_buttons() -> void:
 func _on_elem_btn_pressed(el_id: String) -> void:
 	if _busy or _battle_over:
 		return
-	for i: int in 3:
+	for i: int in _slots.size():
 		if _slots[i].is_empty():
 			_slots[i] = {id = el_id}
 			_refresh_element_buttons()
@@ -728,7 +728,7 @@ func _on_slot_clicked(index: int) -> void:
 
 func _refresh_slots_ui() -> void:
 	var btns := _slot_row.get_children()
-	for i: int in 3:
+	for i: int in _slots.size():
 		var btn: Button = btns[i]
 		if _slots[i].is_empty():
 			btn.text = "[  ]"

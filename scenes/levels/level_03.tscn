@@ -92,6 +92,26 @@ element_id = "O"
 position = Vector2(1680, 273)
 element_id = "O"
 
+[node name="O_03" parent="Pickups" instance=ExtResource("3_pickup")]
+position = Vector2(320, 350)
+element_id = "O"
+
+[node name="C_04" parent="Pickups" instance=ExtResource("3_pickup")]
+position = Vector2(1200, 273)
+element_id = "C"
+
+[node name="C_05" parent="Pickups" instance=ExtResource("3_pickup")]
+position = Vector2(720, 350)
+element_id = "C"
+
+[node name="H_04" parent="Pickups" instance=ExtResource("3_pickup")]
+position = Vector2(560, 273)
+element_id = "H"
+
+[node name="H_05" parent="Pickups" instance=ExtResource("3_pickup")]
+position = Vector2(1440, 273)
+element_id = "H"
+
 [node name="Enemies" type="Node2D" parent="."]
 
 [node name="Virus01" parent="Enemies" instance=ExtResource("5_virus")]
