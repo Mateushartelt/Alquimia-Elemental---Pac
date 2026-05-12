@@ -855,11 +855,14 @@ func _on_attack_pressed() -> void:
 
 	# Boss dropa elemento ao tomar dano positivo (se ainda estiver vivo)
 	if dmg > 0 and _boss_hp > 0:
-		var dropped := _pick_drop()
-		if dropped != "":
-			GameState.collect_element(dropped, 1)
+		var drop := _pick_drop()
+		if not drop.is_empty():
+			var dropped: String = drop["id"]
+			var amount: int     = drop["amount"]
+			GameState.collect_element(dropped, amount)
 			await get_tree().create_timer(0.8).timeout
-			_set_dialog(_boss_data["drop_msg"] % [dropped, dropped])
+			var qty_str := " ×%d" % amount if amount > 1 else ""
+			_set_dialog(_boss_data["drop_msg"] % [dropped + qty_str, dropped])
 			await get_tree().create_timer(1.2).timeout
 
 	if _boss_hp <= 0:
@@ -868,35 +871,37 @@ func _on_attack_pressed() -> void:
 
 	await _boss_attack()
 
-## Escolhe o elemento a dropar.
-## Se o boss tem smart_drop_recipe, dropa o que mais falta para aquela receita.
-## Caso contrário, sorteia aleatório da lista drops.
-func _pick_drop() -> String:
+## Escolhe o elemento a dropar e a quantidade.
+## Com smart_drop_recipe: dropa o elemento com maior quantidade faltando, dando tudo de uma vez.
+## Sem smart_drop_recipe: dropa 1 aleatório da lista drops.
+func _pick_drop() -> Dictionary:
 	var drops: Array = _boss_data.get("drops", [])
 	if drops.is_empty():
-		return ""
+		return {}
 	var recipe_id: String = _boss_data.get("smart_drop_recipe", "")
 	if recipe_id == "":
-		return drops[randi() % drops.size()]
+		return {id = drops[randi() % drops.size()], amount = 1}
 	var recipe := ElementDatabase.get_recipe(recipe_id)
 	if recipe.is_empty():
-		return drops[randi() % drops.size()]
-	# Monta lista de elementos que ainda faltam (repetidos conforme quantidade)
+		return {id = drops[randi() % drops.size()], amount = 1}
+	# Encontra o elemento com maior quantidade ainda faltando
 	var ings: Dictionary = recipe.get("ingredients", {})
-	var missing: Array = []
+	var best_el: String = ""
+	var best_missing: int = 0
 	for el: String in ings:
 		var need: int = int(ings[el])
 		var have: int = GameState.collected_elements.get(el, 0)
-		# Considera também o que já está nos slots da batalha
 		for s: Dictionary in _slots:
 			if s.get("id", "") == el:
 				have += 1
-		for _i: int in maxi(0, need - have):
-			missing.append(el)
-	if missing.is_empty():
+		var missing_count: int = maxi(0, need - have)
+		if missing_count > best_missing:
+			best_missing = missing_count
+			best_el = el
+	if best_el == "" or best_missing == 0:
 		# Player já tem tudo — dropa aleatório da lista padrão
-		return drops[randi() % drops.size()]
-	return missing[randi() % missing.size()]
+		return {id = drops[randi() % drops.size()], amount = 1}
+	return {id = best_el, amount = best_missing}
 
 # ── Turno do boss ──────────────────────────────────────────────────────────────
 func _boss_attack() -> void:
