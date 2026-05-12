@@ -61,6 +61,62 @@ const BOSSES: Dictionary = {
 				"flash":   Color(0.8, 0.5, 2.0),
 			},
 		}
+	},
+	"golem": {
+		"name":        "Golem de Lava",
+		"color":       Color(0.75, 0.28, 0.03),
+		"sprite":      "",
+		"sprite_cols": 1,
+		"sprite_rows": 1,
+		"max_hp":      8,
+		"attack_dmg":  20,
+		"intro":       "Um colossal Golem de Lava bloqueia a saída da Caldeira!",
+		"hint":        "Dica: lava solidifica com água — H₂O é a fraqueza principal do Golem!",
+		"hint_detail": "O Golem de Lava é feito de rocha fundida rica em enxofre.\nH₂O apaga o fogo e solidifica a lava! (3× de dano!)\nCO₂ remove o oxigênio das chamas! (2× + stun)\n\nCuidado: SO₂ é componente do magma vulcânico!\nO golem ABSORVE SO₂ e se recupera — escolha errada = aprendizado!",
+		"boss_atk":    "O Golem lança pedras de lava incandescentes!",
+		"no_reaction": "O composto não causou reação significativa no golem...",
+		"win":         "Vitória! H₂O solidificou a lava — reação endotérmica de resfriamento!",
+		"lose":        "O Golem de Lava foi forte demais...",
+		"drops":       ["S", "Si"],
+		"drop_msg":    "O golem soltou %s com o impacto! (+1 %s)",
+		"reactions": {
+			"H2O": {
+				"damage":  3,
+				"message": "A água reage com a lava incandescente — solidificação imediata! Triplo dano!",
+				"effect":  "none",
+				"flash":   Color(0.3, 0.8, 2.0),
+			},
+			"CO2": {
+				"damage":  2,
+				"message": "O CO₂ remove o oxigênio que alimenta o fogo interno do golem! Dano duplo + stun!",
+				"effect":  "stun",
+				"flash":   Color(0.7, 0.8, 2.0),
+			},
+			"SO2": {
+				"damage":  -1,
+				"message": "O golem absorve o SO₂ — enxofre é componente do magma vulcânico! Ele se recupera!",
+				"effect":  "heal",
+				"flash":   Color(2.0, 2.0, 0.2),
+			},
+			"NaCl": {
+				"damage":  1,
+				"message": "O cloreto de sódio reage com os minerais basálticos do golem!",
+				"effect":  "none",
+				"flash":   Color(2.0, 1.5, 1.0),
+			},
+			"HCl": {
+				"damage":  1,
+				"message": "O ácido clorídrico corrói a superfície rochosa do golem!",
+				"effect":  "none",
+				"flash":   Color(0.5, 2.0, 0.3),
+			},
+			"NaOH": {
+				"damage":  1,
+				"message": "A base forte reage com os óxidos metálicos do golem!",
+				"effect":  "none",
+				"flash":   Color(0.8, 0.5, 2.0),
+			},
+		}
 	}
 }
 
@@ -460,6 +516,10 @@ func show_battle(boss_id: String) -> void:
 			int(_boss_data.get("sprite_cols", 1)),
 			int(_boss_data.get("sprite_rows", 1)))
 	else:
+		# Sem sprite: gera textura 1×1 branca e aplica a cor do boss como modulate
+		var img := Image.create(1, 1, false, Image.FORMAT_RGB8)
+		img.fill(Color.WHITE)
+		(_boss_sprite as TextureRect).texture = ImageTexture.create_from_image(img)
 		(_boss_sprite as TextureRect).modulate = _boss_data.get("color", Color.WHITE)
 
 	# Atualiza texto de dica no popup

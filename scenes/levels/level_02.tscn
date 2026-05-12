@@ -4,13 +4,19 @@
 [ext_resource type="PackedScene" uid="uid://player001" path="res://scenes/player/player.tscn" id="2_player"]
 [ext_resource type="PackedScene" uid="uid://pickup001" path="res://scenes/world/element_pickup.tscn" id="3_pickup"]
 [ext_resource type="PackedScene" uid="uid://hud001" path="res://scenes/ui/hud.tscn" id="4_hud"]
-[ext_resource type="PackedScene" uid="uid://slime001" path="res://scenes/enemies/slime_sodio.tscn" id="5_slime"]
+[ext_resource type="PackedScene" uid="uid://golem001" path="res://scenes/enemies/golem_enxofre.tscn" id="5_golem"]
 [ext_resource type="PackedScene" uid="uid://bks7q737ly4iu" path="res://scenes/ui/alchemy_panel.tscn" id="6_alchemy"]
 [ext_resource type="PackedScene" uid="uid://dialogbox001" path="res://scenes/ui/dialog_box.tscn" id="7_dialog"]
-[ext_resource type="PackedScene" uid="uid://tutor001" path="res://scenes/ui/tutorial_hints.tscn" id="8_hints"]
 [ext_resource type="PackedScene" uid="uid://sbfmum45d4ay" path="res://scenes/ui/periodic_table.tscn" id="9_ptable"]
 [ext_resource type="PackedScene" uid="uid://gameover01" path="res://scenes/ui/game_over.tscn" id="10_go"]
-[ext_resource type="PackedScene" uid="uid://dys6l1fxtntiu" path="res://scenes/world/level_tilemap.tscn" id="12_tilemap"]
+[ext_resource type="PackedScene" uid="uid://lvl02tilemap" path="res://scenes/world/level_02_tilemap.tscn" id="12_tilemap"]
+[ext_resource type="PackedScene" uid="uid://bossbattle01" path="res://scenes/ui/boss_battle.tscn" id="13_boss"]
+
+[sub_resource type="RectangleShape2D" id="boss_trigger_shape"]
+size = Vector2(160, 120)
+
+[sub_resource type="RectangleShape2D" id="fog_trigger_shape"]
+size = Vector2(1648, 160)
 
 [node name="Level02" type="Node2D"]
 script = ExtResource("1_lvl")
@@ -18,26 +24,20 @@ script = ExtResource("1_lvl")
 [node name="BgSky" type="ColorRect" parent="."]
 z_index = -10
 offset_left = -32.0
-offset_top = -512.0
+offset_top = -520.0
 offset_right = 2432.0
 offset_bottom = 512.0
-color = Color(0.15, 0.06, 0.02, 1)
+color = Color(0.08, 0.04, 0.02, 1)
 
 [node name="BgGround" type="ColorRect" parent="."]
 z_index = -9
+offset_left = -32.0
 offset_top = 368.0
 offset_right = 2432.0
-offset_bottom = 620.0
-color = Color(0.25, 0.10, 0.02, 1)
+offset_bottom = 640.0
+color = Color(0.20, 0.08, 0.02, 1)
 
-[node name="BgLava" type="ColorRect" parent="."]
-z_index = -8
-offset_top = 400.0
-offset_right = 2432.0
-offset_bottom = 430.0
-color = Color(0.9, 0.25, 0.0, 0.7)
-
-[node name="LevelTileMap" parent="." instance=ExtResource("12_tilemap")]
+[node name="Level02TileMap" parent="." instance=ExtResource("12_tilemap")]
 
 [node name="Player" parent="." instance=ExtResource("2_player")]
 position = Vector2(80, 300)
@@ -55,62 +55,72 @@ drag_horizontal_enabled = true
 [node name="Pickups" type="Node2D" parent="."]
 
 [node name="S_01" parent="Pickups" instance=ExtResource("3_pickup")]
-position = Vector2(200, 270)
+position = Vector2(540, 350)
 element_id = "S"
 
 [node name="S_02" parent="Pickups" instance=ExtResource("3_pickup")]
-position = Vector2(450, 270)
+position = Vector2(800, 225)
 element_id = "S"
 
 [node name="S_03" parent="Pickups" instance=ExtResource("3_pickup")]
-position = Vector2(900, 280)
+position = Vector2(1360, 225)
 element_id = "S"
 
-[node name="Si_01" parent="Pickups" instance=ExtResource("3_pickup")]
-position = Vector2(1200, 280)
-element_id = "Si"
-
-[node name="Si_02" parent="Pickups" instance=ExtResource("3_pickup")]
-position = Vector2(1600, 280)
-element_id = "Si"
-
 [node name="O_01" parent="Pickups" instance=ExtResource("3_pickup")]
-position = Vector2(300, 270)
+position = Vector2(480, 273)
 element_id = "O"
 
 [node name="O_02" parent="Pickups" instance=ExtResource("3_pickup")]
-position = Vector2(700, 280)
+position = Vector2(1040, 273)
 element_id = "O"
 
 [node name="O_03" parent="Pickups" instance=ExtResource("3_pickup")]
-position = Vector2(1400, 280)
+position = Vector2(1680, 273)
 element_id = "O"
+
+[node name="Si_01" parent="Pickups" instance=ExtResource("3_pickup")]
+position = Vector2(400, -270)
+element_id = "Si"
+
+[node name="Si_02" parent="Pickups" instance=ExtResource("3_pickup")]
+position = Vector2(960, -285)
+element_id = "Si"
 
 [node name="Enemies" type="Node2D" parent="."]
 
-[node name="Slime01" parent="Enemies" instance=ExtResource("5_slime")]
-position = Vector2(600, 340)
-max_health = null
-move_speed = null
-patrol_range = null
-damage_on_touch = null
-element_drop = null
-drop_amount = null
-weak_to = null
-immune_to = null
+[node name="Golem01" parent="Enemies" instance=ExtResource("5_golem")]
+position = Vector2(800, 355)
 
-[node name="Slime02" parent="Enemies" instance=ExtResource("5_slime")]
-position = Vector2(1100, 340)
-max_health = null
-move_speed = null
-patrol_range = null
-damage_on_touch = null
-element_drop = null
-drop_amount = null
-weak_to = null
-immune_to = null
+[node name="Golem02" parent="Enemies" instance=ExtResource("5_golem")]
+position = Vector2(1600, 355)
 
-[node name="TutorialHints" parent="." instance=ExtResource("8_hints")]
+[node name="DarkAreas" type="Node2D" parent="."]
+
+[node name="SalaAltaFog" type="ColorRect" parent="DarkAreas"]
+z_index = 5
+offset_left = -32.0
+offset_top = -340.0
+offset_right = 1632.0
+offset_bottom = -140.0
+color = Color(0, 0, 0, 1)
+
+[node name="FogTrigger" type="Area2D" parent="DarkAreas"]
+collision_layer = 0
+collision_mask = 1
+position = Vector2(800, -240)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DarkAreas/FogTrigger"]
+shape = SubResource("fog_trigger_shape")
+
+[node name="BossTrigger" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 1
+position = Vector2(120, -240)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="BossTrigger"]
+shape = SubResource("boss_trigger_shape")
+
+[node name="BossBattle" parent="." instance=ExtResource("13_boss")]
 
 [node name="HUD" parent="." instance=ExtResource("4_hud")]
 
@@ -121,3 +131,15 @@ immune_to = null
 [node name="PeriodicTable" parent="." instance=ExtResource("9_ptable")]
 
 [node name="GameOver" parent="." instance=ExtResource("10_go")]
+
+[node name="FadeOverlay" type="ColorRect" parent="."]
+z_index = 20
+offset_left = -32.0
+offset_top = -520.0
+offset_right = 2432.0
+offset_bottom = 640.0
+color = Color(0, 0, 0, 1)
+visible = false
+
+[connection signal="body_entered" from="DarkAreas/FogTrigger" to="." method="_on_sala_alta_fog_entered"]
+[connection signal="body_entered" from="BossTrigger" to="." method="_on_boss_trigger_entered"]
