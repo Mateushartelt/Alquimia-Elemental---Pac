@@ -77,9 +77,10 @@ const BOSSES: Dictionary = {
 		"no_reaction": "O composto não causou reação perceptível no vírus...",
 		"win":         "Vitória! Etanol desnaturou as proteínas virais — o vírus se desintegrou!",
 		"lose":        "O Vírus Mutante foi forte demais... Crie Etanol (C+H+H+O) no painel!",
-		"draw_mode":   "virus_proc",
-		"drops":       ["C", "H", "O"],
-		"drop_msg":    "O vírus liberou %s ao se desintegrar! (+1 %s)",
+		"draw_mode":        "virus_proc",
+		"smart_drop_recipe":"Etanol",
+		"drops":            ["C", "H", "O"],
+		"drop_msg":         "O vírus liberou %s ao se desintegrar! (+1 %s)",
 		"reactions": {
 			"Etanol": {
 				"damage":  3,
@@ -617,6 +618,19 @@ func show_battle(boss_id: String) -> void:
 	_set_dialog(_boss_data["hint"])
 	await get_tree().create_timer(2.5).timeout
 
+	# Se não tem elementos para craftar E não tem compostos, dá drops gratuitos iniciais
+	var has_elements := not GameState.collected_elements.is_empty()
+	if _battle_compounds.is_empty() and not has_elements:
+		var smart_recipe: String = _boss_data.get("smart_drop_recipe", "")
+		if smart_recipe != "":
+			var r := ElementDatabase.get_recipe(smart_recipe)
+			var ings: Dictionary = r.get("ingredients", {})
+			for el: String in ings:
+				GameState.collect_element(el, int(ings[el]))
+			_set_dialog("O %s liberou elementos ao entrar no campo de batalha! Agora você pode criar compostos!" % _boss_data["name"])
+			await get_tree().create_timer(2.0).timeout
+		_refresh_element_buttons()
+
 	# Se não tem compostos disponíveis, abre o painel de mistura automaticamente
 	if _battle_compounds.is_empty():
 		_craft_panel_open = true
@@ -778,7 +792,7 @@ func _on_craft_pressed() -> void:
 	_mix_toggle_btn.text = "Misturar ▼"
 
 	# Limpa slots
-	_slots = [{}, {}, {}]
+	_slots = [{}, {}, {}, {}]
 	_refresh_element_buttons()
 	_refresh_slots_ui()
 
@@ -841,9 +855,8 @@ func _on_attack_pressed() -> void:
 
 	# Boss dropa elemento ao tomar dano positivo (se ainda estiver vivo)
 	if dmg > 0 and _boss_hp > 0:
-		var drops: Array = _boss_data.get("drops", [])
-		if not drops.is_empty():
-			var dropped: String = drops[randi() % drops.size()]
+		var dropped := _pick_drop()
+		if dropped != "":
 			GameState.collect_element(dropped, 1)
 			await get_tree().create_timer(0.8).timeout
 			_set_dialog(_boss_data["drop_msg"] % [dropped, dropped])
@@ -854,6 +867,36 @@ func _on_attack_pressed() -> void:
 		return
 
 	await _boss_attack()
+
+## Escolhe o elemento a dropar.
+## Se o boss tem smart_drop_recipe, dropa o que mais falta para aquela receita.
+## Caso contrário, sorteia aleatório da lista drops.
+func _pick_drop() -> String:
+	var drops: Array = _boss_data.get("drops", [])
+	if drops.is_empty():
+		return ""
+	var recipe_id: String = _boss_data.get("smart_drop_recipe", "")
+	if recipe_id == "":
+		return drops[randi() % drops.size()]
+	var recipe := ElementDatabase.get_recipe(recipe_id)
+	if recipe.is_empty():
+		return drops[randi() % drops.size()]
+	# Monta lista de elementos que ainda faltam (repetidos conforme quantidade)
+	var ings: Dictionary = recipe.get("ingredients", {})
+	var missing: Array = []
+	for el: String in ings:
+		var need: int = int(ings[el])
+		var have: int = GameState.collected_elements.get(el, 0)
+		# Considera também o que já está nos slots da batalha
+		for s: Dictionary in _slots:
+			if s.get("id", "") == el:
+				have += 1
+		for _i: int in maxi(0, need - have):
+			missing.append(el)
+	if missing.is_empty():
+		# Player já tem tudo — dropa aleatório da lista padrão
+		return drops[randi() % drops.size()]
+	return missing[randi() % missing.size()]
 
 # ── Turno do boss ──────────────────────────────────────────────────────────────
 func _boss_attack() -> void:
