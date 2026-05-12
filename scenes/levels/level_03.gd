@@ -15,6 +15,8 @@ const ENCYCLOPEDIA  := "Enciclopédia"
 @onready var _fog     : ColorRect    = $DarkAreas/SalaAltaFog
 @onready var _fade    : ColorRect    = $FadeOverlay
 
+const TOTAL_ENEMIES := 3
+
 var _respawning        := false
 var _seen_elements     : Array[String] = []
 var _fog_cleared       := false
@@ -22,6 +24,8 @@ var _boss_started      := false
 var _in_sala_alta      := false
 var _enemy_dialog_done := false
 var _zoom_tween        : Tween = null
+var _enemies_killed    := 0
+var _boss_portal       : BossPortal = null
 
 func _ready() -> void:
 	_cam.zoom                       = Vector2(3, 3)
@@ -104,10 +108,31 @@ func _on_element_collected(element_id: String, _amt: int) -> void:
 		"%s (%s) — %s  ★ %s" % [el_name, element_id, el_desc, el_curio])
 
 func _on_enemy_died(_enemy: Node) -> void:
+	_enemies_killed += 1
 	if not _enemy_dialog_done:
 		_enemy_dialog_done = true
 		_dialog.show_dialog(ELARA,
 			"Etanol a 70% desnatura proteínas virais! Água não mata vírus — eles adoram umidade.")
+	if _enemies_killed >= TOTAL_ENEMIES:
+		_spawn_boss_portal()
+
+func _spawn_boss_portal() -> void:
+	await get_tree().create_timer(1.2).timeout
+	_dialog.show_dialog(ELARA,
+		"Todos os vírus eliminados! Um portal surgiu no centro do complexo — enfrente o Vírus Mutante!")
+	_boss_portal = BossPortal.new()
+	_boss_portal.position = Vector2(600, 320)
+	_boss_portal.player_entered.connect(_on_portal_entered)
+	add_child(_boss_portal)
+
+func _on_portal_entered() -> void:
+	if _boss_started:
+		return
+	_boss_started = true
+	if _boss_portal:
+		_boss_portal.queue_free()
+	_boss.show_battle("virus")
+	_boss.battle_finished.connect(_on_boss_finished, CONNECT_ONE_SHOT)
 
 func _on_sala_alta_fog_entered(body: Node2D) -> void:
 	if _fog_cleared or not body.is_in_group("player"):
@@ -119,13 +144,6 @@ func _on_sala_alta_fog_entered(body: Node2D) -> void:
 		_dialog.show_dialog(ELARA,
 			"O Núcleo de Controle! O Vírus Mutante habita aqui — use Etanol (3× dano) ou HCl!"))
 
-func _on_boss_trigger_entered(body: Node2D) -> void:
-	if _boss_started or not body.is_in_group("player"):
-		return
-	_boss_started = true
-	$BossTrigger.monitoring = false
-	_boss.show_battle("virus")
-	_boss.battle_finished.connect(_on_boss_finished, CONNECT_ONE_SHOT)
 
 func _on_boss_finished(won: bool) -> void:
 	if won:
