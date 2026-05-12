@@ -101,6 +101,13 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 24
 text = "[ ]"
 
+[node name="Slot3" type="Button" parent="Bg/Panel/Margin/VBox/HBox/Right/Slots"]
+custom_minimum_size = Vector2(128, 56)
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "[ ]"
+visible = false
+
 [node name="ResultLabel" type="Label" parent="Bg/Panel/Margin/VBox/HBox/Right" unique_id=17601805]
 layout_mode = 2
 theme_override_font_sizes/font_size = 28

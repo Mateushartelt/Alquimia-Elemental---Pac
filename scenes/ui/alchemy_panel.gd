@@ -9,6 +9,7 @@ const ALL_RECIPES := ["H2O", "SO2", "HCl", "CO2", "NaCl", "NaOH", "Etanol"]
 
 # Cada slot: {} (vazio) | {type: "element"|"compound", id: String}
 var _slots: Array = [{}, {}, {}]
+var _slot_count: int = 3
 var _is_open := false
 
 enum TutStep { NONE = 0, H1 = 1, H2 = 2, ADD_O = 3, MIX = 4 }
@@ -28,6 +29,7 @@ const TUT_TEXTS := {
 @onready var _slot0: Button             = $Bg/Panel/Margin/VBox/HBox/Right/Slots/Slot0
 @onready var _slot1: Button             = $Bg/Panel/Margin/VBox/HBox/Right/Slots/Slot1
 @onready var _slot2: Button             = $Bg/Panel/Margin/VBox/HBox/Right/Slots/Slot2
+@onready var _slot3: Button             = $Bg/Panel/Margin/VBox/HBox/Right/Slots/Slot3
 @onready var _result_label: Label       = $Bg/Panel/Margin/VBox/HBox/Right/ResultLabel
 @onready var _mix_btn: Button           = $Bg/Panel/Margin/VBox/HBox/Right/Btns/MixBtn
 @onready var _clear_btn: Button         = $Bg/Panel/Margin/VBox/HBox/Right/Btns/ClearBtn
@@ -43,6 +45,7 @@ func _ready() -> void:
 	_slot0.pressed.connect(_on_slot_clicked.bind(0))
 	_slot1.pressed.connect(_on_slot_clicked.bind(1))
 	_slot2.pressed.connect(_on_slot_clicked.bind(2))
+	_slot3.pressed.connect(_on_slot_clicked.bind(3))
 	_bg.gui_input.connect(_on_bg_input)
 	GameState.element_collected.connect(_on_state_changed)
 	GameState.element_consumed.connect(_on_state_changed)
@@ -164,7 +167,7 @@ func _on_inv_compound_pressed(cid: String) -> void:
 	_add_to_slot("compound", cid)
 
 func _add_to_slot(type: String, id: String) -> void:
-	for i in 3:
+	for i in _slot_count:
 		if _slots[i].is_empty():
 			_slots[i] = {type = type, id = id}
 			_refresh_inventory()
@@ -209,8 +212,8 @@ func _sync_tut_step() -> void:
 		_tut_step = TutStep.H2
 
 func _refresh_slots_ui() -> void:
-	var slot_nodes := [_slot0, _slot1, _slot2]
-	for i in 3:
+	var slot_nodes: Array = [_slot0, _slot1, _slot2, _slot3]
+	for i in _slot_count:
 		var btn: Button = slot_nodes[i]
 		if _slots[i].is_empty():
 			btn.text = "[ ]"
@@ -291,13 +294,17 @@ func _on_mix() -> void:
 		GameState.discovered_compounds.append(rid)
 	GameState.set_active_compound(rid)
 
-	_slots = [{}, {}, {}]
+	_slots = []
+	for i: int in _slot_count:
+		_slots.append({})
 	_close()                               # fecha e despausa PRIMEIRO
 	GameState.compound_created.emit(rid)   # depois emite (dialog pode pausar)
 
 # ── Limpar ────────────────────────────────────────────────────────────────────
 func _on_clear() -> void:
-	_slots = [{}, {}, {}]
+	_slots = []
+	for i: int in _slot_count:
+		_slots.append({})
 	if _is_open:
 		_refresh_inventory()
 		_refresh_slots_ui()
@@ -335,6 +342,12 @@ func can_craft_anything() -> bool:
 			return true
 	return false
 
+## Ativa o 4º slot (usar somente no Level 03 para Etanol).
+func enable_fourth_slot() -> void:
+	_slot_count = 4
+	_slots.append({})
+	_slot3.visible = true
+
 func _on_state_changed(_id: String, _amt: int = 0) -> void:
 	if _is_open: _refresh_inventory()
 
@@ -344,7 +357,7 @@ func _on_compound_changed(_id: String) -> void:
 # ── Tutorial guiado ───────────────────────────────────────────────────────────
 func start_h2o_tutorial() -> void:
 	_tut_step = TutStep.H1
-	_slots = [{}, {}, {}]
+	_slots = [{}, {}, {}]  # tutorial sempre 3 slots (H2O)
 	_refresh_inventory()
 	_refresh_slots_ui()
 	_refresh_result()

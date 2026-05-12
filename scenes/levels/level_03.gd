@@ -36,6 +36,7 @@ func _ready() -> void:
 	var tw := create_tween()
 	tw.tween_property(_fade, "color", Color(0, 0, 0, 0), 1.0)
 	tw.tween_callback(func() -> void: _fade.visible = false)
+	_alchemy.enable_fourth_slot()
 	GameState.element_collected.connect(_on_element_collected)
 	get_tree().create_timer(1.0).timeout.connect(_show_intro)
 	for enemy in get_tree().get_nodes_in_group("enemies"):
