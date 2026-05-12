@@ -5,7 +5,7 @@ extends CanvasLayer
 
 signal panel_opened
 
-const ALL_RECIPES := ["H2O", "SO2", "HCl", "CO2", "NaCl", "NaOH"]
+const ALL_RECIPES := ["H2O", "SO2", "HCl", "CO2", "NaCl", "NaOH", "Etanol"]
 
 # Cada slot: {} (vazio) | {type: "element"|"compound", id: String}
 var _slots: Array = [{}, {}, {}]

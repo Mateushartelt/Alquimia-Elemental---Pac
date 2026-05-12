@@ -1,0 +1,156 @@
+[gd_scene format=3 uid="uid://level03"]
+
+[ext_resource type="Script" path="res://scenes/levels/level_03.gd" id="1_lvl"]
+[ext_resource type="PackedScene" uid="uid://player001" path="res://scenes/player/player.tscn" id="2_player"]
+[ext_resource type="PackedScene" uid="uid://pickup001" path="res://scenes/world/element_pickup.tscn" id="3_pickup"]
+[ext_resource type="PackedScene" uid="uid://hud001" path="res://scenes/ui/hud.tscn" id="4_hud"]
+[ext_resource type="PackedScene" uid="uid://virus001" path="res://scenes/enemies/virus.tscn" id="5_virus"]
+[ext_resource type="PackedScene" uid="uid://bks7q737ly4iu" path="res://scenes/ui/alchemy_panel.tscn" id="6_alchemy"]
+[ext_resource type="PackedScene" uid="uid://dialogbox001" path="res://scenes/ui/dialog_box.tscn" id="7_dialog"]
+[ext_resource type="PackedScene" uid="uid://sbfmum45d4ay" path="res://scenes/ui/periodic_table.tscn" id="9_ptable"]
+[ext_resource type="PackedScene" uid="uid://gameover01" path="res://scenes/ui/game_over.tscn" id="10_go"]
+[ext_resource type="PackedScene" uid="uid://lvl03tilemap" path="res://scenes/world/level_03_tilemap.tscn" id="12_tilemap"]
+[ext_resource type="PackedScene" uid="uid://bossbattle01" path="res://scenes/ui/boss_battle.tscn" id="13_boss"]
+
+[sub_resource type="RectangleShape2D" id="boss_trigger_shape"]
+size = Vector2(160, 120)
+
+[sub_resource type="RectangleShape2D" id="fog_trigger_shape"]
+size = Vector2(1648, 160)
+
+[node name="Level03" type="Node2D"]
+script = ExtResource("1_lvl")
+
+[node name="BgSky" type="ColorRect" parent="."]
+z_index = -10
+offset_left = -32.0
+offset_top = -520.0
+offset_right = 2432.0
+offset_bottom = 512.0
+color = Color(0.01, 0.06, 0.12, 1)
+
+[node name="BgGround" type="ColorRect" parent="."]
+z_index = -9
+offset_left = -32.0
+offset_top = 368.0
+offset_right = 2432.0
+offset_bottom = 640.0
+color = Color(0.02, 0.08, 0.16, 1)
+
+[node name="Level03TileMap" parent="." instance=ExtResource("12_tilemap")]
+
+[node name="Player" parent="." instance=ExtResource("2_player")]
+position = Vector2(80, 300)
+
+[node name="Camera2D" type="Camera2D" parent="Player"]
+offset = Vector2(0, -20)
+zoom = Vector2(3, 3)
+limit_left = 0
+limit_top = -500
+limit_right = 2400
+limit_bottom = 600
+position_smoothing_enabled = true
+drag_horizontal_enabled = true
+
+[node name="Pickups" type="Node2D" parent="."]
+
+[node name="C_01" parent="Pickups" instance=ExtResource("3_pickup")]
+position = Vector2(480, 350)
+element_id = "C"
+
+[node name="C_02" parent="Pickups" instance=ExtResource("3_pickup")]
+position = Vector2(960, 225)
+element_id = "C"
+
+[node name="C_03" parent="Pickups" instance=ExtResource("3_pickup")]
+position = Vector2(400, -270)
+element_id = "C"
+
+[node name="Cl_01" parent="Pickups" instance=ExtResource("3_pickup")]
+position = Vector2(800, 225)
+element_id = "Cl"
+
+[node name="Cl_02" parent="Pickups" instance=ExtResource("3_pickup")]
+position = Vector2(1360, 225)
+element_id = "Cl"
+
+[node name="H_01" parent="Pickups" instance=ExtResource("3_pickup")]
+position = Vector2(200, 350)
+element_id = "H"
+
+[node name="H_02" parent="Pickups" instance=ExtResource("3_pickup")]
+position = Vector2(1600, 225)
+element_id = "H"
+
+[node name="H_03" parent="Pickups" instance=ExtResource("3_pickup")]
+position = Vector2(960, -285)
+element_id = "H"
+
+[node name="O_01" parent="Pickups" instance=ExtResource("3_pickup")]
+position = Vector2(1040, 273)
+element_id = "O"
+
+[node name="O_02" parent="Pickups" instance=ExtResource("3_pickup")]
+position = Vector2(1680, 273)
+element_id = "O"
+
+[node name="Enemies" type="Node2D" parent="."]
+
+[node name="Virus01" parent="Enemies" instance=ExtResource("5_virus")]
+position = Vector2(700, 355)
+
+[node name="Virus02" parent="Enemies" instance=ExtResource("5_virus")]
+position = Vector2(1200, 355)
+
+[node name="Virus03" parent="Enemies" instance=ExtResource("5_virus")]
+position = Vector2(1800, 355)
+
+[node name="DarkAreas" type="Node2D" parent="."]
+
+[node name="SalaAltaFog" type="ColorRect" parent="DarkAreas"]
+z_index = 5
+offset_left = -32.0
+offset_top = -340.0
+offset_right = 1632.0
+offset_bottom = -140.0
+color = Color(0, 0, 0, 1)
+
+[node name="FogTrigger" type="Area2D" parent="DarkAreas"]
+collision_layer = 0
+collision_mask = 1
+position = Vector2(800, -240)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DarkAreas/FogTrigger"]
+shape = SubResource("fog_trigger_shape")
+
+[node name="BossTrigger" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 1
+position = Vector2(120, -240)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="BossTrigger"]
+shape = SubResource("boss_trigger_shape")
+
+[node name="BossBattle" parent="." instance=ExtResource("13_boss")]
+
+[node name="HUD" parent="." instance=ExtResource("4_hud")]
+
+[node name="AlchemyPanel" parent="." instance=ExtResource("6_alchemy")]
+
+[node name="DialogBox" parent="." instance=ExtResource("7_dialog")]
+
+[node name="PeriodicTable" parent="." instance=ExtResource("9_ptable")]
+
+[node name="GameOver" parent="." instance=ExtResource("10_go")]
+
+[node name="FadeOverlay" type="ColorRect" parent="."]
+z_index = 20
+offset_left = -32.0
+offset_top = -520.0
+offset_right = 2432.0
+offset_bottom = 640.0
+color = Color(0, 0, 0, 1)
+visible = false
+
+[connection signal="body_entered" from="DarkAreas/FogTrigger" to="." method="_on_sala_alta_fog_entered"]
+[connection signal="body_entered" from="BossTrigger" to="." method="_on_boss_trigger_entered"]

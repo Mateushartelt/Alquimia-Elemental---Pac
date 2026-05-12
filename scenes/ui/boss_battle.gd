@@ -62,6 +62,68 @@ const BOSSES: Dictionary = {
 			},
 		}
 	},
+	"virus": {
+		"name":        "Vírus Mutante",
+		"color":       Color(0.54, 0.0, 1.0),
+		"sprite":      "",
+		"sprite_cols": 1,
+		"sprite_rows": 1,
+		"max_hp":      8,
+		"attack_dmg":  15,
+		"intro":       "Um Vírus Mutante colossal contaminou o Núcleo de Controle!",
+		"hint":        "Dica: álcool etílico (Etanol) desnatura proteínas virais — é a fraqueza dele!",
+		"hint_detail": "O Vírus Mutante possui proteínas de superfície que o protegem.\nEtanol (C+2H+O) desnatura essas proteínas — dano triplo!\nHCl corrói a cápsula viral (2× dano)\n\nCuidado: H₂O CURA o vírus — ele adora umidade!\nAprendizado: por isso lavamos mãos com álcool, não só com água!",
+		"boss_atk":    "O Vírus Mutante injeta RNA viral!",
+		"no_reaction": "O composto não causou reação perceptível no vírus...",
+		"win":         "Vitória! Etanol desnaturou as proteínas virais — o vírus se desintegrou!",
+		"lose":        "O Vírus Mutante foi forte demais... Crie Etanol (C+H+H+O) no painel!",
+		"drops":       ["C", "Cl"],
+		"drop_msg":    "O vírus liberou %s ao se desintegrar! (+1 %s)",
+		"reactions": {
+			"Etanol": {
+				"damage":  3,
+				"message": "O Etanol desnatura as proteínas de superfície! Triplo dano!",
+				"effect":  "stun",
+				"flash":   Color(0.5, 2.0, 0.8),
+			},
+			"HCl": {
+				"damage":  2,
+				"message": "O ácido clorídrico corrói a cápsula viral! Dano duplo!",
+				"effect":  "none",
+				"flash":   Color(0.5, 2.0, 0.3),
+			},
+			"H2O": {
+				"damage":  -1,
+				"message": "O vírus absorve a umidade e se recupera! Vírus adoram ambientes úmidos!",
+				"effect":  "heal",
+				"flash":   Color(0.3, 0.8, 2.0),
+			},
+			"NaCl": {
+				"damage":  1,
+				"message": "O sal resseca a membrana viral por osmose!",
+				"effect":  "none",
+				"flash":   Color(2.0, 1.5, 1.0),
+			},
+			"CO2": {
+				"damage":  1,
+				"message": "O CO₂ acidifica o meio intracelular do vírus!",
+				"effect":  "none",
+				"flash":   Color(0.7, 0.8, 2.0),
+			},
+			"NaOH": {
+				"damage":  1,
+				"message": "A base forte destrói o envelope lipídico viral!",
+				"effect":  "none",
+				"flash":   Color(0.8, 0.5, 2.0),
+			},
+			"SO2": {
+				"damage":  1,
+				"message": "O gás tóxico atordoa o vírus!",
+				"effect":  "stun",
+				"flash":   Color(2.0, 2.0, 0.2),
+			},
+		}
+	},
 	"golem": {
 		"name":        "Golem de Lava",
 		"color":       Color(0.75, 0.28, 0.03),
@@ -790,7 +852,7 @@ func _on_attack_pressed() -> void:
 func _boss_attack() -> void:
 	if _boss_stunned:
 		_boss_stunned = false
-		_set_dialog("A lesma ainda está atordoada pelo SO₂ e pula o ataque!")
+		_set_dialog("%s ainda está atordoado e pula o ataque!" % _boss_data["name"])
 		await get_tree().create_timer(1.5).timeout
 		_next_player_turn()
 		return
