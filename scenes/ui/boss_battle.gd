@@ -619,7 +619,11 @@ func show_battle(boss_id: String) -> void:
 	await get_tree().create_timer(2.5).timeout
 
 	# Se não tem elementos para craftar E não tem compostos, dá drops gratuitos iniciais
-	var has_elements := not GameState.collected_elements.is_empty()
+	var has_elements := false
+	for _el: String in GameState.collected_elements:
+		if int(GameState.collected_elements[_el]) > 0:
+			has_elements = true
+			break
 	if _battle_compounds.is_empty() and not has_elements:
 		var smart_recipe: String = _boss_data.get("smart_drop_recipe", "")
 		if smart_recipe != "":
@@ -853,8 +857,8 @@ func _on_attack_pressed() -> void:
 
 	await get_tree().create_timer(1.2).timeout
 
-	# Boss dropa elemento ao tomar dano positivo (se ainda estiver vivo)
-	if dmg > 0 and _boss_hp > 0:
+	# Boss dropa elemento ao tomar dano positivo (inclusive no golpe final)
+	if dmg > 0:
 		var drop := _pick_drop()
 		if not drop.is_empty():
 			var dropped: String = drop["id"]
@@ -891,9 +895,7 @@ func _pick_drop() -> Dictionary:
 	for el: String in ings:
 		var need: int = int(ings[el])
 		var have: int = GameState.collected_elements.get(el, 0)
-		for s: Dictionary in _slots:
-			if s.get("id", "") == el:
-				have += 1
+		# slots não subtraem de collected_elements — não contar duas vezes
 		var missing_count: int = maxi(0, need - have)
 		if missing_count > best_missing:
 			best_missing = missing_count
