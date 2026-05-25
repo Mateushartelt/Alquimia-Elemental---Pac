@@ -1,9 +1,11 @@
 extends Node2D
 ## Level02TileMap — Geometria da Caldeira Vulcânica.
-## Layout:
-##   Hub + Corredor (x:0-2400, y:112-368) — chão único com 8 plataformas
-##   Shaft (x:224-304, 80px) — wall jump obrigatório para Sala Alta
-##   Sala Alta (x:0-1600, y:-320→-160) — zona escura, boss no canto esq
+## Layout: Metroidvania Lock & Key
+##   Zona1 Hub    (x:0-640,  y:112-368) — spawn, H e S, sem O
+##   Shaft        (x:224-304, 80px)     — wall jump c/ plataformas de descanso
+##   Sala Alta    (x:0-704,  y:-320→-160) — único lugar com O e C
+##   Zona2 Lava   (x:672-1440, sem chão) — plataformas sobre lava
+##   Zona3 Arena  (x:1440-2400)         — G3 Guardião + portal boss
 ##
 ## [col, row, w, h] | TILE=16px | col×16=x | row×16=y
 
@@ -14,45 +16,64 @@ const ACCENT_H := 4
 
 ## [col, row, largura_tiles, altura_tiles]
 ## row 7=y112 | row 23=y368 | row -10=y-160 | row -20=y-320
+## ZONAS: Zona1(col0-40) | Barreira(col40-42) | Zona2(col42-90) | Zona3(col90-150)
 const TILES: Array = [
-	# ━━ HUB + CORREDOR (x:0-2400, y:112-368) ━━━━━━━━━━━━━━━━━━━━━━━━━━
-	# Teto com gap para shaft (col14-19 = x:224-304)
-	[0,    7,  14,  2],  # teto esq     x:0-224    y=112
-	[19,   7, 131,  2],  # teto dir     x:304-2400 y=112
-	[0,   23, 150,  2],  # chão total   x:0-2400   y=368
-	[150,  7,   1,  18], # parede dir   x:2400     y:112-400
+	# ━━ SHAFT (x:224-304, 80px) y:-320→304 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+	[14, -20,  1, 39],  # parede esq shaft  x:224  y:-320→304 (desce até alcance do player)
+	[19, -20,  1, 39],  # parede dir shaft  x:304  y:-320→304
+	# Plataformas internas — alternando L/R para wall-jump com descanso
+	[14, 15,   3,  1],  # plat-S0a esq  x:224-272  y:240 (entrada inferior)
+	[17, 10,   2,  1],  # plat-S0b dir  x:272-304  y:160
+	[14,  4,   3,  1],  # plat-S1 esq  x:224-272  y:64
+	[17,  0,   2,  1],  # plat-S2 dir  x:272-304  y:0
+	[14, -4,   3,  1],  # plat-S3 esq  x:224-272  y:-64
+	[17, -8,   2,  1],  # plat-S4 dir  x:272-304  y:-128
 
-	# Plataformas alternadas (alto-baixo para criar ritmo de pulo)
-	[5,   16,  10,  1],  # plat A  x:80-240    y=256
-	[25,  18,  10,  1],  # plat B  x:400-560   y=288
-	[45,  15,  10,  1],  # plat C  x:720-880   y=240
-	[60,  18,  10,  1],  # plat D  x:960-1120  y=288
-	[80,  15,  10,  1],  # plat E  x:1280-1440 y=240
-	[100, 18,  10,  1],  # plat F  x:1600-1760 y=288
-	[120, 15,  10,  1],  # plat G  x:1920-2080 y=240
-	[135, 18,  10,  1],  # plat H  x:2160-2320 y=288
+	# ━━ SALA ALTA (x:0-704, y:-320→-160) ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+	[0,  -20, 44,  2],  # teto           x:0-704   y=-320
+	[0,  -20,  1, 10],  # parede esq     x:0       y:-320→-160
+	[43, -20,  1, 10],  # parede dir     x:688     y:-320→-160
+	[0,  -10, 14,  2],  # chão esq shaft x:0-224   y=-160
+	[19, -10, 24,  2],  # chão dir shaft x:304-688 y=-160
+	# Plataformas zig-zag (caminho até os pickups de O e C)
+	[2,  -18,  8,  1],  # plat I   x:32-160   y=-288
+	[11, -16,  8,  1],  # plat J   x:176-304  y=-256
+	[20, -18,  8,  1],  # plat K   x:320-448  y=-288
+	[30, -16,  8,  1],  # plat L   x:480-608  y=-256
+	[36, -14,  8,  1],  # plat M   x:576-704  y=-224
 
-	# ━━ SHAFT DA CALDEIRA (x:224-304, 80px) y:-320→112 ━━━━━━━━━━━━━━━━━━
-	[14, -20,   1,  27], # parede esq shaft  x:224  y=-320→112
-	[19, -20,   1,  27], # parede dir shaft  x:304  y=-320→112
+	# ━━ ZONA 1 HUB (x:0-640, y:112-368) ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+	[0,   7, 14,  2],   # teto esq shaft  x:0-224   y=112
+	[19,  7, 21,  2],   # teto dir shaft  x:304-640 y=112
+	[0,  23, 40,  2],   # chão            x:0-640   y=368
+	# Plataformas Zona 1
+	[4,  19,  8,  1],   # plat A  x:64-192   y=304
+	[17, 17, 10,  1],   # plat B  x:272-432  y=272
+	[30, 15,  8,  1],   # plat C  x:480-608  y=240
 
-	# ━━ SALA ALTA (x:0-1600, y:-320→-160) ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-	# Gap no chão na posição do shaft (col14-19) para sair do shaft
-	[0,  -20, 100,  2],  # teto         x:0-1600   y=-320
-	[0,  -10,  14,  2],  # chão esq     x:0-224    y=-160 (gap shaft col14-19)
-	[19, -10,  81,  2],  # chão dir     x:304-1600 y=-160
-	[100,-20,   1,  10], # parede dir   x:1600     y=-320→-160
+	# ━━ TETO ZONA 2 (x:672-1440, y:112) ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+	# Sem chão — lava é ColorRect+Area2D em level_02.tscn
+	[42,  7, 48,  2],   # teto zona 2  x:672-1440  y=112
+	# Plataformas flutuantes sobre lava
+	[46, 17,  8,  1],   # plat D  x:736-864   y=272
+	[58, 19,  8,  1],   # plat E  x:928-1056  y=304
+	[68, 16,  8,  1],   # plat F  x:1088-1216 y=256
+	[82, 18,  8,  1],   # plat G  x:1312-1440 y=288
 
-	# Plataformas na Sala Alta (caminho shaft → boss area esq)
-	[3,  -18,  10,  1],  # plat I   x:48-208    y=-288
-	[20, -16,  10,  1],  # plat J   x:320-480   y=-256
-	[38, -14,  10,  1],  # plat K   x:608-768   y=-224
-	[55, -17,  10,  1],  # plat L   x:880-1040  y=-272
-	[70, -15,  10,  1],  # plat M   x:1120-1280 y=-240
-	[83, -13,  10,  1],  # plat N   x:1328-1488 y=-208
+	# ━━ ZONA 3 ARENA (x:1440-2400, y:112-368) ━━━━━━━━━━━━━━━━━━━━━━━━━
+	[90,  7, 60,  2],   # teto             x:1440-2400 y=112
+	[90, 23, 60,  2],   # chão             x:1440-2400 y=368
+	[90,  7,  1, 18],   # parede esq       x:1440 y:112-400
+	[150, 7,  1, 18],   # parede dir       x:2400 y:112-400
+	# Plataformas arena
+	[93, 18, 10,  1],   # plat H  x:1488-1648 y=288
+	[107,15, 12,  1],   # plat I  x:1712-1904 y=240
+	[120,18, 10,  1],   # plat J  x:1920-2080 y=288
+	[136,15, 12,  1],   # plat K  x:2176-2368 y=240
+	[148,17,  2,  1],   # plat L  x:2368-2400 y=272
 
-	# ━━ PAREDE ESQ TOTAL (x:-16, y:-320→480) ━━━━━━━━━━━━━━━━━━━━━━━━━━
-	[-1, -20,   1,  50], # cobre sala alta + hub
+	# ━━ PAREDE ESQ TOTAL ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+	[-1, -20,  1, 50],  # cobre sala alta + hub
 ]
 
 func _ready() -> void:

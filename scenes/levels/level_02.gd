@@ -1,19 +1,25 @@
 extends Node2D
-## Level02 — Caldeira Vulcânica.
-## Introduz S (Enxofre) e Si (Silício). Boss: Golem de Lava (fraco a H₂O e CO₂).
+## Level02 — Caldeira Vulcânica. Metroidvania Lock & Key.
+## O (Oxigênio) exclusivo na Sala Alta → player sobe shaft → crafta H₂O
+## → dissolve barreira de lava → Zona 2 (plataformas sobre lava) → Zona 3 arena
+## → mata G3 → portal do boss Golem de Lava.
 
-const KILL_PLANE_Y  := 620.0
-const SPAWN_POS     := Vector2(80, 300)
+const KILL_PLANE_Y  := 640.0
+const SPAWN_POS     := Vector2(100, 330)
 const ELARA         := "Mestra Elara"
 const ENCYCLOPEDIA  := "Enciclopédia"
 
-@onready var player   : Player       = $Player
-@onready var _dialog  : DialogBox    = $DialogBox
-@onready var _alchemy : AlchemyPanel = $AlchemyPanel
-@onready var _boss    : BossBattle   = $BossBattle
-@onready var _cam     : Camera2D     = $Player/Camera2D
-@onready var _fog     : ColorRect    = $DarkAreas/SalaAltaFog
-@onready var _fade    : ColorRect    = $FadeOverlay
+@onready var player          : Player       = $Player
+@onready var _dialog         : DialogBox    = $DialogBox
+@onready var _alchemy        : AlchemyPanel = $AlchemyPanel
+@onready var _boss           : BossBattle   = $BossBattle
+@onready var _cam            : Camera2D     = $Player/Camera2D
+@onready var _fog            : ColorRect    = $DarkAreas/SalaAltaFog
+@onready var _fade           : ColorRect    = $FadeOverlay
+@onready var _barrier_visual : ColorRect    = $LavaBarrier/Visual
+@onready var _barrier_wall   : StaticBody2D = $LavaBarrier/Wall
+
+const TOTAL_ENEMIES := 3
 
 var _respawning        := false
 var _seen_elements     : Array[String] = []
@@ -21,7 +27,10 @@ var _fog_cleared       := false
 var _boss_started      := false
 var _in_sala_alta      := false
 var _enemy_dialog_done := false
+var _barrier_dissolved := false
 var _zoom_tween        : Tween = null
+var _enemies_killed    := 0
+var _boss_portal       : BossPortal = null
 
 func _ready() -> void:
 	_cam.zoom                       = Vector2(3, 3)
@@ -31,7 +40,7 @@ func _ready() -> void:
 	_cam.limit_bottom               = 450
 	_cam.position_smoothing_enabled = true
 	_cam.drag_horizontal_enabled    = true
-	# Fade de entrada (preto → transparente)
+	# Fade de entrada
 	_fade.color   = Color(0, 0, 0, 1)
 	_fade.visible = true
 	var tw := create_tween()
@@ -49,7 +58,6 @@ func _process(_delta: float) -> void:
 	_update_camera()
 
 func _update_camera() -> void:
-	# Troca de zona: hub (y > -80) ↔ sala alta (y < -80)
 	var in_alta := player.global_position.y < -80.0
 	if in_alta and not _in_sala_alta:
 		_in_sala_alta = true
@@ -57,8 +65,8 @@ func _update_camera() -> void:
 		_cam.position_smoothing_enabled = true
 		_set_zoom(Vector2(4, 4), 0.6)
 		_cam.limit_left   = 0
-		_cam.limit_top    = -400
-		_cam.limit_right  = 1650
+		_cam.limit_top    = -380
+		_cam.limit_right  = 704
 		_cam.limit_bottom = -80
 	elif not in_alta and _in_sala_alta:
 		_in_sala_alta = false
@@ -88,9 +96,9 @@ func _respawn() -> void:
 
 func _show_intro() -> void:
 	_dialog.queue_dialogs([
-		[ELARA, "A Caldeira Vulcânica! Calor intenso e enxofre dominam este lugar."],
-		[ELARA, "Colete S (Enxofre) e O (Oxigênio) — formam SO₂, o gás da chuva ácida de Vênus!"],
-		[ELARA, "O shaft estreito à esquerda leva a uma área mais alta. Wall Jump para escalar!"],
+		[ELARA, "A Caldeira Vulcânica! Enxofre e calor dominam este lugar."],
+		[ELARA, "Colete H (Hidrogênio) aqui embaixo — mas o Oxigênio está LÁ EM CIMA!"],
+		[ELARA, "A barreira de lava bloqueia o caminho. Suba, colete O, crie H₂O e dissolva-a!"],
 	])
 
 func _on_element_collected(element_id: String, _amt: int) -> void:
@@ -104,11 +112,53 @@ func _on_element_collected(element_id: String, _amt: int) -> void:
 	_dialog.show_dialog(ENCYCLOPEDIA,
 		"%s (%s) — %s  ★ %s" % [el_name, element_id, el_desc, el_curio])
 
+func _on_lava_barrier_hit(area: Node) -> void:
+	if _barrier_dissolved:
+		return
+	if area.get("compound_id") != "H2O":
+		_dialog.show_dialog(ELARA, "A lava resiste! Use H₂O (2×H + 1×O) para solidificá-la.")
+		return
+	_barrier_dissolved = true
+	var tw := create_tween()
+	tw.tween_property(_barrier_visual, "color", Color(0.2, 0.1, 0.4, 0.0), 0.8)
+	tw.tween_callback(func() -> void:
+		_barrier_wall.process_mode = Node.PROCESS_MODE_DISABLED
+		_barrier_visual.visible = false
+		_dialog.show_dialog(ELARA, "A lava solidificou em Obsidiana! Zona 2 aberta!"))
+
+func _on_lava_entered(body: Node2D) -> void:
+	if body.is_in_group("player"):
+		_respawn()
+
 func _on_enemy_died(_enemy: Node) -> void:
+	_enemies_killed += 1
 	if not _enemy_dialog_done:
 		_enemy_dialog_done = true
 		_dialog.show_dialog(ELARA,
-			"H₂O derrete rocha vulcânica — reação endotérmica. CO₂ sufoca as chamas internas!")
+			"H₂O resfria e endurece a lava — reação endotérmica!")
+	else:
+		_dialog.show_dialog(ELARA,
+			"%d/%d Golems eliminados!" % [_enemies_killed, TOTAL_ENEMIES])
+	if _enemies_killed >= TOTAL_ENEMIES:
+		_spawn_boss_portal()
+
+func _spawn_boss_portal() -> void:
+	await get_tree().create_timer(1.2).timeout
+	_dialog.show_dialog(ELARA,
+		"Todos os Golems eliminados! Um portal surgiu na Arena — enfrente o Golem de Lava!")
+	_boss_portal = BossPortal.new()
+	_boss_portal.position = Vector2(2200, 320)
+	_boss_portal.player_entered.connect(_on_portal_entered)
+	add_child(_boss_portal)
+
+func _on_portal_entered() -> void:
+	if _boss_started:
+		return
+	_boss_started = true
+	if _boss_portal:
+		_boss_portal.queue_free()
+	_boss.show_battle("golem")
+	_boss.battle_finished.connect(_on_boss_finished, CONNECT_ONE_SHOT)
 
 func _on_sala_alta_fog_entered(body: Node2D) -> void:
 	if _fog_cleared or not body.is_in_group("player"):
@@ -118,15 +168,7 @@ func _on_sala_alta_fog_entered(body: Node2D) -> void:
 	tw.tween_property(_fog, "color", Color(0, 0, 0, 0), 1.2)
 	get_tree().create_timer(0.4).timeout.connect(func() -> void:
 		_dialog.show_dialog(ELARA,
-			"A Cratera! O Golem de Lava habita aqui — prepare H₂O ou CO₂ para derrotá-lo!"))
-
-func _on_boss_trigger_entered(body: Node2D) -> void:
-	if _boss_started or not body.is_in_group("player"):
-		return
-	_boss_started = true
-	$BossTrigger.monitoring = false
-	_boss.show_battle("golem")
-	_boss.battle_finished.connect(_on_boss_finished, CONNECT_ONE_SHOT)
+			"A Sala Alta! O (Oxigênio) está aqui — colete e desça para criar H₂O!"))
 
 func _on_boss_finished(won: bool) -> void:
 	if won:
@@ -143,4 +185,4 @@ func _on_boss_finished(won: bool) -> void:
 		get_tree().change_scene_to_file("res://scenes/levels/level_03.tscn")
 	else:
 		_dialog.show_dialog(ELARA,
-			"O Golem foi forte demais... Colete mais O para H₂O (2H+1O) ou CO₂ (1C+2O)!")
+			"O Golem resistiu! Certifique-se de ter H₂O (2×H + 1×O) equipado.")

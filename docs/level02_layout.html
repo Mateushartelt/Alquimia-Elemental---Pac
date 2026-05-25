@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Level 02 — Caldeira Vulcânica v5</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#06000f; font-family:'Courier New',monospace; color:#ccc; padding:12px; }
+h1 { color:#ff6622; font-size:13px; margin-bottom:4px; }
+canvas { image-rendering:pixelated; display:block; border:1px solid #1a0830; margin-bottom:10px; }
+.legend { display:flex; flex-wrap:wrap; gap:14px; font-size:9px; margin-top:6px; }
+.li { display:flex; align-items:center; gap:5px; }
+.dot { width:10px; height:10px; border-radius:50%; }
+.sq  { width:12px; height:8px; border-radius:1px; }
+</style>
+</head>
+<body>
+<h1>Level 02 — Caldeira Vulcânica &nbsp;<span style="color:#331122;font-size:10px">v5 METROIDVANIA MAP</span></h1>
+
+<canvas id="c" width="1320" height="516"></canvas>
+
+<div class="legend">
+  <div class="li"><div class="sq" style="background:#2a4422;border:1px solid #44aa44"></div>Zona 1 — Spawn / Puzzle</div>
+  <div class="li"><div class="sq" style="background:#1a0600;border:1px solid #ff6600"></div>Zona 2 — Lava</div>
+  <div class="li"><div class="sq" style="background:#110022;border:1px solid #8833cc"></div>Zona 3 / Sala Alta</div>
+  <div class="li"><div class="dot" style="background:#3399ff"></div>O (exclusivo Sala Alta)</div>
+  <div class="li"><div class="dot" style="background:#6688ff"></div>H</div>
+  <div class="li"><div class="dot" style="background:#ffff44"></div>S</div>
+  <div class="li"><div class="dot" style="background:#777;opacity:0.5"></div>C oculto</div>
+  <div class="li"><div class="sq" style="background:#ff8800;width:8px"></div>Barreira de Lava → H₂O</div>
+  <div class="li"><div class="sq" style="background:#1e2a44;border:1px solid #88aaff"></div>Obsidiana (após H₂O)</div>
+  <div class="li"><div class="sq" style="background:#885522"></div>Craft Table</div>
+</div>
+
+<script>
+const cv = document.getElementById('c');
+const ctx = cv.getContext('2d');
+ctx.imageSmoothingEnabled = false;
+const W = cv.width, H = cv.height;
+
+// Scale: 2400 game units → 1320px canvas. OY=420 so y=-412 → near top, y=490 → near bottom
+const S = 0.55, OY = 420;
+const gx = x => Math.round(x * S);
+const gy = y => Math.round((y + OY) * S);
+const gw = w => Math.max(1, Math.round(w * S));
+const gh = h => Math.max(1, Math.round(h * S));
+
+// ── BACKGROUND ───────────────────────────────────────────────
+ctx.fillStyle = '#050010';
+ctx.fillRect(0, 0, W, H);
+
+// ── ZONE BACKGROUNDS ─────────────────────────────────────────
+// Sala Alta
+ctx.fillStyle = '#100020';
+ctx.fillRect(gx(0), gy(-412), gw(700), gh(274));
+
+// Zone 1 (x:0-640, y:112-490)
+ctx.fillStyle = '#091208';
+ctx.fillRect(gx(0), gy(112), gw(640), H - gy(112));
+
+// Zone 2 (x:680-1440, y:112-490)
+ctx.fillStyle = '#160400';
+ctx.fillRect(gx(680), gy(112), gw(760), H - gy(112));
+
+// Zone 3 (x:1440-2400, y:112-490)
+ctx.fillStyle = '#100018';
+ctx.fillRect(gx(1440), gy(112), gw(960), H - gy(112));
+
+// ── LAVA (Zone 2 floor, y:368→bottom) ───────────────────────
+{
+  const lx=gx(680), ly=gy(368), lw=gw(760), lh=H-ly;
+  const g=ctx.createLinearGradient(0,ly,0,H);
+  g.addColorStop(0,'#ff7700'); g.addColorStop(0.25,'#cc3300');
+  g.addColorStop(0.6,'#880000'); g.addColorStop(1,'#2a0000');
+  ctx.fillStyle=g; ctx.fillRect(lx,ly,lw,lh);
+  // animated surface hint
+  ctx.strokeStyle='#ffdd00'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(lx,ly);
+  for(let x=680;x<=1440;x+=10){
+    ctx.lineTo(gx(x), ly+Math.sin(x*0.06)*4+Math.sin(x*0.13)*2);
+  }
+  ctx.stroke();
+  // bubbles
+  ctx.fillStyle='rgba(255,190,0,0.5)';
+  for(let bx=700;bx<1440;bx+=60){
+    const boff=Math.sin(bx*0.03)*3;
+    ctx.beginPath(); ctx.arc(gx(bx),ly+4+boff,2.5,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(gx(bx+30),ly+6+boff*0.5,1.5,0,Math.PI*2); ctx.fill();
+  }
+}
+
+// Zone 1 underground heat
+{
+  const g=ctx.createLinearGradient(0,gy(368),0,H);
+  g.addColorStop(0,'rgba(160,30,0,0.3)'); g.addColorStop(0.5,'rgba(90,10,0,0.7)'); g.addColorStop(1,'rgba(30,0,0,1)');
+  ctx.fillStyle=g; ctx.fillRect(gx(0),gy(368),gw(640),H-gy(368));
+}
+
+// Zone 3 underground heat
+{
+  const g=ctx.createLinearGradient(0,gy(368),0,H);
+  g.addColorStop(0,'rgba(160,30,0,0.3)'); g.addColorStop(0.5,'rgba(90,10,0,0.7)'); g.addColorStop(1,'rgba(30,0,0,1)');
+  ctx.fillStyle=g; ctx.fillRect(gx(1440),gy(368),gw(960),H-gy(368));
+}
+
+// ── GEOMETRY HELPERS ─────────────────────────────────────────
+function block(x1,y1,w,h, fill='#5a2a0c', edge='#cc8844', edgeSide='top'){
+  const px=gx(x1),py=gy(y1),pw=gw(w),ph=gh(h);
+  ctx.fillStyle=fill; ctx.fillRect(px,py,pw,ph);
+  ctx.fillStyle=edge;
+  if(edgeSide==='top')    ctx.fillRect(px,py,pw,2);
+  if(edgeSide==='bottom') ctx.fillRect(px,py+ph-2,pw,2);
+  if(edgeSide==='left')   ctx.fillRect(px,py,2,ph);
+  if(edgeSide==='right')  ctx.fillRect(px+pw-2,py,2,ph);
+}
+
+function solidBlock(x1,y1,w,h){
+  // Full rock block (walls, ceilings) — dark with orange-brown edge on top
+  const px=gx(x1),py=gy(y1),pw=gw(w),ph=gh(h);
+  const g=ctx.createLinearGradient(px,py,px,py+ph);
+  g.addColorStop(0,'#5a2a0c'); g.addColorStop(0.3,'#3a1608'); g.addColorStop(1,'#1a0804');
+  ctx.fillStyle=g; ctx.fillRect(px,py,pw,ph);
+  // edge highlight (top)
+  ctx.fillStyle='#cc8844'; ctx.fillRect(px,py,pw,2);
+  // subtle inner shadow
+  ctx.fillStyle='rgba(0,0,0,0.3)'; ctx.fillRect(px,py+2,pw,3);
+}
+
+function platform(x1,y1,w, hot=false){
+  const px=gx(x1),py=gy(y1),pw=gw(w),ph=8;
+  ctx.fillStyle=hot?'#7a3814':'#5a2a0c';
+  ctx.fillRect(px,py,pw,ph);
+  ctx.fillStyle=hot?'#ffaa44':'#cc8844';
+  ctx.fillRect(px,py,pw,2);
+  if(hot){
+    const ug=ctx.createLinearGradient(0,py+ph,0,py+ph+14);
+    ug.addColorStop(0,'rgba(255,100,0,0.3)'); ug.addColorStop(1,'rgba(255,60,0,0)');
+    ctx.fillStyle=ug; ctx.fillRect(px,py+ph,pw,14);
+  }
+}
+
+// ── SALA ALTA STRUCTURE ──────────────────────────────────────
+// Ceiling
+solidBlock(0,-412,700,14);
+// Left wall
+solidBlock(0,-412,14,274);
+// Right wall
+solidBlock(686,-412,14,274);
+// Floor: gap1 at x:100-192 (mandatory shaft up), gap2 at x:560-640 (fast drop down)
+solidBlock(14,-140,86,16);   // floor left of shaft1
+solidBlock(192,-140,368,16); // floor between shafts
+
+// Sala Alta zig-zag platforms
+[[30,-325,120],[175,-295,100],[305,-328,115],[435,-295,105],[555,-322,95]].forEach(([x,y,w])=>platform(x,y,w));
+
+// Label
+ctx.fillStyle='#9955ee'; ctx.font='bold 9px Courier New'; ctx.textAlign='center';
+ctx.fillText('SALA ALTA', gx(350), gy(-398));
+ctx.fillStyle='#663388'; ctx.font='7px Courier New';
+ctx.fillText('Exclusivo: O e C oculto', gx(350), gy(-386));
+ctx.textAlign='left';
+
+// ── MANDATORY CLIMB SHAFT (x:100-192) ────────────────────────
+{
+  const sx=gx(100), sx2=gx(192), sy1=gy(-140), sy2=gy(112);
+  const pw=sx2-sx, ph=sy2-sy1;
+  ctx.fillStyle='#100020'; ctx.fillRect(sx,sy1,pw,ph);
+  ctx.strokeStyle='#ff8822'; ctx.lineWidth=2;
+  ctx.strokeRect(sx,sy1,pw,ph);
+  // Challenge platforms (alternating sides)
+  [[0.22,'right'],[0.46,'left'],[0.70,'right']].forEach(([t,side])=>{
+    const py=sy1+ph*t;
+    const ppx=side==='right'?sx2-gw(36)-2:sx+2;
+    ctx.fillStyle='#884422'; ctx.fillRect(ppx,py,gw(36),5);
+    ctx.fillStyle='#ffcc88'; ctx.fillRect(ppx,py,gw(36),2);
+  });
+  // Up arrows
+  ctx.fillStyle='rgba(255,150,50,0.85)'; ctx.font='11px Courier New'; ctx.textAlign='center';
+  [0.10,0.34,0.58,0.82].forEach(t=>ctx.fillText('↑',(sx+sx2)/2,sy1+ph*t));
+  ctx.fillStyle='#ff9922'; ctx.font='bold 7px Courier New';
+  ctx.fillText('SUBIDA',(sx+sx2)/2,sy1-11);
+  ctx.fillText('OBRIG.',(sx+sx2)/2,sy1-2);
+  ctx.textAlign='left';
+}
+
+// ── FAST DROP SHAFT (x:560-640) ──────────────────────────────
+{
+  const sx=gx(560), sx2=gx(640), sy1=gy(-140), sy2=gy(112);
+  const pw=sx2-sx, ph=sy2-sy1;
+  ctx.fillStyle='#001a06'; ctx.fillRect(sx,sy1,pw,ph);
+  ctx.strokeStyle='#44dd44'; ctx.lineWidth=2;
+  ctx.strokeRect(sx,sy1,pw,ph);
+  ctx.fillStyle='rgba(80,220,80,0.85)'; ctx.font='11px Courier New'; ctx.textAlign='center';
+  [0.20,0.50,0.78].forEach(t=>ctx.fillText('↓',(sx+sx2)/2,sy1+ph*t));
+  ctx.fillStyle='#44cc44'; ctx.font='bold 7px Courier New';
+  ctx.fillText('DROP',(sx+sx2)/2,sy1-11);
+  ctx.fillText('RÁPIDA',(sx+sx2)/2,sy1-2);
+  ctx.textAlign='left';
+}
+
+// ── HUB CEILINGS ─────────────────────────────────────────────
+solidBlock(14,112,86,14);    // Zone 1 left of shaft1
+solidBlock(192,112,368,14);  // Zone 1 between shafts
+solidBlock(640,112,40,14);   // Zone 1 right (before barrier)
+solidBlock(680,112,760,14);  // Zone 2 ceiling
+solidBlock(1440,112,960,14); // Zone 3 ceiling
+
+// ── ZONE 1 FLOOR & LEFT WALL ──────────────────────────────────
+solidBlock(14,368,626,24);
+solidBlock(14,112,14,256);
+
+// Zone 1 platforms (3 heights)
+platform(60,308,130); platform(270,275,120); platform(490,242,140);
+platform(105,345,80);
+
+// ── LAVA BARRIER (x:640-680) ─────────────────────────────────
+{
+  const bx=gx(640),bx2=gx(680),by1=gy(112),by2=H,bw=bx2-bx,bh=by2-by1;
+  // outer glow
+  const og=ctx.createLinearGradient(bx-24,0,bx2+24,0);
+  og.addColorStop(0,'rgba(255,80,0,0)'); og.addColorStop(0.3,'rgba(255,140,0,0.45)');
+  og.addColorStop(0.5,'rgba(255,220,50,0.85)'); og.addColorStop(0.7,'rgba(255,140,0,0.45)');
+  og.addColorStop(1,'rgba(255,80,0,0)');
+  ctx.fillStyle=og; ctx.fillRect(bx-24,by1,bw+48,bh);
+  // core
+  ctx.fillStyle='#ff8800'; ctx.fillRect(bx,by1,bw,bh);
+  ctx.fillStyle='#ffee44'; ctx.fillRect(bx+(bw/2)-2,by1,4,bh);
+  // vertical shimmer
+  ctx.save(); ctx.beginPath(); ctx.rect(bx,by1,bw,bh); ctx.clip();
+  for(let y_=by1;y_<by2;y_+=8){
+    const w_=Math.sin(y_*0.14)*3;
+    ctx.fillStyle='rgba(255,255,150,0.15)'; ctx.fillRect(bx+bw/2+w_-2,y_,4,5);
+  }
+  ctx.restore();
+  // label
+  const mx=(bx+bx2)/2;
+  ctx.fillStyle='#ffee66'; ctx.font='bold 7px Courier New'; ctx.textAlign='center';
+  ctx.fillText('BARREIRA',mx,by1+22); ctx.fillText('DE LAVA',mx,by1+33);
+  ctx.fillStyle='#ffaa44'; ctx.font='6px Courier New';
+  ctx.fillText('→ H₂O',mx,by1+46); ctx.textAlign='left';
+}
+
+// ── OBSIDIAN OVERLAY (Zone 2 floor, solidified lava) ─────────
+{
+  const ox=gx(680),oy=gy(368),ow=gw(760),oh=gh(20);
+  ctx.fillStyle='#1a2440'; ctx.fillRect(ox,oy,ow,oh);
+  ctx.fillStyle='#8899cc'; ctx.fillRect(ox,oy,ow,2);
+  ctx.strokeStyle='rgba(100,70,180,0.3)'; ctx.lineWidth=1;
+  for(let dx=0;dx<ow;dx+=18){
+    ctx.beginPath(); ctx.moveTo(ox+dx,oy); ctx.lineTo(ox+dx+9,oy+oh); ctx.stroke();
+  }
+  ctx.fillStyle='rgba(140,180,255,0.75)'; ctx.font='7px Courier New'; ctx.textAlign='center';
+  ctx.fillText('OBSIDIANA — lava solidificada (após H₂O)',gx(1060),oy-5);
+  ctx.textAlign='left';
+}
+
+// ── ZONE 2 PLATFORMS (hot, above lava) ───────────────────────
+[[720,280,130],[900,258,120],[1075,272,130],[1265,255,140]].forEach(([x,y,w])=>platform(x,y,w,true));
+
+// Steam geysers
+[[770,368,50],[965,368,42],[1185,368,48],[1380,368,40]].forEach(([gx_,gy_,gh_])=>{
+  const cx=gx(gx_), cy=gy(gy_);
+  const sg=ctx.createLinearGradient(0,cy,0,cy-gh_);
+  sg.addColorStop(0,'rgba(190,210,255,0.65)'); sg.addColorStop(1,'rgba(190,210,255,0)');
+  ctx.fillStyle=sg;
+  ctx.beginPath();
+  ctx.moveTo(cx-5,cy);
+  ctx.bezierCurveTo(cx-3,cy-gh_*0.5,cx-1,cy-gh_*0.85,cx,cy-gh_);
+  ctx.bezierCurveTo(cx+1,cy-gh_*0.85,cx+3,cy-gh_*0.5,cx+5,cy);
+  ctx.closePath(); ctx.fill();
+});
+
+// ── ZONE 3 FLOOR & WALLS ─────────────────────────────────────
+solidBlock(1440,368,960,24);
+solidBlock(1440,112,16,256);   // left wall
+solidBlock(2384,112,16,256);   // right wall
+
+// Zone 3 platforms
+[[1500,288,140],[1720,260,150],[1950,276,140],[2185,258,150],[2280,283,100]].forEach(([x,y,w])=>platform(x,y,w));
+
+// ── GOLEMS ────────────────────────────────────────────────────
+function golem(x,y,label,sz=1,bodyCol='#5a4a38'){
+  const cx=gx(x), cy=gy(y), s=sz;
+  // shadow
+  ctx.fillStyle='rgba(0,0,0,0.4)';
+  ctx.beginPath(); ctx.ellipse(cx,cy+12*s,11*s,4*s,0,0,Math.PI*2); ctx.fill();
+  // legs
+  ctx.fillStyle='#3a3028';
+  ctx.fillRect(cx-7*s,cy+3*s,5*s,11*s); ctx.fillRect(cx+2*s,cy+3*s,5*s,11*s);
+  ctx.fillStyle='#4a4038';
+  ctx.fillRect(cx-7*s,cy+3*s,2*s,11*s); ctx.fillRect(cx+2*s,cy+3*s,2*s,11*s);
+  // body
+  ctx.fillStyle=bodyCol; ctx.fillRect(cx-9*s,cy-14*s,18*s,18*s);
+  ctx.fillStyle='rgba(0,0,0,0.35)';
+  ctx.fillRect(cx-7*s,cy-12*s,14*s,4*s); ctx.fillRect(cx-7*s,cy-4*s,14*s,3*s);
+  ctx.fillStyle='rgba(255,255,255,0.06)'; ctx.fillRect(cx-9*s,cy-14*s,2*s,18*s);
+  // head
+  ctx.fillStyle=bodyCol; ctx.fillRect(cx-8*s,cy-26*s,16*s,13*s);
+  ctx.fillStyle='rgba(0,0,0,0.3)'; ctx.fillRect(cx-8*s,cy-26*s,16*s,3*s);
+  // eyes
+  ctx.fillStyle='#ff2200';
+  ctx.fillRect(cx-6*s,cy-21*s,4*s,3*s); ctx.fillRect(cx+2*s,cy-21*s,4*s,3*s);
+  ctx.fillStyle='rgba(255,60,0,0.35)';
+  ctx.beginPath(); ctx.arc(cx-4*s,cy-20*s,4.5*s,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(cx+4*s,cy-20*s,4.5*s,0,Math.PI*2); ctx.fill();
+  // label
+  ctx.fillStyle='#ff9966'; ctx.font=`bold ${Math.round(7.5*s)}px Courier New`;
+  ctx.textAlign='center'; ctx.fillText(label,cx,cy-31*s); ctx.textAlign='left';
+}
+
+golem(200,350,'G1',1,'#5a4a38');
+golem(480,350,'G2',1,'#5a4a38');
+golem(1840,348,'G3 — GUARDIÃO',1.25,'#4a3828');
+
+// ── PICKUPS ──────────────────────────────────────────────────
+function pickup(x,y,sym,col,hidden=false){
+  const cx=gx(x), cy=gy(y);
+  ctx.globalAlpha=hidden?0.35:1;
+  const gg=ctx.createRadialGradient(cx,cy,0,cx,cy,11);
+  gg.addColorStop(0,col); gg.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=gg; ctx.beginPath(); ctx.arc(cx,cy,11,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle=col; ctx.beginPath(); ctx.arc(cx,cy,5.5,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,0.5)';
+  ctx.beginPath(); ctx.arc(cx-1.5,cy-1.5,2,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle=hidden?'#aaa':'rgba(0,0,0,0.7)';
+  ctx.font='bold 6px Courier New'; ctx.textAlign='center';
+  ctx.fillText(sym,cx,cy+2.5); ctx.textAlign='left';
+  ctx.globalAlpha=1;
+  ctx.fillStyle=hidden?'rgba(160,160,160,0.5)':col;
+  ctx.font=(hidden?'6':'7')+'px Courier New'; ctx.textAlign='center';
+  ctx.fillText(sym,cx,cy-12); ctx.textAlign='left';
+}
+
+// Sala Alta
+pickup(300,-280,'O','#3399ff');
+pickup(590,-308,'C','#999',true);
+
+// Zone 1 (H and S only — NO O here!)
+pickup(130,292,'H','#6688ff');
+pickup(215,292,'H','#6688ff');
+pickup(320,258,'S','#ffff44');
+pickup(522,228,'S','#ffff44');
+
+// ── CRAFT TABLE ──────────────────────────────────────────────
+{
+  const cx=gx(530), cy=gy(360);
+  ctx.fillStyle='#7a4420'; ctx.fillRect(cx-10,cy-10,22,13);
+  ctx.fillStyle='#9a6030'; ctx.fillRect(cx-10,cy-10,22,3);
+  ctx.fillStyle='#cc9944'; ctx.fillRect(cx-10,cy-10,3,13);
+  ctx.fillStyle='#552211';
+  ctx.fillRect(cx-9,cy+3,4,7); ctx.fillRect(cx+6,cy+3,4,7);
+  ctx.fillStyle='rgba(255,200,80,0.18)';
+  ctx.beginPath(); ctx.arc(cx+1,cy-5,14,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#ffcc55'; ctx.font='bold 7px Courier New'; ctx.textAlign='center';
+  ctx.fillText('CRAFT',cx+1,cy-14); ctx.fillText('H₂O',cx+1,cy-5);
+  ctx.textAlign='left';
+}
+
+// ── BOSS PORTAL ──────────────────────────────────────────────
+{
+  const cx=gx(2310), cy=gy(285);
+  const og=ctx.createRadialGradient(cx,cy,4,cx,cy,34);
+  og.addColorStop(0,'rgba(200,0,255,0.9)'); og.addColorStop(0.5,'rgba(110,0,200,0.35)');
+  og.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=og; ctx.beginPath(); ctx.arc(cx,cy,34,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle='#cc44ff'; ctx.lineWidth=2.5;
+  ctx.beginPath(); ctx.arc(cx,cy,17,0,Math.PI*2); ctx.stroke();
+  ctx.strokeStyle='#ff99ff'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.arc(cx,cy,14,0,Math.PI*2); ctx.stroke();
+  ctx.fillStyle='#eeddff'; ctx.font='bold 7px Courier New'; ctx.textAlign='center';
+  ctx.fillText('PORTAL',cx,cy-23); ctx.fillText('DO BOSS',cx,cy-13);
+  ctx.fillStyle='rgba(180,100,255,0.6)'; ctx.font='6px Courier New';
+  ctx.fillText('(após G3)',cx,cy+27); ctx.textAlign='left';
+}
+
+// ── PLAYER SPAWN ─────────────────────────────────────────────
+{
+  const cx=gx(110), cy=gy(330);
+  ctx.strokeStyle='rgba(80,255,80,0.45)'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.arc(cx,cy,20,0,Math.PI*2); ctx.stroke();
+  ctx.fillStyle='#224422'; ctx.fillRect(cx-5,cy+2,10,11);
+  ctx.fillStyle='#33aa33'; ctx.fillRect(cx-5,cy-12,10,16);
+  ctx.fillStyle='#55cc55'; ctx.fillRect(cx-4,cy-11,8,7);
+  ctx.fillStyle='#cc8833'; ctx.fillRect(cx-4,cy-20,9,9);
+  ctx.fillStyle='#ffcc88'; ctx.fillRect(cx-3,cy-19,6,6);
+  ctx.fillStyle='rgba(80,255,80,0.88)';
+  ctx.beginPath(); ctx.moveTo(cx,cy-28); ctx.lineTo(cx-5,cy-20); ctx.lineTo(cx+5,cy-20); ctx.closePath(); ctx.fill();
+  ctx.fillStyle='#aaffaa'; ctx.font='bold 7px Courier New';
+  ctx.fillText('SPAWN',gx(70),gy(308));
+}
+
+// ── ZONE LABEL STRIP (top of playable area) ──────────────────
+ctx.fillStyle='rgba(0,0,0,0.75)'; ctx.fillRect(gx(0),gy(112)-20,W,20);
+ctx.font='bold 8px Courier New'; ctx.textAlign='center';
+ctx.fillStyle='#66dd66'; ctx.fillText('ZONA 1 — BARREIRA & PUZZLE',gx(320),gy(112)-6);
+ctx.fillStyle='#ff9933'; ctx.fillText('ZONA 2 — RIO DE LAVA',gx(1060),gy(112)-6);
+ctx.fillStyle='#bb55ff'; ctx.fillText('ZONA 3 — ARENA FINAL',gx(1920),gy(112)-6);
+ctx.textAlign='left';
+
+// Sala Alta strip
+ctx.fillStyle='rgba(0,0,0,0.75)'; ctx.fillRect(gx(0),gy(-412),gw(700),13);
+ctx.fillStyle='#aa66ff'; ctx.font='bold 7px Courier New'; ctx.textAlign='center';
+ctx.fillText('SALA ALTA — O exclusivo aqui!',gx(350),gy(-412)+10); ctx.textAlign='left';
+
+// ── FLOW DASHED ARROWS ───────────────────────────────────────
+ctx.strokeStyle='rgba(255,150,50,0.45)'; ctx.lineWidth=1.5; ctx.setLineDash([5,4]);
+// From Z1 up into shaft
+ctx.beginPath(); ctx.moveTo(gx(150),gy(280)); ctx.lineTo(gx(145),gy(-80)); ctx.stroke();
+// Across Sala Alta
+ctx.beginPath(); ctx.moveTo(gx(192),gy(-265)); ctx.lineTo(gx(555),gy(-265)); ctx.stroke();
+// Down drop shaft
+ctx.beginPath(); ctx.moveTo(gx(600),gy(-240)); ctx.lineTo(gx(600),gy(310)); ctx.stroke();
+// Right toward barrier
+ctx.beginPath(); ctx.moveTo(gx(612),gy(330)); ctx.lineTo(gx(636),gy(330)); ctx.stroke();
+ctx.setLineDash([]);
+
+function arrowHead(x,y,dir){
+  ctx.fillStyle='rgba(255,150,50,0.7)'; ctx.beginPath();
+  if(dir==='up')   {ctx.moveTo(x,y-7);ctx.lineTo(x-4,y+2);ctx.lineTo(x+4,y+2);}
+  if(dir==='down') {ctx.moveTo(x,y+7);ctx.lineTo(x-4,y-2);ctx.lineTo(x+4,y-2);}
+  if(dir==='right'){ctx.moveTo(x+7,y);ctx.lineTo(x-2,y-4);ctx.lineTo(x-2,y+4);}
+  ctx.closePath(); ctx.fill();
+}
+arrowHead(gx(145),gy(-80),'up');
+arrowHead(gx(555),gy(-265),'right');
+arrowHead(gx(600),gy(310),'down');
+arrowHead(gx(636),gy(330),'right');
+
+// ── ZONE DIVIDERS ────────────────────────────────────────────
+ctx.strokeStyle='rgba(255,100,0,0.22)'; ctx.lineWidth=1; ctx.setLineDash([6,5]);
+ctx.beginPath(); ctx.moveTo(gx(640),gy(112)-20); ctx.lineTo(gx(640),H-12); ctx.stroke();
+ctx.beginPath(); ctx.moveTo(gx(1440),gy(112)-20); ctx.lineTo(gx(1440),H-12); ctx.stroke();
+ctx.setLineDash([]);
+
+// Sala Alta room outline
+ctx.strokeStyle='rgba(120,50,220,0.28)'; ctx.lineWidth=1.5; ctx.setLineDash([6,4]);
+ctx.strokeRect(gx(0),gy(-412),gw(700),gh(272)); ctx.setLineDash([]);
+
+// ── RULER ────────────────────────────────────────────────────
+ctx.fillStyle='#08001a'; ctx.fillRect(0,H-13,W,13);
+ctx.font='6px Courier New';
+for(let x=0;x<=2400;x+=200){
+  ctx.fillStyle='#281838'; ctx.fillRect(gx(x),H-13,1,4);
+  ctx.fillStyle='#554466'; ctx.textAlign='center';
+  ctx.fillText(x,gx(x),H-2);
+}
+ctx.textAlign='left';
+[[-412,'teto sala'],[-140,'piso sala'],[112,'teto hub'],[368,'piso hub']].forEach(([v,l])=>{
+  ctx.fillStyle='#3a2248'; ctx.font='6px Courier New';
+  ctx.fillText(l,2,gy(v)+(v<0?-2:8));
+});
+</script>
+</body>
+</html>
