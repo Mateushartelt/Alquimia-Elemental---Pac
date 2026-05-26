@@ -19,15 +19,8 @@ const ACCENT_H := 4
 ## ZONAS: Zona1(col0-40) | Barreira(col40-42) | Zona2(col42-90) | Zona3(col90-150)
 const TILES: Array = [
 	# ━━ SHAFT (x:224-304, 80px) y:-320→304 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-	[14, -20,  1, 39],  # parede esq shaft  x:224  y:-320→304 (desce até alcance do player)
-	[19, -20,  1, 39],  # parede dir shaft  x:304  y:-320→304
-	# Plataformas internas — alternando L/R para wall-jump com descanso
-	[14, 15,   3,  1],  # plat-S0a esq  x:224-272  y:240 (entrada inferior)
-	[17, 10,   2,  1],  # plat-S0b dir  x:272-304  y:160
-	[14,  4,   3,  1],  # plat-S1 esq  x:224-272  y:64
-	[17,  0,   2,  1],  # plat-S2 dir  x:272-304  y:0
-	[14, -4,   3,  1],  # plat-S3 esq  x:224-272  y:-64
-	[17, -8,   2,  1],  # plat-S4 dir  x:272-304  y:-128
+	[14, -10,  1, 29],  # parede esq shaft  x:224  y:-160→304 (não entra na Sala Alta)
+	[19, -10,  1, 29],  # parede dir shaft  x:304  y:-160→304
 
 	# ━━ SALA ALTA (x:0-704, y:-320→-160) ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 	[0,  -20, 44,  2],  # teto           x:0-704   y=-320
@@ -37,7 +30,8 @@ const TILES: Array = [
 	[19, -10, 24,  2],  # chão dir shaft x:304-688 y=-160
 	# Plataformas zig-zag (caminho até os pickups de O e C)
 	[2,  -18,  8,  1],  # plat I   x:32-160   y=-288
-	[11, -16,  8,  1],  # plat J   x:176-304  y=-256
+	[11, -16,  4,  1],  # plat J esq  x:176-240  y=-256 (para antes do shaft)
+	[20, -16,  4,  1],  # plat J dir  x:320-384  y=-256 (depois do shaft)
 	[20, -18,  8,  1],  # plat K   x:320-448  y=-288
 	[30, -16,  8,  1],  # plat L   x:480-608  y=-256
 	[36, -14,  8,  1],  # plat M   x:576-704  y=-224
@@ -48,7 +42,7 @@ const TILES: Array = [
 	[0,  23, 40,  2],   # chão            x:0-640   y=368
 	# Plataformas Zona 1
 	[4,  19,  8,  1],   # plat A  x:64-192   y=304
-	[17, 17, 10,  1],   # plat B  x:272-432  y=272
+	[20, 17, 10,  1],   # plat B  x:320-480  y=272 (fora do shaft)
 	[30, 15,  8,  1],   # plat C  x:480-608  y=240
 
 	# ━━ TETO ZONA 2 (x:672-1440, y:112) ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

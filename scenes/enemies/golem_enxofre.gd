@@ -3,6 +3,19 @@ extends EnemyBase
 ## Fraco a H₂O (×2) e CO₂ (×2). Imune a SO₂ — absorve enxofre do magma.
 ## Dropa S ao morrer.
 
+@onready var _sprite: Sprite2D = $Sprite2D
+
+# spritesheet: 4 cols × 4 rows → frames 0-15
+# 0-3  idle (linha 0)  |  4-7  walk (linha 1)  |  8-11 hurt (linha 2)  |  12-15 unused
+const IDLE_FRAMES  := [0, 1, 2, 3]
+const WALK_FRAMES  := [4, 5, 6, 7]
+const HURT_FRAMES  := [8, 9, 10, 11]
+const ANIM_FPS     := 8.0
+
+var _anim_timer  : float = 0.0
+var _anim_idx    : int   = 0
+var _anim_frames : Array = IDLE_FRAMES
+
 func _ready() -> void:
 	max_health      = 40
 	move_speed      = 30.0
@@ -16,53 +29,45 @@ func _ready() -> void:
 
 func _physics_process(delta: float) -> void:
 	super._physics_process(delta)
+
+	# choose animation set based on state
+	var target_frames: Array
+	match estate:
+		EState.CHASE, EState.PATROL:
+			target_frames = WALK_FRAMES if abs(velocity.x) > 1.0 else IDLE_FRAMES
+		EState.HURT:
+			target_frames = HURT_FRAMES
+		_:
+			target_frames = IDLE_FRAMES
+
+	if target_frames != _anim_frames:
+		_anim_frames = target_frames
+		_anim_idx    = 0
+		_anim_timer  = 0.0
+
+	_anim_timer += delta
+	if _anim_timer >= 1.0 / ANIM_FPS:
+		_anim_timer -= 1.0 / ANIM_FPS
+		_anim_idx = (_anim_idx + 1) % _anim_frames.size()
+		_sprite.frame = _anim_frames[_anim_idx]
+
+	_sprite.flip_h = not facing_right
+
+	if _flash_timer > 0.0:
+		var fa := clampf(_flash_timer / 0.15, 0.0, 1.0)
+		_sprite.modulate = Color.WHITE.lerp(_flash_color, fa)
+	else:
+		_sprite.modulate = Color.WHITE
+
 	queue_redraw()
 
 func _draw() -> void:
-	var base  := Color(0.52, 0.26, 0.05)
-	var lava  := Color(0.95, 0.40, 0.02)
-	var dark  := Color(0.08, 0.04, 0.01)
-
-	var fa  := clampf(_flash_timer / 0.15, 0.0, 1.0)
-	var col := base.lerp(_flash_color if fa > 0.0 else base, fa)
-
-	if not facing_right:
-		draw_set_transform(Vector2.ZERO, 0.0, Vector2(-1.0, 1.0))
-
-	var t     := Time.get_ticks_msec() * 0.001
-	var pulse := sin(t * 1.8) * 0.3
-
-	# ── Corpo rochoso / angular ───────────────────────────────────────────────
-	draw_rect(Rect2(-5.0, -9.0, 10.0, 14.0), col)      # corpo central
-	draw_rect(Rect2(-7.0, -5.0,  4.0,  7.0), col)      # ombro esq
-	draw_rect(Rect2( 3.0, -5.0,  4.0,  7.0), col)      # ombro dir
-	draw_rect(Rect2(-4.0,  5.0,  8.0,  4.0), col)      # base / pernas
-
-	# Contorno escuro
-	draw_rect(Rect2(-5.0, -9.0, 10.0, 14.0), dark, false, 0.8)
-
-	# Fissuras de lava pulsando
-	var lc := Color(lava.r, lava.g, lava.b, 0.65 + pulse)
-	draw_line(Vector2(-2.0, -6.0), Vector2(-1.0, -1.0), lc, 1.2)
-	draw_line(Vector2( 1.5, -7.0), Vector2( 2.5, -2.0), lc, 1.2)
-	draw_line(Vector2(-3.0,  1.0), Vector2(-1.0,  4.0), lc, 1.0)
-	draw_line(Vector2( 1.0,  0.0), Vector2( 3.0,  3.0), lc, 1.0)
-
-	# ── Olhos — buracos de lava ───────────────────────────────────────────────
-	var er := 1.3 if estate != EState.CHASE else 1.9
-	var ec := Color(lava.r, lava.g, lava.b, 0.9 + pulse * 0.5)
-	draw_circle(Vector2(-2.5, -5.5), er, ec)
-	draw_circle(Vector2( 2.5, -5.5), er, ec)
-	draw_circle(Vector2(-2.5, -5.5), er * 0.45, dark)
-	draw_circle(Vector2( 2.5, -5.5), er * 0.45, dark)
-
-	# ── Barra de HP ───────────────────────────────────────────────────────────
+	# HP bar only — body is drawn by Sprite2D
+	if current_health <= 0:
+		return
 	var hp_r := float(current_health) / float(max_health)
 	draw_rect(Rect2(-7.0, -13.0, 14.0, 2.0), Color(0.15, 0.15, 0.15, 0.85))
 	draw_rect(Rect2(-7.0, -13.0, 14.0 * hp_r, 2.0), Color(0.9, 0.35, 0.04, 1.0))
-
-	if not facing_right:
-		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 func _die() -> void:
 	_spawn_death_label()

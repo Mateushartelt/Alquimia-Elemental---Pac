@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GDD: Alquimia Elemental</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#f0f0f0;font-family:'Segoe UI',Arial,sans-serif;font-size:14px;color:#111;line-height:1.75}
+.page{background:#fff;max-width:840px;margin:28px auto;padding:72px 80px;box-shadow:0 2px 18px rgba(0,0,0,.15)}
+hr.sep{border:none;border-top:1px solid #ccc;margin:40px 0}
+h2{font-size:1.05rem;font-weight:700;margin:36px 0 10px;text-transform:uppercase;letter-spacing:.5px;color:#111}
+h3{font-size:.95rem;font-weight:700;margin:22px 0 8px;color:#222}
+p,li{font-size:14px;line-height:1.75;color:#222}
+ul,ol{margin-left:22px;margin-bottom:10px}
+li{margin-bottom:4px}
+strong{font-weight:700}
+.toc-title{font-size:3rem;font-weight:300;text-align:center;color:#333;margin:24px 0 40px}
+.toc-entry{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dotted #ccc;font-size:14px;font-weight:600}
+.toc-entry span{color:#555;font-weight:400}
+canvas.lvmap{display:block;width:100%;border:1px solid #ddd;border-radius:3px;margin:16px 0 4px}
+.map-caption{font-size:11px;color:#888;margin-bottom:20px;text-align:right}
+table.gdd{width:100%;border-collapse:collapse;margin:12px 0 18px;font-size:13px}
+table.gdd th{background:#f5f5f5;font-weight:700;padding:8px 12px;text-align:left;border:1px solid #ddd;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:#555}
+table.gdd td{padding:7px 12px;border:1px solid #e8e8e8;vertical-align:middle}
+table.gdd tr:nth-child(even) td{background:#fafafa}
+.dmg-weak{color:#c0392b;font-weight:700}
+.dmg-heal{color:#27ae60;font-weight:700}
+.dmg-stun{color:#8e44ad;font-weight:700}
+.ref-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin:14px 0}
+.ref-card{border:1px solid #e0e0e0;border-radius:4px;padding:14px;background:#fafafa}
+.ref-name{font-weight:700;font-size:15px;margin-bottom:5px}
+.char-card{display:flex;gap:20px;border:1px solid #e8e8e8;border-radius:4px;padding:16px;margin:14px 0;background:#fafafa}
+.char-icon{width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:30px;flex-shrink:0}
+.char-info h3{margin:0 0 4px;font-size:1rem}
+.char-info p{font-size:13px;color:#444;margin-top:3px}
+.mech-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:14px 0}
+.mech-card{border:1px solid #e0e0e0;border-radius:4px;padding:14px;background:#fafafa}
+.mech-card h4{font-size:13px;font-weight:700;margin-bottom:5px}
+.mech-card p{font-size:12px;color:#555;margin:0}
+.ctrl-table td:first-child{font-family:monospace;background:#f5f5f5;font-weight:700;white-space:nowrap;width:160px}
+.badge-done{display:inline-block;background:#27ae60;color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;text-transform:uppercase;vertical-align:middle}
+.badge-wip{display:inline-block;background:#e67e22;color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;text-transform:uppercase;vertical-align:middle}
+.badge-plan{display:inline-block;background:#95a5a6;color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;text-transform:uppercase;vertical-align:middle}
+@media print{body{background:#fff}.page{box-shadow:none;margin:0;padding:48px 56px}}
+</style>
+</head>
+<body>
+<div class="page">
+
+<!-- CAPA -->
+<hr class="sep" style="margin-top:0">
+<p><strong>GDD: ALQUIMIA ELEMENTAL</strong></p>
+<p>Versão: (Final — Sprint N2 · Maio 2026)</p>
+<p><strong>Autores:</strong> Mateus Hartelt da Silva, Ruan Fernandes Raulino, João Gabriel Carvalho Floriano, Alan Daniel Biliski</p>
+<hr class="sep">
+
+<canvas id="cover" class="lvmap" height="360" style="margin-bottom:0;border:none"></canvas>
+
+<hr class="sep">
+
+<!-- SUMÁRIO -->
+<div class="toc-title">Sumário</div>
+<div class="toc-entry"><strong>2. GÊNERO E PÚBLICO-ALVO</strong><span>3</span></div>
+<div class="toc-entry"><strong>3. REFERÊNCIAS (JOGOS SEMELHANTES)</strong><span>4</span></div>
+<div class="toc-entry"><strong>4. CARACTERÍSTICAS PRINCIPAIS</strong><span>5</span></div>
+<div class="toc-entry"><strong>5. HISTÓRIA E ENREDO</strong><span>6</span></div>
+<div class="toc-entry"><strong>6. PERSONAGENS (CHARACTER DESIGN)</strong><span>8</span></div>
+<div class="toc-entry"><strong>7. AMBIENTES ESPECÍFICOS (LEVEL DESIGN)</strong><span>10</span></div>
+<div class="toc-entry"><strong>8. GAMEPLAY E MECÂNICAS</strong><span>14</span></div>
+<div class="toc-entry"><strong>9. PROGRESSÃO E RECOMPENSAS</strong><span>15</span></div>
+<div class="toc-entry"><strong>10. ESTÉTICA E ÁUDIO</strong><span>16</span></div>
+<div class="toc-entry"><strong>11. INTERFACE (UI/HUD)</strong><span>17</span></div>
+
+<hr class="sep">
+
+<!-- 2. GÊNERO -->
+<h2>2. GÊNERO E PÚBLICO-ALVO</h2>
+<h3>2.1. Gênero</h3>
+<p><strong>Metroidvania Educativo 2D com Batalha por Turnos.</strong></p>
+<ul>
+  <li><strong>Metroidvania:</strong> Exploração não-linear de salas interconectadas. Habilidades desbloqueadas (wall jump, compostos químicos) abrem novos caminhos retroativos. Salas fechadas com teto, chão e paredes — não plataformas flutuantes. Layout Lock &amp; Key força exploração vertical antes de progressão horizontal.</li>
+  <li><strong>Plataforma 2D:</strong> Mecânica central de salto, wall jump, coyote time (0.12s) e jump buffer (0.12s) para feel preciso e responsivo. Shafts verticais de 80px exigem domínio do wall jump para avançar.</li>
+  <li><strong>Educativo:</strong> Elementos reais da tabela periódica. Compostos químicos corretos derrotam inimigos com base em reações reais. Aprender errando: usar o composto errado tem consequências com explicação científica do porquê.</li>
+  <li><strong>Batalha por Turnos:</strong> Sistema estilo Pokémon nos confrontos de boss. O jogador escolhe o composto, vê a reação química animada e o ensinamento científico antes de prosseguir.</li>
+</ul>
+
+<h3>2.2. Público-Alvo</h3>
+<ul>
+  <li><strong>Primário:</strong> Estudantes do 6º ano ao 3º ano do Ensino Médio (10–17 anos). Primeiro contato com tabela periódica, ligações químicas e compostos inorgânicos.</li>
+  <li><strong>Secundário:</strong> Professores de química que buscam ferramentas lúdicas e interativas para complementar o ensino em sala de aula. Pais e educadores interessados em jogos que aliam entretenimento e aprendizado real.</li>
+</ul>
+
+<hr class="sep">
+
+<!-- 3. REFERÊNCIAS -->
+<h2>3. REFERÊNCIAS (JOGOS SEMELHANTES)</h2>
+<div class="ref-grid">
+  <div class="ref-card">
+    <div class="ref-name">Celeste</div>
+    <p>Pela precisão da jogabilidade de plataforma, coyote time e design de níveis que ensina mecânicas progressivamente. Os shafts de wall jump do nosso jogo são diretamente inspirados nos desafios de escalada do Celeste — pequena margem de erro, alta satisfação ao superar.</p>
+  </div>
+  <div class="ref-card">
+    <div class="ref-name">Hollow Knight</div>
+    <p>Pela atmosfera de exploração metroidvania em mundo interconectado, salas escuras com recompensas escondidas e inimigos temáticos. Inspiração direta para as dark areas com fog e a progressão Lock &amp; Key que força exploração antes de cada boss.</p>
+  </div>
+  <div class="ref-card">
+    <div class="ref-name">Scribblenauts</div>
+    <p>Pelo aspecto criativo de usar um inventário de elementos para resolver problemas de formas diferentes. O Painel de Alquimia (3 slots, combinação livre de elementos) é influenciado diretamente pela mecânica de criação livre do Scribblenauts.</p>
+  </div>
+  <div class="ref-card">
+    <div class="ref-name">Pokémon</div>
+    <p>A batalha de boss por turnos — escolha de composto, animação de reação, texto educativo, fraquezas e imunidades — segue exatamente a estrutura de batalha Pokémon. O sistema de tipos ensina estratégia; nosso sistema de reações ensina química.</p>
+  </div>
+</div>
+
+<hr class="sep">
+
+<!-- 4. CARACTERÍSTICAS -->
+<h2>4. CARACTERÍSTICAS PRINCIPAIS</h2>
+<ul>
+  <li><strong>Alquimia Interativa:</strong> Colete elementos químicos reais (H, O, Na, S, Cl, C, Si) e combine-os no Painel de Alquimia (tecla Q) para criar compostos com propriedades distintas: H₂O, NaCl, CO₂, SO₂, HCl, NaOH.</li>
+  <li><strong>Lock &amp; Key Químico:</strong> Barreiras ambientais exigem o composto correto para serem superadas. Level 01: barreira de sódio (necessita Na + Cl no inventário). Level 02: barreira de lava que só se dissolve ao ser atingida por projétil H₂O.</li>
+  <li><strong>Wall Jump Obrigatório:</strong> Shafts verticais de 80px de largura são o único caminho para salas do boss. Recompensam domínio da mecânica com acesso exclusivo a novos elementos.</li>
+  <li><strong>Exploração Progressiva:</strong> Áreas escuras (dark fog) escondem elementos raros. Tabela Periódica de Descobertas (TAB) registra todos os elementos coletados com curiosidades científicas reais.</li>
+  <li><strong>Aprendizado por Reação:</strong> Cada hit no boss exibe o ensinamento químico real. Usar o composto errado pode curar o boss — o erro tem consequência e explicação.</li>
+  <li><strong>Estilo Pixel Art:</strong> Visual 2D procedural. Level 01: verdes e pedra de floresta. Level 02: laranja vulcânico e rocha escura (C_ROCK + C_ACCENT). Sprites reais em desenvolvimento para N2/N3.</li>
+</ul>
+
+<hr class="sep">
+
+<!-- 5. HISTÓRIA -->
+<h2>5. HISTÓRIA E ENREDO</h2>
+<h3>5.1. Sinopse</h3>
+<p>Um jovem e curioso aprendiz de alquimista chamado <strong>Kael</strong> acorda em um laboratório destruído. Uma explosão no Grande Reator Alquímico criou fendas dimensionais de onde escapam criaturas de energia instável, transformando as instalações em caos. Sua mentora, <strong>Mestra Elara</strong>, presa em outra ala, comunica-se como projeção mágica translúcida para guiar Kael em sua jornada de restauração.</p>
+
+<h3>5.2. Progresso da Trama</h3>
+<ul>
+  <li><strong>Início — O Acidente (Level 01 · Floresta Elemental):</strong> Kael acorda no laboratório devastado. Elara aparece como projeção e dá a primeira tarefa: coletar Hidrogênio e Oxigênio para criar H₂O. O jogador descobre que Sódio e Cloro se escondem na caverna escura subterrânea. Com NaCl em mãos, a barreira pré-boss cede. A Lesma Gigante de Sódio guarda a saída.</li>
+  <li><strong>Meio — A Caldeira (Level 02 · Caldeira Vulcânica):</strong> Kael adentra uma caldeira vulcânica dominada pelo enxofre e calor extremo. Uma barreira de lava bloqueia o avanço. Elara revela que Oxigênio só existe na Sala Alta — acessível pelo shaft via wall jump — permitindo criar H₂O para dissolver a barreira. Plataformas sobre lava testam precisão. O Golem de Lava aguarda na arena.</li>
+  <li><strong>Fim — O Portal da Sabedoria (Level 03+):</strong> Kael avança para câmaras subaquáticas e encontra o complexo do Reator. Para fechar o portal dimensional, precisa dominar todos os elementos e compostos aprendidos. A Hidra Ácida de três cabeças é o desafio final.</li>
+</ul>
+
+<h3>5.3. Diálogos Educativos de Elara (exemplos implementados)</h3>
+<ul>
+  <li>"A Lesma de Sódio teme o sal! NaCl causa osmose e resseca o muco dela."</li>
+  <li>"H₂O dissolve a lava pela reação endotérmica — absorve calor e solidifica em obsidiana!"</li>
+  <li>"Cuidado! SO₂ alimenta o magma — enxofre é componente do próprio vulcão."</li>
+  <li>"Oxigênio só existe lá em cima, na Sala Alta. Vai precisar do wall jump para chegar."</li>
+</ul>
+
+<hr class="sep">
+
+<!-- 6. PERSONAGENS -->
+<h2>6. PERSONAGENS (CHARACTER DESIGN)</h2>
+
+<div class="char-card">
+  <div class="char-icon" style="background:#1a2a4a">🧑</div>
+  <div class="char-info">
+    <h3>6.1. Kael (Protagonista)</h3>
+    <p><strong>Descrição:</strong> Jovem curioso, impulsivo e determinado. Aprende química na prática, errando e descobrindo reações no campo. Personagem mudo — comunica-se por ações.</p>
+    <p><strong>Visual:</strong> Túnica de aprendiz azul, luva alquímica verde que permite manusear elementos puros com segurança. Sprites pixel art em desenvolvimento; atualmente placeholder procedural (ColorRect).</p>
+    <p><strong>Animações:</strong> States implementados: IDLE, WALK, JUMP, FALL, WALL_SLIDE (tint azul), HURT (flash vermelho), DEAD.</p>
+    <p><strong>Física:</strong> Speed 100px/s · Jump −320 · Gravity 900 · Max fall 500px/s · Coyote 0.12s · Buffer 0.12s · Wall slide 50px/s · Wall jump vx:±140 vy:−300</p>
+  </div>
+</div>
+
+<div class="char-card">
+  <div class="char-icon" style="background:#0a1520">👻</div>
+  <div class="char-info">
+    <h3>6.2. Mestra Elara (Guia / Mentora)</h3>
+    <p><strong>Descrição:</strong> Alquimista sábia e paciente. Presa em outra ala do laboratório, guia Kael como projeção translúcida azul com símbolos rúnicos flutuando ao redor.</p>
+    <p><strong>Visual:</strong> Portrait pixel art implementada no dialog_box. Projeção holográfica azul. Sprite disponível no projeto.</p>
+    <p><strong>Função:</strong> Aparece em checkpoints, boss triggers, dark areas e ao coletar elementos pela primeira vez. Sempre entrega o ensinamento químico contextualizado com a situação atual.</p>
+  </div>
+</div>
+
+<div class="char-card">
+  <div class="char-icon" style="background:#1a2a08">🐌</div>
+  <div class="char-info">
+    <h3>6.3. Lesma de Sódio (Inimigo · Level 01)</h3>
+    <p><strong>Inimigo Comum (SlimeSodio):</strong> HP: 25 · Speed: 35px/s · Patrol: ±80px · Dano toque: 10 · Drop: Na. Patrulha e persegue o player. Visual amebóide verde-amarelo com olhos brancos.</p>
+    <p><strong>Boss (Lesma Gigante):</strong> HP: 6 · Ataque: 15/turno. Fraqueza: NaCl (−2HP). Armadilha: H₂O a cura (+1HP)! Ensina osmose e comportamento de moluscos em presença de umidade.</p>
+  </div>
+</div>
+
+<div class="char-card">
+  <div class="char-icon" style="background:#2a0a00">🗿</div>
+  <div class="char-info">
+    <h3>6.4. Golem de Enxofre / Golem de Lava (Inimigo / Boss · Level 02)</h3>
+    <p><strong>Inimigo Comum (GolemEnxofre):</strong> HP: 40 · Speed: 30px/s · Patrol: ±60px · Dano: 12 · Drop: S. Corpo rochoso laranja com fissuras de lava pulsando. Fraco a H₂O (×2) e CO₂ (×2). Imune a SO₂.</p>
+    <p><strong>Boss (Golem de Lava):</strong> HP: 8 · Ataque: 20/turno. Fraqueza: H₂O (−3HP). CO₂ (−2HP + stun). Armadilha: SO₂ CURA (+1HP) — enxofre alimenta magma! Drop: S ou Si.</p>
+  </div>
+</div>
+
+<hr class="sep">
+
+<!-- 7. AMBIENTES -->
+<h2>7. AMBIENTES ESPECÍFICOS (LEVEL DESIGN)</h2>
+
+<h3>7.1. Level 01 — "Floresta Elemental" &nbsp;<span class="badge-done">Concluído ✓</span></h3>
+<p>Área de introdução ao sistema Metroidvania. Hub central com shaft vertical e zona subterrânea escura. Ensina: movimentação, wall jump, alquimia (H₂O), barreira Lock &amp; Key (NaCl).</p>
+
+<canvas id="map01" class="lvmap" height="260"></canvas>
+<p class="map-caption">Mapa Level 01 — verde: hub/corredor · roxo: sala superior/boss · azul: shaft · cinza escuro: underground (dark fog)</p>
+
+<ul>
+  <li><strong>Hub / Spawn</strong> (x:0–800, y:160–368): Spawn em (80, 300). Tutorial de Elara: movimento → pulo → wall jump → coleta → alquimia → ataque. H e O disponíveis facilmente.</li>
+  <li><strong>Shaft Vertical</strong> (x:224–368, 80px largura): Wall jump obrigatório. 5 plataformas internas alternadas para descanso. Tint azul no estado WALL_SLIDE indica mecânica ativa.</li>
+  <li><strong>Sala Superior</strong> (y:−480→−320): Única via de acesso ao boss. Plataformas zig-zag. Barreira de sódio em x≈440 exige Na≥1 + Cl≥1 no inventário.</li>
+  <li><strong>Corredor Direito</strong> (x:800–2400): Plataformas em alturas variadas, Lesmas de Sódio patrulhando, pickups de H e O. Transição → Level 02 ao final.</li>
+  <li><strong>Caverna Underground</strong> (y:400–576): Gap no chão do hub leva à zona escura. Dark fog remove visibilidade. Na e Cl escondidos aqui — ÚNICOS locais desses elementos no nível. Descer é obrigatório para vencer o boss.</li>
+</ul>
+
+<p><strong>Desafio de design:</strong> O jogador NÃO pode enfrentar o boss sem explorar a caverna escura primeiro (necessita Na + Cl). O Lock &amp; Key força exploração vertical antes da progressão horizontal.</p>
+
+<h3>7.2. Level 02 — "Caldeira Vulcânica" &nbsp;<span class="badge-wip">Implementado (N2)</span></h3>
+<p>Metroidvania com 4 zonas horizontais + Sala Alta vertical. Lock &amp; Key baseado em química da lava: somente H₂O dissolve a barreira — e O só existe na Sala Alta, acessível via wall jump.</p>
+
+<canvas id="map02" class="lvmap" height="290"></canvas>
+<p class="map-caption">Mapa Level 02 — verde: Zona 1 Hub · roxo/fog: Sala Alta · laranja: barreira lava · vermelho: Zona 2 Lava · marrom: Zona 3 Arena</p>
+
+<ul>
+  <li><strong>Zona 1 Hub</strong> (x:0–640, y:112–368): Spawn em (100, 330). H×2 e S disponíveis. 2 Golems de Enxofre patrulhando. Teto com gap no shaft (x:224–304).</li>
+  <li><strong>Shaft</strong> (x:224–304, 80px): Conecta Zona 1 à Sala Alta sem plataformas internas — wall jump puro exige domínio completo da mecânica. 160px de altura total.</li>
+  <li><strong>Sala Alta</strong> (x:0–704, y:−320→−160): Coberta por dark fog ao entrar. O e Si <strong>exclusivos desta zona</strong> — o jogador PRECISA do wall jump para acessar Oxigênio. Plataformas zig-zag reveladas após fade do fog.</li>
+  <li><strong>Barreira de Lava</strong> (x:640): ColorRect laranja bloqueando Zona 2. Dissolvida por projétil H₂O com tween de 0.8s e diálogo "A lava solidificou em Obsidiana!"</li>
+  <li><strong>Zona 2 — Lava</strong> (x:672–1440): Sem chão — lava cobre y:368+. 4 plataformas flutuantes em alturas variadas. Cair na lava = respawn imediato no checkpoint.</li>
+  <li><strong>Zona 3 — Arena</strong> (x:1440–2400): Arena fechada com paredes laterais. G3 Guardião patrulhando. Matar os 3 Golems (progresso 1/3 → 2/3 → 3/3) faz surgir portal do boss em (2200, 320).</li>
+</ul>
+
+<p><strong>Fluxo obrigatório:</strong> Spawn → coleta H+S → barreira bloqueia → SOBE shaft → Sala Alta (fog some) → coleta O → crafta H₂O → DESCE → atira na barreira → atravessa lava → mata G3 → portal → boss.</p>
+
+<h3>7.3. Level 03 — "Complexo Subaquático" &nbsp;<span class="badge-plan">Planejado — N3 (Julho/2026)</span></h3>
+<p>Câmaras de ar subaquáticas interligadas verticalmente. Nova mecânica de O₂ limitado sob água. Puzzles de condutividade elétrica (Cl) e neutralização ácido-base (HCl/NaOH para abrir portas). Boss: Hidra Ácida de 3 cabeças — cada cabeça com fraqueza química distinta.</p>
+
+<canvas id="map03" class="lvmap" height="200"></canvas>
+<p class="map-caption">Level 03 — concept art · layout definitivo em desenvolvimento para N3 (03/07/2026)</p>
+
+<hr class="sep">
+
+<!-- 8. GAMEPLAY -->
+<h2>8. GAMEPLAY E MECÂNICAS</h2>
+<h3>8.1. Movimentação</h3>
+<div class="mech-grid">
+  <div class="mech-card"><h4>Plataformer Base</h4><p>State machine completo: IDLE → WALK → JUMP → FALL. Coyote time 0.12s e jump buffer 0.12s garantem feel responsivo. Max fall: 500px/s.</p></div>
+  <div class="mech-card"><h4>Wall Jump</h4><p>Estado WALL_SLIDE (50px/s) ao pressionar parede no ar. Pular = impulso vx:±140, vy:−300. Tint azul indica estado ativo. Shafts de 80px exigem domínio.</p></div>
+  <div class="mech-card"><h4>Projéteis</h4><p>Tecla J ou clique lança o composto ativo. Area2D com compound_id determina efeito em cada alvo. Layer 5 (bitmask 16).</p></div>
+</div>
+
+<h3>8.2. Alquimia Interativa (Mecânica Central)</h3>
+<ul>
+  <li><strong>Coleta:</strong> Orbs de elementos (ElementPickup) espalhados pelo cenário. Inventário gerenciado pelo GameState autoload. HUD atualiza em tempo real via sinal element_collected.</li>
+  <li><strong>Painel de Alquimia (Q):</strong> 3 slots de ingredientes. Combina elementos → forma compostos. Tutorial guiado no primeiro H₂O (flag tutorial_unlock). Bloqueado se não houver ingredientes disponíveis para evitar confusão precoce.</li>
+  <li><strong>Composto Ativo:</strong> Scroll ↑↓ ou tecla E cicla entre compostos crafted. HUD exibe ícone do composto ativo no canto inferior.</li>
+</ul>
+
+<h3>8.3. Batalha de Boss (Turn-Based)</h3>
+<ul>
+  <li>Interface construída via código em boss_battle.gd (sem .tscn separado). PanelContainer auto-sizing com botões gerados dinamicamente a partir do inventário atual.</li>
+  <li>Cada turno: jogador escolhe composto → animação flash da cor do composto → diálogo com ensinamento químico real → boss responde com ataque (−15 a −20 HP).</li>
+  <li>Fraquezas, imunidades e curas derivadas da química real (osmose, reações endotérmicas, oxidação, composição do magma).</li>
+  <li>Boss dropa elemento ao tomar dano → aparece no inventário do jogador no turno seguinte.</li>
+</ul>
+
+<h3>8.4. Desafios Ambientais</h3>
+<ul>
+  <li><strong>Dark Areas:</strong> ColorRect preta z=5 cobre salas secretas. Fade out de 1.2s ao entrar via Area2D trigger. Incentiva exploração e recompensa curiosidade.</li>
+  <li><strong>Lava Hazard (L02):</strong> Area2D na Zona 2. Contato com o player → _respawn() imediato no checkpoint mais próximo.</li>
+  <li><strong>Lock &amp; Key:</strong> L01: verificação de inventário (Na≥1 e Cl≥1 → abre barreira). L02: projétil H₂O acertando HitZone da barreira → tween dissolve visual + desativa StaticBody2D.</li>
+  <li><strong>Encyclopedia:</strong> Primeiro pickup de cada elemento dispara dialog com nome, família, curiosidade científica real e dado educativo.</li>
+</ul>
+
+<hr class="sep">
+
+<!-- 9. PROGRESSÃO -->
+<h2>9. PROGRESSÃO E RECOMPENSAS</h2>
+
+<h3>9.1. Elementos e Compostos por Fase</h3>
+<table class="gdd">
+  <thead><tr><th>Fase</th><th>Elementos Introduzidos</th><th>Compostos Disponíveis</th><th>Boss</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Level 01</strong></td><td>H, O, Na, Cl</td><td>H₂O, NaCl, HCl, NaOH</td><td>Lesma Gigante (fraqueza: NaCl)</td></tr>
+    <tr><td><strong>Level 02</strong></td><td>S, Si (sala alta), C (escondido)</td><td>SO₂, CO₂ (todos os 6)</td><td>Golem de Lava (fraqueza: H₂O)</td></tr>
+    <tr><td><strong>Level 03 ○</strong><br><small style="color:#888">Planejado N3</small></td><td>+13 novos (20 total)</td><td>H₂SO₄, HNO₃ e outros</td><td>Hidra Ácida (3 cabeças)</td></tr>
+  </tbody>
+</table>
+
+<h3>9.2. Reações dos Bosses — Tabela Educativa</h3>
+<table class="gdd">
+  <thead><tr><th>Composto</th><th>Lesma Gigante (L01)</th><th>Golem de Lava (L02)</th><th>Ensinamento Químico</th></tr></thead>
+  <tbody>
+    <tr><td><strong>H₂O</strong></td><td class="dmg-heal">+1 HP ★ CURA!</td><td class="dmg-weak">−3 HP ★ Fraqueza</td><td>Lesmas adoram umidade · H₂O resfria lava (reação endotérmica) → obsidiana</td></tr>
+    <tr><td><strong>SO₂</strong></td><td class="dmg-stun">Stun −1 HP</td><td class="dmg-heal">+1 HP ★ CURA!</td><td>Gás tóxico atordoa moluscos · Enxofre compõe o magma vulcânico</td></tr>
+    <tr><td><strong>NaCl</strong></td><td class="dmg-weak">−2 HP ★ Fraqueza</td><td>−1 HP</td><td>Osmose resseca o muco da lesma · Reage com minerais basálticos</td></tr>
+    <tr><td><strong>CO₂</strong></td><td>−1 HP</td><td class="dmg-stun">−2 HP + Stun</td><td>Resfria muco · Remove O₂ que alimenta as chamas do golem</td></tr>
+    <tr><td><strong>HCl</strong></td><td>−1 HP</td><td>−1 HP</td><td>Ácido clorídrico corrói matéria orgânica e rocha vulcânica</td></tr>
+    <tr><td><strong>NaOH</strong></td><td>−1 HP</td><td>−1 HP</td><td>Base forte reage com muco ácido e óxidos metálicos da rocha</td></tr>
+  </tbody>
+</table>
+
+<h3>9.3. Tabela Periódica de Descobertas</h3>
+<p>Tecla TAB abre tabela periódica interativa (layer 20, process_mode = ALWAYS). Cada elemento coletado pela primeira vez exibe dialog com nome, número atômico, família e curiosidade científica real. A grade posiciona cada elemento na posição real de período/grupo. Elementos não coletados aparecem opacos — desbloqueio visual progressivo conectado ao sinal element_collected do GameState.</p>
+
+<h3>9.4. Roadmap</h3>
+<table class="gdd">
+  <thead><tr><th>Marco</th><th>Data</th><th>Principais Entregas</th><th>Status</th></tr></thead>
+  <tbody>
+    <tr><td><strong>N1</strong></td><td>03/04/2026</td><td>Level 01 completo, 7 elementos, 6 receitas, Boss Lesma, wall jump, painel alquimia, menu, game over</td><td><span class="badge-done">Entregue ✓</span></td></tr>
+    <tr><td><strong>N2</strong></td><td>22/05/2026</td><td>Level 02 Caldeira, Golem de Lava (boss), Lock &amp; Key lava, Zona 2 lava hazard, Zona 3 Arena, barreira H₂O</td><td><span class="badge-wip">Em andamento</span></td></tr>
+    <tr><td><strong>N3</strong></td><td>03/07/2026</td><td>Level 03, 20 elementos, Boss Hidra Ácida (3 cabeças), sprites reais, sistema de quiz, polimento geral</td><td><span class="badge-plan">Planejado</span></td></tr>
+  </tbody>
+</table>
+
+<hr class="sep">
+
+<!-- 10. ESTÉTICA -->
+<h2>10. ESTÉTICA E ÁUDIO</h2>
+<h3>10.1. Visual (Look and Feel)</h3>
+<ul>
+  <li><strong>Pixel Art 2D:</strong> Resolução 320×180 com scale ×4 → 1280×720 no display. Assets em desenvolvimento; fase atual usa ColorRect procedural como placeholder por bioma.</li>
+  <li><strong>Paleta Dinâmica por Bioma:</strong> Level 01 — verdes florestais e pedra cinza. Level 02 — C_ROCK = Color(0.18, 0.10, 0.05) / C_ACCENT = Color(0.65, 0.30, 0.05) (laranja vulcânico). Level 03 — azuis e cinzas subaquáticos.</li>
+  <li><strong>Efeitos Alquímicos:</strong> Projéteis com flash colorido ao acertar (cor da reação). Barreira de lava dissolve com tween de alpha 0.8s. Dark fog fade-out 1.2s ao entrar em zona escura.</li>
+  <li><strong>Câmera Dinâmica:</strong> Level 02 gerencia câmera diretamente — zoom 3× no hub, zoom 4× na Sala Alta com transição suave de 0.6s ao cruzar y = −80.</li>
+</ul>
+
+<h3>10.2. Música e Sonoplastia</h3>
+<ul>
+  <li><strong>Trilha por Bioma:</strong> Level 01 — melodia de floresta/laboratório, misteriosa e exploratória. Level 02 — percussão pesada, sons metálicos de forja, borbulhar de lava. Level 03 — sons subaquáticos, eco e pressão.</li>
+  <li><strong>Efeitos Sonoros:</strong> Coleta de elemento (chime distinto por tipo químico). Craft de composto (borbulhar alquímico). Projétil (whoosh + impacto com variação por composto). Boss hurt (reação química sonora específica por fraqueza/cura).</li>
+  <li><strong>Status:</strong> Áudio em desenvolvimento por Alan para N2/N3.</li>
+</ul>
+
+<hr class="sep">
+
+<!-- 11. INTERFACE -->
+<h2>11. INTERFACE (UI/HUD)</h2>
+
+<h3>11.1. HUD em Jogo</h3>
+<ul>
+  <li><strong>Barra de Vida:</strong> Canto superior esquerdo. Barra visual com contagem numérica. Atualiza via sinal health_changed do player.</li>
+  <li><strong>Inventário de Elementos:</strong> Ícones com contador por elemento coletado. Atualiza via sinal element_collected do GameState autoload.</li>
+  <li><strong>Composto Ativo:</strong> Ícone do composto selecionado exibido no HUD inferior. Scroll ou tecla E para ciclar.</li>
+</ul>
+
+<h3>11.2. Controles</h3>
+<table class="gdd ctrl-table">
+  <tbody>
+    <tr><td>A / ←</td><td>Mover para esquerda</td></tr>
+    <tr><td>D / →</td><td>Mover para direita</td></tr>
+    <tr><td>Espaço / ↑</td><td>Pular / Wall Jump (ao pressionar parede no ar)</td></tr>
+    <tr><td>J / Click</td><td>Atacar — lança composto ativo como projétil</td></tr>
+    <tr><td>E / RMB</td><td>Abrir roda de compostos / ciclar composto ativo</td></tr>
+    <tr><td>Q</td><td>Abrir Painel de Alquimia (3 slots de combinação)</td></tr>
+    <tr><td>TAB</td><td>Abrir Tabela Periódica de Descobertas</td></tr>
+    <tr><td>F</td><td>Interagir (checkpoints, objetos)</td></tr>
+    <tr><td>Scroll ↑↓</td><td>Ciclar composto ativo no HUD</td></tr>
+  </tbody>
+</table>
+
+<h3>11.3. Sistemas de UI</h3>
+<ul>
+  <li><strong>Painel de Alquimia:</strong> CanvasLayer com 3 slots. Bloqueado até ter ingredientes (evita confusão). Tutorial guiado no primeiro uso via flag tutorial_unlock. Tecla Q fecha mesmo com jogo pausado (lógica: and not _is_open no _unhandled_input).</li>
+  <li><strong>Tabela Periódica:</strong> Layer 20, process_mode = ALWAYS. Grid por período/grupo reais. Desbloqueio visual progressivo.</li>
+  <li><strong>Dialog Box:</strong> Fila de diálogos (queue_dialogs). Portrait de Elara + texto. Suporte a fórmulas químicas com subíndices.</li>
+  <li><strong>Boss Battle:</strong> 100% via código (sem .tscn). PanelContainer auto-sizing. Botões gerados dinamicamente do inventário. Flash colorido por composto. Drop de elemento aparece após cada hit.</li>
+  <li><strong>Game Over / Menu:</strong> Tela de morte com reinício. Menu principal com botão Jogar. Fade preto entre cenas e ao entrar em novos níveis.</li>
+</ul>
+
+<hr class="sep">
+<p style="text-align:center;color:#888;font-size:12px">GDD: Alquimia Elemental · Versão Final (N2) · PAC IV 2026 · Católica de Santa Catarina<br>
+Mateus Hartelt da Silva · Ruan Fernandes Raulino · João Gabriel Carvalho Floriano · Alan Daniel Biliski</p>
+
+</div><!-- /page -->
+
+<script>
+function resizeC(id, h) {
+  const c = document.getElementById(id);
+  c.width = c.parentElement.clientWidth;
+  c.height = h;
+  return c.getContext('2d');
+}
+
+function blk(ctx, col, row, w, h, gx, gy, fill, acc) {
+  const x=gx(col*16), y=gy(row*16);
+  const pw=Math.max(1,gx((col+w)*16)-x), ph=Math.max(1,gy((row+h)*16)-y);
+  ctx.fillStyle=fill||'#2a1608'; ctx.fillRect(x,y,pw,ph);
+  ctx.fillStyle=acc||'#904010'; ctx.fillRect(x,y,pw,Math.max(1,Math.round(ph*.12)));
+}
+
+function orb(ctx,wx,wy,lbl,col,gx,gy){
+  const px=gx(wx),py=gy(wy);
+  ctx.beginPath();ctx.arc(px,py,5,0,Math.PI*2);
+  ctx.strokeStyle=col;ctx.lineWidth=1.5;ctx.stroke();
+  ctx.fillStyle=col+'33';ctx.fill();
+  ctx.fillStyle=col;ctx.font='bold 6px monospace';
+  ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(lbl,px,py);
+}
+
+function lbl(ctx,x,y,t,c,s){
+  ctx.fillStyle=c||'#666';ctx.font=(s||9)+'px sans-serif';
+  ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(t,x,y);
+}
+
+function playerSprite(ctx,x,y){
+  ctx.fillStyle='#2060c0';ctx.fillRect(x-4,y-10,8,12);
+  ctx.fillStyle='#ffc060';ctx.beginPath();ctx.arc(x,y-13,4,0,Math.PI*2);ctx.fill();
+}
+
+function slime(ctx,x,y){
+  ctx.fillStyle='#2a6010';ctx.fillRect(x-5,y-7,10,9);
+  ctx.fillStyle='#ffff00';ctx.fillRect(x-3,y-5,2,2);ctx.fillRect(x+1,y-5,2,2);
+}
+
+function golem(ctx,x,y){
+  ctx.fillStyle='#5a2808';ctx.fillRect(x-5,y-9,10,12);
+  ctx.fillStyle='#ff4400';ctx.fillRect(x-3,y-7,2,2);ctx.fillRect(x+1,y-7,2,2);
+}
+
+function bossGlow(ctx,x,y,col){
+  const g=ctx.createRadialGradient(x,y,0,x,y,12);
+  g.addColorStop(0,col+'88');g.addColorStop(1,'transparent');
+  ctx.fillStyle=g;ctx.fillRect(x-12,y-12,24,24);
+  ctx.beginPath();ctx.arc(x,y,8,0,Math.PI*2);
+  ctx.strokeStyle=col;ctx.lineWidth=2;ctx.stroke();
+  ctx.fillStyle=col;ctx.font='bold 7px sans-serif';
+  ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('B',x,y);
+}
+
+// ── COVER ────────────────────────────────────────────────────────────────────
+(function(){
+  const ctx=resizeC('cover',360);
+  const W=ctx.canvas.width,H=ctx.canvas.height;
+  const bg=ctx.createLinearGradient(0,0,W,H);
+  bg.addColorStop(0,'#080418');bg.addColorStop(.5,'#160c28');bg.addColorStop(1,'#081420');
+  ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+  // Stars
+  ctx.fillStyle='rgba(255,255,255,.5)';
+  for(let i=0;i<80;i++){ctx.beginPath();ctx.arc(Math.random()*W,Math.random()*H*.7,Math.random()*1.5,0,Math.PI*2);ctx.fill();}
+  // Ground
+  ctx.fillStyle='#180e06';ctx.fillRect(0,H*.68,W,H*.32);
+  ctx.fillStyle='#261606';ctx.fillRect(0,H*.68,W,6);
+  // Elara glow
+  const eg=ctx.createRadialGradient(W*.72,H*.5,0,W*.72,H*.5,90);
+  eg.addColorStop(0,'rgba(60,140,255,.3)');eg.addColorStop(1,'transparent');
+  ctx.fillStyle=eg;ctx.fillRect(W*.72-90,H*.25,180,180);
+  // Title
+  ctx.shadowColor='rgba(220,150,0,.6)';ctx.shadowBlur=28;
+  ctx.fillStyle='#e8a020';ctx.font='bold 60px serif';ctx.textAlign='center';
+  ctx.fillText('ALQUIMIA',W/2,H*.30);ctx.fillText('ELEMENTAL',W/2,H*.52);
+  ctx.shadowBlur=0;
+  // Element symbols
+  const syms=['H','O','Na','S','Cl','C','Si'];
+  const sc=['#99ccff','#3399ff','#ffcc33','#ffff00','#99ff66','#888888','#aa88cc'];
+  syms.forEach((s,i)=>{
+    const sx=W*.06+i*(W*.13),sy=H*.14+Math.sin(i*1.4)*(H*.05);
+    ctx.fillStyle=sc[i];ctx.font='bold 12px monospace';ctx.textAlign='center';
+    ctx.fillText(s,sx,sy);
+    ctx.strokeStyle=sc[i]+'55';ctx.lineWidth=1;
+    ctx.beginPath();ctx.arc(sx,sy+3,9,0,Math.PI*2);ctx.stroke();
+  });
+  ctx.fillStyle='rgba(190,170,130,.6)';ctx.font='12px sans-serif';ctx.textAlign='center';
+  ctx.fillText('Godot 4.6 · Metroidvania Educativo · PAC IV 2026 · Católica de Santa Catarina',W/2,H*.93);
+})();
+
+// ── MAP 01 ───────────────────────────────────────────────────────────────────
+(function(){
+  const ctx=resizeC('map01',260);
+  const W=ctx.canvas.width,H=ctx.canvas.height;
+  ctx.fillStyle='#0c0906';ctx.fillRect(0,0,W,H);
+  const OY=490,S=W/2480;
+  const gx=x=>Math.round(x*S+8),gy=y=>Math.round((y+OY)*S);
+
+  // Zone fills
+  [[0,160,800,208,'rgba(40,80,30,.3)'],[800,160,1600,208,'rgba(30,60,20,.2)'],
+   [0,-480,800,160,'rgba(50,20,80,.3)'],[0,400,900,176,'rgba(10,20,40,.5)'],
+   [224,-480,144,640,'rgba(30,60,100,.12)']].forEach(([x,y,w,h,c])=>{
+    ctx.fillStyle=c;ctx.fillRect(gx(x),gy(y),Math.round(w*S),Math.round(h*S));
+  });
+
+  const B=(c,r,w,h)=>blk(ctx,c,r,w,h,gx,gy);
+  B(-1,-30,1,56);B(0,-30,50,2);B(0,-20,14,2);B(23,-20,27,2);
+  B(14,-30,1,40);B(23,-30,1,40);
+  B(0,10,14,2);B(23,10,27,2);B(0,23,150,2);B(50,10,100,2);B(150,10,1,20);
+  B(0,25,60,2);B(0,36,60,2);B(0,25,1,11);
+  B(2,-26,8,1);B(11,-24,8,1);B(20,-26,8,1);B(30,-24,10,1);
+  B(4,19,8,1);B(16,17,10,1);B(30,15,8,1);
+  B(55,17,8,1);B(70,15,10,1);B(90,17,8,1);B(110,15,12,1);B(130,17,8,1);
+  B(5,31,8,1);B(17,29,10,1);B(32,31,8,1);
+
+  // Barrier
+  ctx.fillStyle='rgba(255,200,0,.8)';ctx.fillRect(gx(440),gy(-430),3,gy(-330)-gy(-430));
+  lbl(ctx,gx(452),gy(-412),'NaCl','#ffcc33',7);
+
+  // Underground fog
+  ctx.fillStyle='rgba(0,0,0,.42)';ctx.fillRect(gx(0),gy(400),gx(900)-gx(0),gy(580)-gy(400));
+
+  // Pickups
+  orb(ctx,130,320,'H','#6699ff',gx,gy);orb(ctx,340,295,'H','#6699ff',gx,gy);
+  orb(ctx,600,290,'O','#3399ff',gx,gy);orb(ctx,900,275,'O','#3399ff',gx,gy);
+  orb(ctx,180,460,'Na','#ffcc33',gx,gy);orb(ctx,380,445,'Na','#ffcc33',gx,gy);
+  orb(ctx,520,460,'Cl','#99ff66',gx,gy);orb(ctx,680,445,'Cl','#99ff66',gx,gy);
+
+  [400,700,1100,1700,2200].forEach(x=>slime(ctx,gx(x),gy(360)));
+  bossGlow(ctx,gx(600),gy(-392),'#cc3020');
+  playerSprite(ctx,gx(80),gy(350));
+
+  lbl(ctx,gx(400),gy(182),'HUB / SPAWN','rgba(80,180,60,.7)',8);
+  lbl(ctx,gx(296),gy(-148),'SHAFT','rgba(60,140,220,.7)',7);
+  lbl(ctx,gx(450),gy(-458),'SALA SUPERIOR','rgba(140,60,200,.7)',8);
+  lbl(ctx,gx(1600),gy(186),'CORREDOR DIREITO →','rgba(80,180,60,.6)',8);
+  lbl(ctx,gx(400),gy(490),'CAVERNA UNDERGROUND (dark fog — Na + Cl únicos)','rgba(80,100,200,.7)',7);
+  lbl(ctx,gx(600),gy(-406),'⚔ BOSS','rgba(220,60,40,.8)',8);
+  lbl(ctx,gx(80),gy(336),'▶ START','rgba(80,200,80,.8)',7);
+})();
+
+// ── MAP 02 ───────────────────────────────────────────────────────────────────
+(function(){
+  const ctx=resizeC('map02',290);
+  const W=ctx.canvas.width,H=ctx.canvas.height;
+  ctx.fillStyle='#0e0804';ctx.fillRect(0,0,W,H);
+  const OY=325,S=W/2440;
+  const gx=x=>Math.round(x*S+8),gy=y=>Math.round((y+OY)*S);
+
+  [[0,112,640,256,'rgba(60,120,40,.2)'],[0,-320,704,160,'rgba(80,30,100,.25)'],
+   [672,112,768,256,'rgba(160,50,10,.2)'],[1440,112,960,256,'rgba(100,40,0,.2)']].forEach(([x,y,w,h,c])=>{
+    ctx.fillStyle=c;ctx.fillRect(gx(x),gy(y),Math.round(w*S),Math.round(h*S));
+  });
+
+  // Lava
+  const lv=ctx.createLinearGradient(0,gy(368),0,gy(450));
+  lv.addColorStop(0,'rgba(220,80,0,.7)');lv.addColorStop(1,'rgba(150,40,0,.4)');
+  ctx.fillStyle=lv;ctx.fillRect(gx(672),gy(368),gx(1440)-gx(672),gy(450)-gy(368));
+
+  const B=(c,r,w,h)=>blk(ctx,c,r,w,h,gx,gy,'#2a1206','#b84808');
+  B(14,-10,1,29);B(19,-10,1,29);
+  B(0,-20,44,2);B(0,-20,1,10);B(43,-20,1,10);
+  B(0,-10,14,2);B(19,-10,24,2);
+  B(2,-18,8,1);B(11,-16,4,1);B(20,-16,4,1);B(20,-18,8,1);B(30,-16,8,1);B(36,-14,8,1);
+  B(0,7,14,2);B(19,7,21,2);B(0,23,40,2);
+  B(4,19,8,1);B(20,17,10,1);B(30,15,8,1);
+  B(42,7,48,2);B(46,17,8,1);B(58,19,8,1);B(68,16,8,1);B(82,18,8,1);
+  B(90,7,60,2);B(90,23,60,2);B(90,7,1,18);B(150,7,1,18);
+  B(93,18,10,1);B(107,15,12,1);B(120,18,10,1);B(136,15,12,1);B(148,17,2,1);
+  B(-1,-20,1,50);
+
+  // Lava barrier
+  ctx.fillStyle='rgba(255,130,0,.85)';ctx.fillRect(gx(640),gy(112),4,gy(390)-gy(112));
+  lbl(ctx,gx(640),gy(100),'H₂O','rgba(255,160,0,.9)',7);
+
+  // Sala Alta fog
+  ctx.fillStyle='rgba(0,0,0,.44)';ctx.fillRect(gx(0),gy(-320),gx(704)-gx(0),gy(-160)-gy(-320));
+
+  orb(ctx,130,310,'H','#6699ff',gx,gy);orb(ctx,340,278,'H','#6699ff',gx,gy);
+  orb(ctx,490,248,'S','#cccc00',gx,gy);orb(ctx,1360,278,'S','#cccc00',gx,gy);
+  orb(ctx,120,-210,'O','#3399ff',gx,gy);orb(ctx,500,-230,'O','#3399ff',gx,gy);
+  orb(ctx,380,-268,'Si','#aa88cc',gx,gy);orb(ctx,620,-240,'C','#888888',gx,gy);
+
+  [200,480,1840].forEach(x=>golem(ctx,gx(x),gy(354)));
+  bossGlow(ctx,gx(2200),gy(320),'#9c27b0');
+  playerSprite(ctx,gx(100),gy(328));
+
+  lbl(ctx,gx(320),gy(148),'ZONA 1','rgba(80,180,60,.6)',8);
+  lbl(ctx,gx(352),gy(-278),'SALA ALTA','rgba(140,60,200,.7)',8);
+  lbl(ctx,gx(352),gy(-258),'fog · O exclusivo','rgba(100,40,160,.55)',7);
+  lbl(ctx,gx(1056),gy(148),'ZONA 2 — LAVA','rgba(220,80,20,.7)',8);
+  lbl(ctx,gx(1920),gy(148),'ZONA 3 — ARENA','rgba(200,140,20,.7)',8);
+  lbl(ctx,gx(1056),gy(412),'🔥 LAVA','rgba(255,100,20,.7)',8);
+  lbl(ctx,gx(2200),gy(300),'⚔ PORTAL','rgba(150,60,255,.8)',8);
+  lbl(ctx,gx(100),gy(310),'▶ START','rgba(80,200,80,.8)',7);
+  ctx.save();ctx.translate(gx(264),gy(-30));ctx.rotate(-Math.PI/2);
+  lbl(ctx,0,0,'SHAFT','rgba(60,150,220,.6)',7);ctx.restore();
+})();
+
+// ── MAP 03 (concept) ──────────────────────────────────────────────────────────
+(function(){
+  const ctx=resizeC('map03',200);
+  const W=ctx.canvas.width,H=ctx.canvas.height;
+  const bg=ctx.createLinearGradient(0,0,0,H);
+  bg.addColorStop(0,'rgba(8,40,90,.95)');bg.addColorStop(1,'rgba(4,15,40,.98)');
+  ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='rgba(80,160,255,.1)';
+  for(let i=0;i<30;i++){ctx.beginPath();ctx.arc(Math.random()*W,Math.random()*H,Math.random()*3+1,0,Math.PI*2);ctx.fill();}
+
+  function ch(x,y,w,h,title,sub,ac){
+    ctx.fillStyle='#06101c';ctx.fillRect(x,y,w,h);
+    ctx.strokeStyle=ac||'#1a6090';ctx.lineWidth=1.5;ctx.strokeRect(x,y,w,h);
+    ctx.fillStyle=ac||'#1a6090';ctx.fillRect(x,y,w,3);
+    ctx.fillStyle='#3090c0';ctx.font='bold 10px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(title,x+w/2,y+h/2-(sub?6:0));
+    if(sub){ctx.fillStyle='#507080';ctx.font='8px sans-serif';ctx.fillText(sub,x+w/2,y+h/2+9);}
+  }
+
+  const cw=W/5,gap=8;
+  ch(gap,gap,cw-gap,H*.45,'CÂMARA 1','Spawn/Tutorial','#226644');
+  ch(cw+gap,gap,cw-gap,H*.45,'CÂMARA 2','Corredor/H₂O','#1a6090');
+  ch(cw*2+gap,gap,cw-gap,H*.7,'SHAFT','Pressão+Cl','#886600');
+  ch(cw*3+gap,gap,cw-gap,H*.45,'ABISMO','C e N hidden','#1a4060');
+  ch(cw*4+gap,gap,cw-gap*2,H-gap*2,'BOSS','Hidra Ácida\n3 Cabeças','#662288');
+
+  ctx.strokeStyle='rgba(30,100,160,.4)';ctx.lineWidth=1;ctx.setLineDash([4,4]);
+  [[cw,H*.22,cw+gap,H*.22],[cw*2,H*.22,cw*2+gap,H*.22],
+   [cw*3,H*.35,cw*3+gap,H*.35],[cw*4,H*.22,cw*4+gap,H*.22]].forEach(([x1,y1,x2,y2])=>{
+    ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
+  });
+  ctx.setLineDash([]);
+  ctx.fillStyle='rgba(48,144,192,.5)';ctx.font='9px sans-serif';ctx.textAlign='center';
+  ctx.fillText('Level 03 — Complexo Subaquático · Concept em desenvolvimento (N3 · Julho/2026)',W/2,H-10);
+})();
+</script>
+</body>
+</html>

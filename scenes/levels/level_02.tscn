@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://level02"]
 
-[ext_resource type="Script" path="res://scenes/levels/level_02.gd" id="1_lvl"]
+[ext_resource type="Script" uid="uid://bpd3hxyj18mca" path="res://scenes/levels/level_02.gd" id="1_lvl"]
 [ext_resource type="PackedScene" uid="uid://player001" path="res://scenes/player/player.tscn" id="2_player"]
 [ext_resource type="PackedScene" uid="uid://pickup001" path="res://scenes/world/element_pickup.tscn" id="3_pickup"]
 [ext_resource type="PackedScene" uid="uid://hud001" path="res://scenes/ui/hud.tscn" id="4_hud"]
@@ -10,10 +10,7 @@
 [ext_resource type="PackedScene" uid="uid://sbfmum45d4ay" path="res://scenes/ui/periodic_table.tscn" id="9_ptable"]
 [ext_resource type="PackedScene" uid="uid://gameover01" path="res://scenes/ui/game_over.tscn" id="10_go"]
 [ext_resource type="PackedScene" uid="uid://lvl02tilemap" path="res://scenes/world/level_02_tilemap.tscn" id="12_tilemap"]
-[ext_resource type="PackedScene" uid="uid://bossbattle01" path="res://scenes/ui/boss_battle.tscn" id="13_boss"]
-
-[sub_resource type="RectangleShape2D" id="fog_trigger_shape"]
-size = Vector2(1648, 160)
+[ext_resource type="PackedScene" path="res://scenes/ui/boss_battle.tscn" id="13_boss"]
 
 [sub_resource type="RectangleShape2D" id="barrier_wall_shape"]
 size = Vector2(32, 378)
@@ -24,10 +21,13 @@ size = Vector2(40, 378)
 [sub_resource type="RectangleShape2D" id="lava_hazard_shape"]
 size = Vector2(760, 80)
 
-[node name="Level02" type="Node2D"]
+[sub_resource type="RectangleShape2D" id="fog_trigger_shape"]
+size = Vector2(1648, 160)
+
+[node name="Level02" type="Node2D" unique_id=481213255]
 script = ExtResource("1_lvl")
 
-[node name="BgSky" type="ColorRect" parent="."]
+[node name="BgSky" type="ColorRect" parent="." unique_id=1741220203]
 z_index = -10
 offset_left = -32.0
 offset_top = -520.0
@@ -35,20 +35,20 @@ offset_right = 2432.0
 offset_bottom = 512.0
 color = Color(0.08, 0.04, 0.02, 1)
 
-[node name="BgGround" type="ColorRect" parent="."]
+[node name="BgGround" type="ColorRect" parent="." unique_id=1729529714]
 z_index = -9
 offset_left = -32.0
 offset_top = 368.0
 offset_right = 2432.0
 offset_bottom = 640.0
-color = Color(0.20, 0.08, 0.02, 1)
+color = Color(0.2, 0.08, 0.02, 1)
 
-[node name="Level02TileMap" parent="." instance=ExtResource("12_tilemap")]
+[node name="Level02TileMap" parent="." unique_id=1334823237 instance=ExtResource("12_tilemap")]
 
-[node name="Player" parent="." instance=ExtResource("2_player")]
+[node name="Player" parent="." unique_id=2003425140 instance=ExtResource("2_player")]
 position = Vector2(100, 330)
 
-[node name="Camera2D" type="Camera2D" parent="Player"]
+[node name="Camera2D" type="Camera2D" parent="Player" unique_id=229745033]
 offset = Vector2(0, -20)
 zoom = Vector2(3, 3)
 limit_left = 0
@@ -58,99 +58,95 @@ limit_bottom = 600
 position_smoothing_enabled = true
 drag_horizontal_enabled = true
 
-[node name="Pickups" type="Node2D" parent="."]
+[node name="Pickups" type="Node2D" parent="." unique_id=95800834]
 
-[node name="H_01" parent="Pickups" instance=ExtResource("3_pickup")]
+[node name="H_01" parent="Pickups" unique_id=1712680355 instance=ExtResource("3_pickup")]
 position = Vector2(130, 310)
-element_id = "H"
 
-[node name="H_02" parent="Pickups" instance=ExtResource("3_pickup")]
+[node name="H_02" parent="Pickups" unique_id=1704438899 instance=ExtResource("3_pickup")]
 position = Vector2(340, 278)
-element_id = "H"
 
-[node name="S_01" parent="Pickups" instance=ExtResource("3_pickup")]
+[node name="S_01" parent="Pickups" unique_id=895148953 instance=ExtResource("3_pickup")]
 position = Vector2(490, 248)
 element_id = "S"
 
-[node name="S_02" parent="Pickups" instance=ExtResource("3_pickup")]
+[node name="S_02" parent="Pickups" unique_id=1224113037 instance=ExtResource("3_pickup")]
 position = Vector2(1360, 278)
 element_id = "S"
 
-[node name="O_01" parent="Pickups" instance=ExtResource("3_pickup")]
+[node name="O_01" parent="Pickups" unique_id=1055644269 instance=ExtResource("3_pickup")]
 position = Vector2(120, -210)
 element_id = "O"
 
-[node name="O_02" parent="Pickups" instance=ExtResource("3_pickup")]
+[node name="O_02" parent="Pickups" unique_id=761852596 instance=ExtResource("3_pickup")]
 position = Vector2(500, -230)
 element_id = "O"
 
-[node name="Si_01" parent="Pickups" instance=ExtResource("3_pickup")]
+[node name="Si_01" parent="Pickups" unique_id=241317478 instance=ExtResource("3_pickup")]
 position = Vector2(380, -268)
 element_id = "Si"
 
-[node name="C_hidden" parent="Pickups" instance=ExtResource("3_pickup")]
+[node name="C_hidden" parent="Pickups" unique_id=2023525309 instance=ExtResource("3_pickup")]
 position = Vector2(620, -240)
 element_id = "C"
 
-[node name="Enemies" type="Node2D" parent="."]
+[node name="Enemies" type="Node2D" parent="." unique_id=1035044088]
 
-[node name="Golem01" parent="Enemies" instance=ExtResource("5_golem")]
+[node name="Golem01" parent="Enemies" unique_id=760002802 instance=ExtResource("5_golem")]
 position = Vector2(200, 352)
 
-[node name="Golem02" parent="Enemies" instance=ExtResource("5_golem")]
+[node name="Golem02" parent="Enemies" unique_id=609360347 instance=ExtResource("5_golem")]
 position = Vector2(480, 352)
 
-[node name="Golem03" parent="Enemies" instance=ExtResource("5_golem")]
+[node name="Golem03" parent="Enemies" unique_id=2009649144 instance=ExtResource("5_golem")]
 position = Vector2(1840, 352)
 
-[node name="LavaBarrier" type="Node2D" parent="."]
+[node name="LavaBarrier" type="Node2D" parent="." unique_id=1520001451]
 position = Vector2(640, 0)
 
-[node name="Visual" type="ColorRect" parent="LavaBarrier"]
+[node name="Visual" type="ColorRect" parent="LavaBarrier" unique_id=2076410562]
 z_index = 3
-offset_left = 0.0
 offset_top = 112.0
 offset_right = 32.0
 offset_bottom = 490.0
-color = Color(1.0, 0.55, 0.0, 1.0)
+color = Color(1, 0.55, 0, 1)
 
-[node name="Wall" type="StaticBody2D" parent="LavaBarrier"]
+[node name="Wall" type="StaticBody2D" parent="LavaBarrier" unique_id=2066419942]
+position = Vector2(16, 301)
 collision_layer = 2
 collision_mask = 0
-position = Vector2(16, 301)
 
-[node name="WallShape" type="CollisionShape2D" parent="LavaBarrier/Wall"]
+[node name="WallShape" type="CollisionShape2D" parent="LavaBarrier/Wall" unique_id=1232750083]
 shape = SubResource("barrier_wall_shape")
 
-[node name="HitZone" type="Area2D" parent="LavaBarrier"]
+[node name="HitZone" type="Area2D" parent="LavaBarrier" unique_id=958451034]
+position = Vector2(16, 301)
 collision_layer = 0
 collision_mask = 16
-position = Vector2(16, 301)
 
-[node name="HitShape" type="CollisionShape2D" parent="LavaBarrier/HitZone"]
+[node name="HitShape" type="CollisionShape2D" parent="LavaBarrier/HitZone" unique_id=1574498570]
 shape = SubResource("barrier_hit_shape")
 
-[node name="LavaZone2" type="Node2D" parent="."]
+[node name="LavaZone2" type="Node2D" parent="." unique_id=1791881099]
 
-[node name="LavaVisual" type="ColorRect" parent="LavaZone2"]
+[node name="LavaVisual" type="ColorRect" parent="LavaZone2" unique_id=1606766484]
 z_index = -1
 offset_left = 680.0
 offset_top = 368.0
 offset_right = 1440.0
 offset_bottom = 620.0
-color = Color(0.9, 0.4, 0.0, 1.0)
+color = Color(0.9, 0.4, 0, 1)
 
-[node name="LavaHazard" type="Area2D" parent="LavaZone2"]
-collision_layer = 32
-collision_mask = 1
+[node name="LavaHazard" type="Area2D" parent="LavaZone2" unique_id=2146746168]
 position = Vector2(1060, 408)
+collision_layer = 32
 
-[node name="LavaShape" type="CollisionShape2D" parent="LavaZone2/LavaHazard"]
+[node name="LavaShape" type="CollisionShape2D" parent="LavaZone2/LavaHazard" unique_id=994916582]
 shape = SubResource("lava_hazard_shape")
 
-[node name="DarkAreas" type="Node2D" parent="."]
+[node name="DarkAreas" type="Node2D" parent="." unique_id=460344947]
 
-[node name="SalaAltaFog" type="ColorRect" parent="DarkAreas"]
+[node name="SalaAltaFog" type="ColorRect" parent="DarkAreas" unique_id=944232086]
 z_index = 5
 offset_left = -32.0
 offset_top = -340.0
@@ -158,35 +154,34 @@ offset_right = 720.0
 offset_bottom = -140.0
 color = Color(0, 0, 0, 1)
 
-[node name="FogTrigger" type="Area2D" parent="DarkAreas"]
-collision_layer = 0
-collision_mask = 1
+[node name="FogTrigger" type="Area2D" parent="DarkAreas" unique_id=186789121]
 position = Vector2(350, -240)
+collision_layer = 0
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="DarkAreas/FogTrigger"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DarkAreas/FogTrigger" unique_id=2108312877]
 shape = SubResource("fog_trigger_shape")
 
-[node name="BossBattle" parent="." instance=ExtResource("13_boss")]
+[node name="BossBattle" parent="." unique_id=1908681030 instance=ExtResource("13_boss")]
 
-[node name="HUD" parent="." instance=ExtResource("4_hud")]
+[node name="HUD" parent="." unique_id=517223055 instance=ExtResource("4_hud")]
 
-[node name="AlchemyPanel" parent="." instance=ExtResource("6_alchemy")]
+[node name="AlchemyPanel" parent="." unique_id=1138282792 instance=ExtResource("6_alchemy")]
 
-[node name="DialogBox" parent="." instance=ExtResource("7_dialog")]
+[node name="DialogBox" parent="." unique_id=1933353698 instance=ExtResource("7_dialog")]
 
-[node name="PeriodicTable" parent="." instance=ExtResource("9_ptable")]
+[node name="PeriodicTable" parent="." unique_id=1251684156 instance=ExtResource("9_ptable")]
 
-[node name="GameOver" parent="." instance=ExtResource("10_go")]
+[node name="GameOver" parent="." unique_id=1927711930 instance=ExtResource("10_go")]
 
-[node name="FadeOverlay" type="ColorRect" parent="."]
+[node name="FadeOverlay" type="ColorRect" parent="." unique_id=566762501]
+visible = false
 z_index = 20
 offset_left = -32.0
 offset_top = -520.0
 offset_right = 2432.0
 offset_bottom = 640.0
 color = Color(0, 0, 0, 1)
-visible = false
 
-[connection signal="body_entered" from="DarkAreas/FogTrigger" to="." method="_on_sala_alta_fog_entered"]
 [connection signal="area_entered" from="LavaBarrier/HitZone" to="." method="_on_lava_barrier_hit"]
 [connection signal="body_entered" from="LavaZone2/LavaHazard" to="." method="_on_lava_entered"]
+[connection signal="body_entered" from="DarkAreas/FogTrigger" to="." method="_on_sala_alta_fog_entered"]

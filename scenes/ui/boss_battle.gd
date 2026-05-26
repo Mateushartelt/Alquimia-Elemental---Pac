@@ -129,9 +129,9 @@ const BOSSES: Dictionary = {
 	"golem": {
 		"name":        "Golem de Lava",
 		"color":       Color(0.75, 0.28, 0.03),
-		"sprite":      "",
-		"sprite_cols": 1,
-		"sprite_rows": 1,
+		"sprite":      "res://scenes/enemies/assets/golem/golem_fire.png",
+		"sprite_cols": 6,
+		"sprite_rows": 2,
 		"max_hp":      8,
 		"attack_dmg":  20,
 		"intro":       "Um colossal Golem de Lava bloqueia a saída da Caldeira!",
