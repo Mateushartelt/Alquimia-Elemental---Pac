@@ -28,7 +28,6 @@ var _seen_elements     : Array[String] = []
 var _fog_cleared       := false
 var _boss_started      := false
 var _in_sala_alta      := false
-var _in_shaft          := false
 var _enemy_dialog_done := false
 var _barrier_dissolved  := false
 var _barrier2_dissolved := false
@@ -63,46 +62,35 @@ func _process(_delta: float) -> void:
 	_update_camera()
 
 func _update_camera() -> void:
-	var px       := player.global_position.x
-	var py       := player.global_position.y
-	var in_alta  := py < -80.0
-	var in_shaft := not in_alta and py < 120.0 and px > 208.0 and px < 316.0
+	var py      := player.global_position.y
+	var px      := player.global_position.x
+	var in_alta := py < -80.0
 
 	if in_alta and not _in_sala_alta:
 		_in_sala_alta = true
-		_in_shaft     = false
-		_cam.drag_horizontal_enabled    = false
-		_cam.position_smoothing_enabled = true
+		_cam.drag_horizontal_enabled = false
 		_set_zoom(Vector2(4, 4), 0.6)
+	elif not in_alta and _in_sala_alta:
+		_in_sala_alta = false
+		_cam.drag_horizontal_enabled = true
+		_set_zoom(Vector2(3, 3), 0.5)
+
+	if in_alta:
 		_cam.limit_left   = 0
 		_cam.limit_top    = -380
 		_cam.limit_right  = 704
 		_cam.limit_bottom = -80
-	elif not in_alta and _in_sala_alta:
-		_in_sala_alta = false
-		_cam.drag_horizontal_enabled    = true
-		_cam.position_smoothing_enabled = true
-		_set_zoom(Vector2(3, 3), 0.5)
+	elif py < 120.0 and px > 208.0 and px < 316.0:
+		_cam.limit_left   = 0
+		_cam.limit_top    = -160
+		_cam.limit_right  = 2400
+		_cam.limit_bottom = 450
+	else:
 		_cam.limit_left   = 0
 		_cam.limit_top    = 60
-		_cam.limit_right  = _right_limit()
-		_cam.limit_bottom = 450
-	elif in_shaft and not _in_shaft:
-		_in_shaft = true
-		_cam.limit_top    = -160
-		_cam.limit_right  = _right_limit()
-		_cam.limit_bottom = 450
-	elif not in_shaft and _in_shaft and not _in_sala_alta:
-		_in_shaft = false
-		_cam.drag_horizontal_enabled    = true
-		_cam.limit_top    = 60
-		_cam.limit_right  = _right_limit()
+		_cam.limit_right  = 2400
 		_cam.limit_bottom = 450
 
-func _right_limit() -> int:
-	if _barrier2_dissolved: return 2400
-	if _barrier_dissolved:  return 1472
-	return 672
 
 func _set_zoom(target: Vector2, duration: float) -> void:
 	if _zoom_tween:
@@ -150,7 +138,7 @@ func _on_lava_barrier_hit(area: Node) -> void:
 	tw.tween_callback(func() -> void:
 		_barrier_wall.process_mode = Node.PROCESS_MODE_DISABLED
 		_barrier_visual.visible = false
-		_cam.limit_right = _right_limit()
+		_cam.limit_right = 2400
 		_dialog.show_dialog(ELARA, "A lava solidificou em Obsidiana! Zona 2 aberta!"))
 
 func _on_lava_barrier2_hit(area: Node) -> void:
@@ -165,7 +153,7 @@ func _on_lava_barrier2_hit(area: Node) -> void:
 	tw.tween_callback(func() -> void:
 		_barrier2_wall.process_mode = Node.PROCESS_MODE_DISABLED
 		_barrier2_visual.visible = false
-		_cam.limit_right = _right_limit()
+		_cam.limit_right = 2400
 		_dialog.show_dialog(ELARA, "Obsidiana! A Arena está aberta — cuidado com o Golem de Lava!"))
 
 func _on_lava_entered(body: Node2D) -> void:
