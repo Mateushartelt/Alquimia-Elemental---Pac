@@ -16,8 +16,10 @@ const ENCYCLOPEDIA  := "Enciclopédia"
 @onready var _cam            : Camera2D     = $Player/Camera2D
 @onready var _fog            : ColorRect    = $DarkAreas/SalaAltaFog
 @onready var _fade           : ColorRect    = $FadeOverlay
-@onready var _barrier_visual : ColorRect    = $LavaBarrier/Visual
-@onready var _barrier_wall   : StaticBody2D = $LavaBarrier/Wall
+@onready var _barrier_visual  : ColorRect    = $LavaBarrier/Visual
+@onready var _barrier_wall    : StaticBody2D = $LavaBarrier/Wall
+@onready var _barrier2_visual : ColorRect    = $LavaBarrier2/Visual
+@onready var _barrier2_wall   : StaticBody2D = $LavaBarrier2/Wall
 
 const TOTAL_ENEMIES := 3
 
@@ -26,8 +28,10 @@ var _seen_elements     : Array[String] = []
 var _fog_cleared       := false
 var _boss_started      := false
 var _in_sala_alta      := false
+var _in_shaft          := false
 var _enemy_dialog_done := false
-var _barrier_dissolved := false
+var _barrier_dissolved  := false
+var _barrier2_dissolved := false
 var _zoom_tween        : Tween = null
 var _enemies_killed    := 0
 var _boss_portal       : BossPortal = null
@@ -36,10 +40,11 @@ func _ready() -> void:
 	_cam.zoom                       = Vector2(3, 3)
 	_cam.limit_left                 = 0
 	_cam.limit_top                  = 60
-	_cam.limit_right                = 2400
+	_cam.limit_right                = 672   # Zona 1 — avança ao dissolver barreiras
 	_cam.limit_bottom               = 450
 	_cam.position_smoothing_enabled = true
 	_cam.drag_horizontal_enabled    = true
+	_setup_background()
 	# Fade de entrada
 	_fade.color   = Color(0, 0, 0, 1)
 	_fade.visible = true
@@ -58,9 +63,14 @@ func _process(_delta: float) -> void:
 	_update_camera()
 
 func _update_camera() -> void:
-	var in_alta := player.global_position.y < -80.0
+	var px       := player.global_position.x
+	var py       := player.global_position.y
+	var in_alta  := py < -80.0
+	var in_shaft := not in_alta and py < 120.0 and px > 208.0 and px < 316.0
+
 	if in_alta and not _in_sala_alta:
 		_in_sala_alta = true
+		_in_shaft     = false
 		_cam.drag_horizontal_enabled    = false
 		_cam.position_smoothing_enabled = true
 		_set_zoom(Vector2(4, 4), 0.6)
@@ -75,8 +85,24 @@ func _update_camera() -> void:
 		_set_zoom(Vector2(3, 3), 0.5)
 		_cam.limit_left   = 0
 		_cam.limit_top    = 60
-		_cam.limit_right  = 2400
+		_cam.limit_right  = _right_limit()
 		_cam.limit_bottom = 450
+	elif in_shaft and not _in_shaft:
+		_in_shaft = true
+		_cam.limit_top    = -160
+		_cam.limit_right  = _right_limit()
+		_cam.limit_bottom = 450
+	elif not in_shaft and _in_shaft and not _in_sala_alta:
+		_in_shaft = false
+		_cam.drag_horizontal_enabled    = true
+		_cam.limit_top    = 60
+		_cam.limit_right  = _right_limit()
+		_cam.limit_bottom = 450
+
+func _right_limit() -> int:
+	if _barrier2_dissolved: return 2400
+	if _barrier_dissolved:  return 1472
+	return 672
 
 func _set_zoom(target: Vector2, duration: float) -> void:
 	if _zoom_tween:
@@ -124,7 +150,23 @@ func _on_lava_barrier_hit(area: Node) -> void:
 	tw.tween_callback(func() -> void:
 		_barrier_wall.process_mode = Node.PROCESS_MODE_DISABLED
 		_barrier_visual.visible = false
+		_cam.limit_right = _right_limit()
 		_dialog.show_dialog(ELARA, "A lava solidificou em Obsidiana! Zona 2 aberta!"))
+
+func _on_lava_barrier2_hit(area: Node) -> void:
+	if _barrier2_dissolved:
+		return
+	if area.get("compound_id") != "H2O":
+		_dialog.show_dialog(ELARA, "A lava resiste novamente! H₂O (2×H + 1×O) para solidificá-la.")
+		return
+	_barrier2_dissolved = true
+	var tw := create_tween()
+	tw.tween_property(_barrier2_visual, "color", Color(0.2, 0.1, 0.4, 0.0), 0.8)
+	tw.tween_callback(func() -> void:
+		_barrier2_wall.process_mode = Node.PROCESS_MODE_DISABLED
+		_barrier2_visual.visible = false
+		_cam.limit_right = _right_limit()
+		_dialog.show_dialog(ELARA, "Obsidiana! A Arena está aberta — cuidado com o Golem de Lava!"))
 
 func _on_lava_entered(body: Node2D) -> void:
 	if body.is_in_group("player"):
@@ -186,3 +228,32 @@ func _on_boss_finished(won: bool) -> void:
 	else:
 		_dialog.show_dialog(ELARA,
 			"O Golem resistiu! Certifique-se de ter H₂O (2×H + 1×O) equipado.")
+
+func _setup_background() -> void:
+	var bg_tex: Texture2D = load("res://scenes/world/assets/bg_cave.png")
+	if not bg_tex:
+		return
+
+	# ParallaxBackground é CanvasLayer — usa 'layer' não 'z_index'
+	var parallax := ParallaxBackground.new()
+	parallax.layer = -10
+	add_child(parallax)
+
+	# Nível vai de y=-320 (Sala Alta) até y=450 = ~770px de altura total
+	# bg_cave.png tem 941px de altura — estica para cobrir tudo
+	var level_top    := -520.0
+	var level_height := 1040.0   # cobre sala alta + hub + abaixo
+
+	var layer := ParallaxLayer.new()
+	layer.motion_scale     = Vector2(0.25, 0.15)
+	layer.motion_mirroring = Vector2(bg_tex.get_width(), 0.0)
+	parallax.add_child(layer)
+
+	for i in 3:   # 3 cópias horizontais para cobrir nível largo (2400px)
+		var tr := TextureRect.new()
+		tr.texture      = bg_tex
+		tr.expand_mode  = TextureRect.EXPAND_IGNORE_SIZE
+		tr.stretch_mode = TextureRect.STRETCH_SCALE
+		tr.size         = Vector2(bg_tex.get_width(), level_height)
+		tr.position     = Vector2(i * bg_tex.get_width(), level_top)
+		layer.add_child(tr)

@@ -1,33 +1,94 @@
 [gd_scene format=3 uid="uid://golem001"]
 
-[ext_resource type="Script" path="res://scenes/enemies/golem_enxofre.gd" id="1"]
-[ext_resource type="Texture2D" uid="uid://kwmwvhurnjhn" path="res://scenes/enemies/assets/golem/golem_fire.png" id="2"]
+[ext_resource type="Script" uid="uid://dn3x3wm2gwjaq" path="res://scenes/enemies/golem_enxofre.gd" id="1"]
+[ext_resource type="Texture2D" uid="uid://buedh8ca8wgdt" path="res://scenes/enemies/assets/golem/Golem.png" id="2"]
 
 [sub_resource type="RectangleShape2D" id="body_shape"]
 size = Vector2(14, 16)
 
+[sub_resource type="AtlasTexture" id="AtlasTexture_168ij"]
+atlas = ExtResource("2")
+region = Rect2(0, 1080, 256, 270)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_vtp3g"]
+atlas = ExtResource("2")
+region = Rect2(256, 1080, 256, 270)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_rgnj2"]
+atlas = ExtResource("2")
+region = Rect2(512, 1080, 256, 270)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_w0"]
+atlas = ExtResource("2")
+region = Rect2(0, 270, 256, 270)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_t8hyo"]
+atlas = ExtResource("2")
+region = Rect2(256, 270, 256, 270)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_n7bgw"]
+atlas = ExtResource("2")
+region = Rect2(512, 270, 256, 270)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_21yjs"]
+atlas = ExtResource("2")
+region = Rect2(768, 270, 256, 270)
+
+[sub_resource type="SpriteFrames" id="frames"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_168ij")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_vtp3g")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_rgnj2")
+}],
+"loop": false,
+"name": &"death",
+"speed": 8.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_w0")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_t8hyo")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_n7bgw")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_21yjs")
+}],
+"loop": true,
+"name": &"walk",
+"speed": 8.0
+}]
+
 [sub_resource type="RectangleShape2D" id="detect_shape"]
 size = Vector2(100, 35)
 
-[node name="GolemEnxofre" type="CharacterBody2D" groups=["enemies"]]
+[node name="GolemEnxofre" type="CharacterBody2D" unique_id=316942881 groups=["enemies"]]
 collision_layer = 4
 collision_mask = 2
 script = ExtResource("1")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1334071980]
 shape = SubResource("body_shape")
 
-[node name="Sprite2D" type="Sprite2D" parent="."]
-position = Vector2(0, 0)
-scale = Vector2(0.30, 0.30)
-texture = ExtResource("2")
-hframes = 4
-vframes = 4
-frame = 0
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=767086628]
+position = Vector2(7.1000013, -7.750001)
+scale = Vector2(0.15546876, 0.12777779)
+sprite_frames = SubResource("frames")
+animation = &"walk"
+frame_progress = 0.6600399
 
-[node name="DetectArea" type="Area2D" parent="."]
+[node name="DetectArea" type="Area2D" parent="." unique_id=1533987279]
 collision_layer = 0
-collision_mask = 1
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="DetectArea"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DetectArea" unique_id=944742685]
+visible = false
 shape = SubResource("detect_shape")

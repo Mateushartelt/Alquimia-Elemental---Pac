@@ -31,13 +31,15 @@ var _wall_normal     : Vector2 = Vector2.ZERO
 var _attack_cooldown : float   = 0.0
 var input_locked     : bool    = false
 
-@onready var attack_point : Marker2D       = $AttackPoint
-@onready var _anim        : AnimationPlayer = $AnimationPlayer
-@onready var _visual      : Node2D          = $Visual
+@onready var attack_point : Marker2D         = $AttackPoint
+@onready var _anim        : AnimationPlayer  = $AnimationPlayer
+@onready var _visual      : Node2D           = $Visual
+@onready var _sprite      : AnimatedSprite2D = $AnimatedSprite2D
 
 func _ready() -> void:
 	_build_animations()
-	_anim.play("idle")
+	_sprite.play("idle")
+
 
 func _physics_process(delta: float) -> void:
 	_invincible_timer = maxf(0.0, _invincible_timer - delta)
@@ -165,26 +167,26 @@ func _update_state() -> void:
 		_set_state(State.JUMP if velocity.y < 0.0 else State.FALL)
 
 func _update_visual() -> void:
-	_visual.scale.x = 1.0 if _facing_right else -1.0
-	var blink  := _invincible_timer > 0.0 and int(_invincible_timer * 10) % 2 == 0
-	var alpha  := 0.0 if blink else 1.0
+	_sprite.flip_h = not _facing_right
+	var blink := _invincible_timer > 0.0 and int(_invincible_timer * 10) % 2 == 0
+	var alpha := 0.0 if blink else 1.0
 	if _state == State.WALL_SLIDE:
-		_visual.modulate = Color(0.55, 0.85, 1.0, alpha)
+		_sprite.modulate = Color(0.55, 0.85, 1.0, alpha)
 	else:
-		_visual.modulate = Color(1.0, 1.0, 1.0, alpha)
+		_sprite.modulate = Color(1.0, 1.0, 1.0, alpha)
 
 func _set_state(s: State) -> void:
 	if _state == s:
 		return
 	_state = s
 	match s:
-		State.IDLE:       _anim.play("idle")
-		State.WALK:       _anim.play("walk")
-		State.JUMP:       _anim.play("jump")
-		State.FALL:       _anim.play("fall")
-		State.WALL_SLIDE: _anim.play("wall_slide")
-		State.HURT:       _anim.play("hurt")
-		State.DEAD:       _anim.play("dead")
+		State.IDLE:       _sprite.play("idle")
+		State.WALK:       _sprite.play("walk")
+		State.JUMP:       _sprite.play("jump")
+		State.FALL:       _sprite.play("fall")
+		State.WALL_SLIDE: _sprite.play("wall_slide")
+		State.HURT:       _sprite.play("hurt")
+		State.DEAD:       _sprite.play("dead")
 
 func _build_animations() -> void:
 	var lib := AnimationLibrary.new()
