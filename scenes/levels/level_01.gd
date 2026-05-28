@@ -108,6 +108,10 @@ func _ready() -> void:
 	_dialog.dialog_queue_finished.connect(_on_any_dialog_closed)
 	for enemy in get_tree().get_nodes_in_group("enemies"):
 		enemy.connect("died", _on_enemy_died)
+	# TESTE — remover depois
+	for _el: String in ["H", "O", "Na", "S", "Cl", "C", "Si"]:
+		GameState.collect_element(_el, 100)
+	_boss_battle.show_battle("snail")
 
 var _debug_zoom : Label
 

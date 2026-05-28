@@ -81,7 +81,21 @@
 	  "description": "Soda cáustica! Base forte usada em sabões e limpadores. Reage violentamente com ácidos.",
 	  "curiosity": "O NaOH é tão básico (pH 14) que dissolve gorduras — por isso é o principal ingrediente de limpadores de canos!",
 	  "bncc": "EM13CNT101",
-	  "unlocked_level": 2
+	  "unlocked_in_level": 2
+	},
+	"Etanol": {
+	  "name": "Álcool Etílico",
+	  "formula": "C₂H₅OH",
+	  "ingredients": { "C": 1, "H": 2, "O": 1 },
+	  "projectile_color": "#A8E6CF",
+	  "projectile_size": 7,
+	  "damage": 20,
+	  "effect": "denature",
+	  "special": "virus_killer",
+	  "description": "Álcool etílico que desnatura proteínas virais. Componente de antisséticos e combustíveis.",
+	  "curiosity": "O álcool a 70% é mais eficaz que 100% — a água potencializa a penetração na membrana viral!",
+	  "bncc": "EF09CI03",
+	  "unlocked_in_level": 3
 	}
   }
 }
