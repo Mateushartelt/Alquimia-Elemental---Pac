@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b4etec2df7ime"
-path="res://.godot/imported/idle snail.jpg-bde981169f110f710045872fc9e607f7.ctex"
+uid="uid://cf6jmv2epjihm"
+path="res://.godot/imported/Lesma_ataque-removebg-preview.png-008d95197b2085165b4f1a8c2bcf83dc.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://scenes/enemies/assets/snail/idle snail.jpg"
-dest_files=["res://.godot/imported/idle snail.jpg-bde981169f110f710045872fc9e607f7.ctex"]
+source_file="res://scenes/enemies/assets/snail/Lesma_ataque-removebg-preview.png"
+dest_files=["res://.godot/imported/Lesma_ataque-removebg-preview.png-008d95197b2085165b4f1a8c2bcf83dc.ctex"]
 
 [params]
 

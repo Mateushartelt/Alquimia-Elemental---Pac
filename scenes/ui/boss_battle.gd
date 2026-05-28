@@ -9,9 +9,25 @@ const BOSSES: Dictionary = {
 	"snail": {
 		"name":        "Lesma Gigante",
 		"color":       Color(0.18, 0.55, 0.12),
-		"sprite":      "res://scenes/enemies/assets/snail/idle snail.jpg",
-		"sprite_cols": 4,
-		"sprite_rows": 2,
+		"sprite":      "res://scenes/enemies/assets/snail/Lesma_olhos_abertos-removebg-preview.png",
+		"sprite_cols": 2,
+		"sprite_rows": 1,
+		"anim_files": {
+			"idle":   "res://scenes/enemies/assets/snail/Lesma_olhos_abertos-removebg-preview.png",
+			"water":  "res://scenes/enemies/assets/snail/Lesma_agua-removebg-preview.png",
+			"hurt":   "res://scenes/enemies/assets/snail/Lesma_levou_hit-removebg-preview.png",
+			"attack": "res://scenes/enemies/assets/snail/Lesma_ataque-removebg-preview.png",
+			"death":  "res://scenes/enemies/assets/snail/Lesma_morreu-removebg-preview.png",
+			"alert":  "res://scenes/enemies/assets/snail/Lesma_olhos_abertos-removebg-preview.png",
+		},
+		"reaction_anims": {
+			"H2O":  "water",
+			"NaCl": "hurt",
+			"HCl":  "hurt",
+			"SO2":  "hurt",
+			"CO2":  "hurt",
+			"NaOH": "hurt",
+		},
 		"max_hp":      6,
 		"attack_dmg":  15,
 		"intro":       "Uma enorme Lesma Gigante bloqueia o caminho!",
@@ -190,6 +206,14 @@ var _player_hp_bar   : ProgressBar
 var _boss_sprite       : Control   # TextureRect se tiver sprite, ColorRect se não
 var _boss_anim_frames  : Array[AtlasTexture] = []
 var _boss_anim_idx     : int = 0
+var _snail_anims       : Dictionary = {}
+var _snail_anim_name   : String = ""
+var _snail_loop        : bool = false
+var _snail_timer       : Timer = null
+var _player_sprite     : TextureRect = null
+var _player_idle_frames: Array[AtlasTexture] = []
+var _player_idle_idx   : int = 0
+var _player_idle_timer : Timer = null
 var _boss_name_lbl   : Label
 var _dialog_lbl      : Label
 var _compound_row    : HBoxContainer   # botões dos compostos disponíveis
@@ -293,26 +317,37 @@ func _build_ui() -> void:
 	player_side.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	field.add_child(player_side)
 
-	var player_sprite := ColorRect.new()
-	player_sprite.color = Color(0.3, 0.5, 1.0)
-	player_sprite.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
-	player_sprite.offset_left   = 80
-	player_sprite.offset_right  = 180
-	player_sprite.offset_top    = -150
-	player_sprite.offset_bottom = 0
-	player_side.add_child(player_sprite)
-
-	var p_lbl := Label.new()
-	p_lbl.text = "Kael"
-	p_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	p_lbl.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
-	p_lbl.offset_left   = 80
-	p_lbl.offset_right  = 180
-	p_lbl.offset_top    = 4
-	p_lbl.offset_bottom = 26
-	p_lbl.add_theme_font_size_override("font_size", 16)
-	p_lbl.add_theme_color_override("font_color", Color(0.7, 0.85, 1.0))
-	player_side.add_child(p_lbl)
+	var player_tex := TextureRect.new()
+	player_tex.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
+	player_tex.offset_left   = 40
+	player_tex.offset_right  = 340
+	player_tex.offset_top    = -320
+	player_tex.offset_bottom = 0
+	player_tex.stretch_mode  = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	player_tex.expand_mode   = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+	var psheet := load("res://scenes/player/assets/player.png") as Texture2D
+	if psheet:
+		# 4 frames idle: I0-I3 do player.tscn
+		var idle_regions := [
+			Rect2(0,   0, 109, 125),
+			Rect2(109, 0, 109, 125),
+			Rect2(218, 0, 109, 125),
+			Rect2(327, 0, 107, 125),
+		]
+		for r: Rect2 in idle_regions:
+			var at := AtlasTexture.new()
+			at.atlas  = psheet
+			at.region = r
+			_player_idle_frames.append(at)
+		player_tex.texture = _player_idle_frames[0]
+	_player_sprite = player_tex
+	if not _player_idle_frames.is_empty():
+		_player_idle_timer = Timer.new()
+		_player_idle_timer.wait_time = 0.2
+		_player_idle_timer.autostart = true
+		_player_idle_timer.timeout.connect(_on_player_idle_frame)
+		add_child(_player_idle_timer)
+	player_side.add_child(player_tex)
 
 	var boss_side := Control.new()
 	boss_side.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -321,12 +356,13 @@ func _build_ui() -> void:
 	var tr := TextureRect.new()
 	tr.name = "BossSprite"
 	tr.set_anchors_preset(Control.PRESET_TOP_RIGHT)
-	tr.offset_left   = -320
-	tr.offset_right  = -60
-	tr.offset_top    = 10
-	tr.offset_bottom = 210
+	tr.offset_left   = -480
+	tr.offset_right  = -20
+	tr.offset_top    = 0
+	tr.offset_bottom = 320
 	tr.stretch_mode  = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	tr.expand_mode   = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+	tr.flip_h        = true
 	boss_side.add_child(tr)
 	_boss_sprite = tr
 
@@ -575,7 +611,11 @@ func show_battle(boss_id: String) -> void:
 	_boss_name_lbl.text = _boss_data["name"]
 	# Carrega sprite do boss (ou usa cor de fallback)
 	var sprite_path: String = _boss_data.get("sprite", "")
-	if sprite_path != "" and ResourceLoader.exists(sprite_path):
+	_snail_anims = _boss_data.get("anim_files", {})
+	if not _snail_anims.is_empty():
+		_setup_snail_anim_timer()
+		_play_snail_anim("idle", true)
+	elif sprite_path != "" and ResourceLoader.exists(sprite_path):
 		_start_boss_animation(sprite_path,
 			int(_boss_data.get("sprite_cols", 1)),
 			int(_boss_data.get("sprite_rows", 1)))
@@ -685,6 +725,7 @@ func _on_compound_selected(cid: String) -> void:
 	_attack_btn.text     = "Atacar com %s ▶" % cid
 	_attack_btn.disabled = false
 	_refresh_compound_buttons()
+	_play_snail_anim("alert")
 
 # ── Toggle craft panel ─────────────────────────────────────────────────────────
 func _on_toggle_craft_panel() -> void:
@@ -847,10 +888,14 @@ func _on_attack_pressed() -> void:
 		_boss_hp = max(0, _boss_hp - dmg)
 		_boss_hp_bar.value = _boss_hp
 		await _flash_boss(flash)
+		var ranim: String = _boss_data.get("reaction_anims", {}).get(_selected_compound, "hurt")
+		_play_snail_anim(ranim, false)
 	elif dmg < 0:
 		_boss_hp = min(_boss_max_hp, _boss_hp + abs(dmg))
 		_boss_hp_bar.value = _boss_hp
 		await _flash_boss(flash)
+		var ranim: String = _boss_data.get("reaction_anims", {}).get(_selected_compound, "idle")
+		_play_snail_anim(ranim, false)
 
 	if effect == "stun":
 		_boss_stunned = true
@@ -914,6 +959,7 @@ func _boss_attack() -> void:
 		_next_player_turn()
 		return
 
+	_play_snail_anim("attack", false)
 	var dmg: int = _boss_data.get("attack_dmg", 15)
 	GameState.player_health = max(0, GameState.player_health - dmg)
 	GameState.health_changed.emit(GameState.player_health, GameState.player_max_health)
@@ -959,6 +1005,7 @@ func _end_battle(won: bool) -> void:
 	_mix_toggle_btn.disabled = true
 
 	if won:
+		_play_snail_anim("death", false)
 		_set_dialog(_boss_data["win"])
 		for _i: int in 3:
 			await _flash_boss(Color(2.0, 0.1, 0.1))
@@ -999,3 +1046,61 @@ func _next_boss_frame() -> void:
 
 func _set_dialog(text: String) -> void:
 	_dialog_lbl.text = text
+
+# ── Animações da Lesma ─────────────────────────────────────────────────────────
+func _setup_snail_anim_timer() -> void:
+	if _snail_timer:
+		_snail_timer.queue_free()
+	_snail_timer = Timer.new()
+	_snail_timer.one_shot = false
+	_snail_timer.timeout.connect(_on_snail_frame)
+	add_child(_snail_timer)
+
+func _play_snail_anim(name: String, _loop: bool = false) -> void:
+	if _snail_anims.is_empty():
+		return
+	var path: String = _snail_anims.get(name, "")
+	if path.is_empty() or not ResourceLoader.exists(path):
+		return
+	_snail_anim_name = name
+	var tex: Texture2D = load(path)
+	var cols := 2
+	var fw   := tex.get_width() / float(cols)
+	var fh   := float(tex.get_height())
+	_boss_anim_frames.clear()
+	for col in cols:
+		var at := AtlasTexture.new()
+		at.atlas  = tex
+		at.region = Rect2(col * fw, 0.0, fw, fh)
+		_boss_anim_frames.append(at)
+	# idle = frame 0 (olhos murchos), alert = frame 1 (olhos arregalados)
+	_boss_anim_idx = 1 if name == "alert" else 0
+	if _boss_sprite is TextureRect:
+		(_boss_sprite as TextureRect).texture = _boss_anim_frames[_boss_anim_idx]
+	if _snail_timer:
+		_snail_timer.stop()
+	# idle e alert ficam estáticos — sem timer
+	if name != "idle" and name != "alert":
+		if _snail_timer:
+			_snail_timer.wait_time = 2.0 if name == "water" else 0.8
+			_snail_timer.start()
+
+func _on_player_idle_frame() -> void:
+	if _player_idle_frames.is_empty() or not is_instance_valid(_player_sprite):
+		return
+	_player_idle_idx = (_player_idle_idx + 1) % _player_idle_frames.size()
+	_player_sprite.texture = _player_idle_frames[_player_idle_idx]
+
+func _on_snail_frame() -> void:
+	if _boss_anim_frames.is_empty():
+		return
+	_boss_anim_idx += 1
+	if _boss_anim_idx >= _boss_anim_frames.size():
+		_boss_anim_idx = _boss_anim_frames.size() - 1
+		if _snail_timer:
+			_snail_timer.stop()
+		if _snail_anim_name != "death":
+			_play_snail_anim("idle")
+		return
+	if _boss_sprite is TextureRect:
+		(_boss_sprite as TextureRect).texture = _boss_anim_frames[_boss_anim_idx]
