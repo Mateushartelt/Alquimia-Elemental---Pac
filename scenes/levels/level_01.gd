@@ -58,6 +58,10 @@ var _tutorial_h2o_triggered := false
 
 func _ready() -> void:
 	$HUD.visible = true
+	for enemy in $Enemies.get_children():
+		enemy.visible      = false
+		enemy.process_mode = Node.PROCESS_MODE_DISABLED
+	_setup_background()
 	_make_debug_label()
 	_cam.limit_left                 = 800
 	_cam.limit_right                = int(FIRE_ORIGIN_X) + FIRE_SEG_W
@@ -77,7 +81,7 @@ func _ready() -> void:
 		_cam.limit_left   = 226
 		_cam.limit_top    = -500
 		_cam.limit_bottom = 680
-		_cam.zoom         = Vector2(4, 4)
+		_cam.zoom         = Vector2(5, 5)
 		# Spawna inimigos no túnel para o player treinar a arma de água
 		_spawn_tutorial_enemies()
 		if is_instance_valid(_door_in):
@@ -206,7 +210,7 @@ func _process(delta: float) -> void:
 		_cam.limit_left   = 0 if _portal_exploded else 226  # para no portal até ele explodir
 		_cam.limit_top    = -500
 		_cam.limit_bottom = 680
-		_set_zoom(Vector2(4, 4), 0.5)
+		_set_zoom(Vector2(5, 5), 0.5)
 	# Lookahead horizontal no túnel
 	var target_look_x := 0.0
 	if _in_tunnel:
@@ -227,7 +231,7 @@ func _cine_end() -> void:
 		_zoom_tween.kill()
 		_zoom_tween = null
 	_cam_look_x       = 0.0
-	_cam.zoom         = Vector2(4, 4) if _in_tunnel else Vector2(3, 3)
+	_cam.zoom         = Vector2(5, 5) if _in_tunnel else Vector2(3, 3)
 	_cam.limit_left   = (0 if _portal_exploded else 226) if _in_tunnel else 800
 	_cam.limit_top    = -500 if _in_tunnel else 80
 	_cam.limit_bottom = 680  if _in_tunnel else 400
@@ -583,6 +587,32 @@ func _on_shaft_b_fog_entered(body: Node2D) -> void:
 func _on_boss_trigger_entered(_body: Node2D) -> void:
 	_boss_battle.show_battle("snail")
 	_boss_battle.battle_finished.connect(_on_boss_battle_finished, CONNECT_ONE_SHOT)
+
+func _setup_background() -> void:
+	$BgSky.visible = false
+	var bg_tex: Texture2D = load("res://scenes/world/assets/bg_cave_far.png")
+	if not bg_tex:
+		return
+
+	var parallax := ParallaxBackground.new()
+	parallax.layer = -10
+	add_child(parallax)
+
+	var layer := ParallaxLayer.new()
+	layer.motion_scale     = Vector2(0.3, 0.1)
+	layer.motion_mirroring = Vector2(bg_tex.get_width(), 0.0)
+	parallax.add_child(layer)
+
+	var img_w := bg_tex.get_width()
+	var img_h := bg_tex.get_height()
+	for i in 4:
+		var sp := Sprite2D.new()
+		sp.texture        = bg_tex
+		sp.centered       = false
+		sp.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+		sp.position       = Vector2(i * img_w, 80)
+		sp.scale          = Vector2(1.0, 400.0 / img_h)
+		layer.add_child(sp)
 
 func _on_boss_battle_finished(won: bool) -> void:
 	if won:

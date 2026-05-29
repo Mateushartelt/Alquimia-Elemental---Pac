@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://dys6skn2srprj"]
+
+[ext_resource type="Script" path="res://scenes/world/level_01_tilemap.gd" id="1"]
+
+[node name="Level01TileMap" type="Node2D"]
+script = ExtResource("1")

@@ -2,11 +2,7 @@ extends EnemyBase
 ## FireSpirit — Inimigo de fogo do Nível 1.
 ## Fraco a H₂O e CO₂. Explode ao se aproximar do player. Dropa Cl.
 
-const _ASSETS      := "res://scenes/enemies/assets/fire_spirit/"
-const _TARGET_H    := 48.0   # altura visual alvo em px do mundo (normaliza qualquer spritesheet)
-
 @onready var _anim : AnimatedSprite2D = $AnimatedSprite2D
-@onready var _col  : CollisionShape2D = $CollisionShape2D
 
 var _exploding := false
 
@@ -14,41 +10,12 @@ func _ready() -> void:
 	max_health      = 50
 	move_speed      = 60.0
 	patrol_range    = 64.0
-	damage_on_touch = 0      # dano só via explosão
+	damage_on_touch = 0
 	element_drop    = "Cl"
 	drop_amount     = 1
 	weak_to         = ["H2O", "CO2"]
 	super._ready()
-	_setup_animations()
-	# Normaliza escala para _TARGET_H px independente do tamanho do spritesheet
-	var fh := float(load(_ASSETS + "Idle.png").get_height())
-	var s   := _TARGET_H / fh
-	_anim.scale  = Vector2(s, s)
-	_anim.offset = Vector2(0, -fh * 0.5)   # pés na origem do nó
-	_col.position = Vector2(0, -9.0)         # colisão 18px, base na origem
 	_anim.play("idle")
-
-func _setup_animations() -> void:
-	var frames := SpriteFrames.new()
-	_add_strip(frames, "idle",      "Idle.png",      10.0, true)
-	_add_strip(frames, "walk",      "Walk.png",      10.0, true)
-	_add_strip(frames, "hurt",      "Hurt.png",       8.0, false)
-	_add_strip(frames, "explosion", "Explosion.png", 12.0, false)
-	_anim.sprite_frames = frames
-
-func _add_strip(frames: SpriteFrames, anim: String, file: String,
-		fps: float, loop: bool) -> void:
-	var tex: Texture2D = load(_ASSETS + file)
-	var fh    := tex.get_height()
-	var count := tex.get_width() / fh
-	frames.add_animation(anim)
-	frames.set_animation_speed(anim, fps)
-	frames.set_animation_loop(anim, loop)
-	for i in count:
-		var atlas   := AtlasTexture.new()
-		atlas.atlas  = tex
-		atlas.region = Rect2(i * fh, 0, fh, fh)
-		frames.add_frame(anim, atlas)
 
 ## Chase persegue o player diretamente com velocidade dobrada
 func _chase(_delta: float) -> void:
