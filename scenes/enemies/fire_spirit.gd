@@ -14,6 +14,7 @@ func _ready() -> void:
 	element_drop    = "Cl"
 	drop_amount     = 1
 	weak_to         = ["H2O", "CO2"]
+	show_hp_bar     = false   # fire spirit não mostra barra de vida
 	super._ready()
 	_anim.play("idle")
 

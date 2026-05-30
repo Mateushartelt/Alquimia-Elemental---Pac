@@ -27,8 +27,9 @@ var _flash_timer: float = 0.0
 # sprite opcional para retrocompatibilidade (null se o nó não existir)
 var sprite: ColorRect = null
 
-# Y local da barra de vida (acima da cabeça) — subclasses ajustam por sprite
+# Barra de vida: subclasses ajustam Y por sprite ou desligam com show_hp_bar
 var hp_bar_y: float = -20.0
+var show_hp_bar: bool = true
 
 @onready var detect_area: Area2D = $DetectArea
 
@@ -67,7 +68,7 @@ func _physics_process(delta: float) -> void:
 
 ## Barra de vida desenhada acima da cabeça de TODOS os inimigos.
 func _draw() -> void:
-	if current_health <= 0 or estate == EState.DEAD:
+	if not show_hp_bar or current_health <= 0 or estate == EState.DEAD:
 		return
 	var hp_r := clampf(float(current_health) / float(max_health), 0.0, 1.0)
 	const W := 16.0
