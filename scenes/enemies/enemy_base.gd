@@ -27,6 +27,9 @@ var _flash_timer: float = 0.0
 # sprite opcional para retrocompatibilidade (null se o nó não existir)
 var sprite: ColorRect = null
 
+# Y local da barra de vida (acima da cabeça) — subclasses ajustam por sprite
+var hp_bar_y: float = -20.0
+
 @onready var detect_area: Area2D = $DetectArea
 
 signal died(enemy: Node)
@@ -60,6 +63,17 @@ func _physics_process(delta: float) -> void:
 		velocity.y  = min(velocity.y, 500.0)
 	move_and_slide()
 	_check_player_touch()
+	queue_redraw()
+
+## Barra de vida desenhada acima da cabeça de TODOS os inimigos.
+func _draw() -> void:
+	if current_health <= 0 or estate == EState.DEAD:
+		return
+	var hp_r := clampf(float(current_health) / float(max_health), 0.0, 1.0)
+	const W := 16.0
+	draw_rect(Rect2(-W * 0.5, hp_bar_y, W, 2.5), Color(0.1, 0.1, 0.1, 0.85))
+	var fill := Color(0.2, 0.85, 0.25) if hp_r > 0.5 else (Color(1.0, 0.7, 0.0) if hp_r > 0.25 else Color(0.95, 0.2, 0.15))
+	draw_rect(Rect2(-W * 0.5, hp_bar_y, W * hp_r, 2.5), fill)
 
 func _patrol(delta: float) -> void:
 	velocity.x = move_speed * (1.0 if facing_right else -1.0)
@@ -109,7 +123,7 @@ func _drop_element() -> void:
 		return
 	var pickup: Area2D = PICKUP_SCENE.instantiate()
 	pickup.element_id      = element_drop
-	pickup.global_position = global_position
+	pickup.global_position = global_position + Vector2(0, -22)   # acima do chão
 	get_tree().current_scene.add_child(pickup)
 
 func _on_player_detected(body: Node) -> void:

@@ -5,6 +5,8 @@ extends CanvasLayer
 
 signal battle_finished(won: bool)
 
+const MAIN_MENU := "res://scenes/menus/main_menu.tscn"
+
 const BOSSES: Dictionary = {
 	"snail": {
 		"name":        "Lesma Gigante",
@@ -145,9 +147,7 @@ const BOSSES: Dictionary = {
 	"golem": {
 		"name":        "Golem de Lava",
 		"color":       Color(0.75, 0.28, 0.03),
-		"sprite":      "res://scenes/enemies/assets/golem/golem_fire.png",
-		"sprite_cols": 6,
-		"sprite_rows": 2,
+		"sprite_scene": "res://scenes/enemies/fire_golem_visual.tscn",
 		"max_hp":      8,
 		"attack_dmg":  20,
 		"intro":       "Um colossal Golem de Lava bloqueia a saída da Caldeira!",
@@ -210,6 +210,8 @@ var _snail_anims       : Dictionary = {}
 var _snail_anim_name   : String = ""
 var _snail_loop        : bool = false
 var _snail_timer       : Timer = null
+var _golem_anim        : AnimatedSprite2D = null
+var _golem_idle_timer  : Timer = null
 var _player_sprite     : TextureRect = null
 var _player_idle_frames: Array[AtlasTexture] = []
 var _player_idle_idx   : int = 0
@@ -224,6 +226,10 @@ var _attack_btn      : Button
 var _mix_toggle_btn  : Button
 var _hint_panel      : Control         # popup de dica (ℹ)
 var _hint_text_lbl   : Label           # label de texto dentro do popup
+var _combos_panel    : Control         # popup com a lista de compostos possíveis
+var _combos_list_vb  : VBoxContainer    # container da lista (repopulado ao abrir)
+var _defeat_panel    : Control         # tela de derrota com "Tente Novamente"
+var _defeat_msg_lbl  : Label           # mensagem da tela de derrota
 var _no_compound_lbl : Label           # aviso "Sem compostos"
 
 # ── State ──────────────────────────────────────────────────────────────────────
@@ -449,6 +455,14 @@ func _build_ui() -> void:
 	hint_btn.pressed.connect(_on_hint_pressed)
 	action_row.add_child(hint_btn)
 
+	# Botão Compostos possíveis (🧪)
+	var combos_btn := Button.new()
+	combos_btn.text = "🧪 Compostos"
+	combos_btn.add_theme_font_size_override("font_size", 20)
+	combos_btn.add_theme_color_override("font_color", Color(0.6, 0.95, 0.7))
+	combos_btn.pressed.connect(_on_combos_pressed)
+	action_row.add_child(combos_btn)
+
 	# Espaço
 	var spacer := Control.new()
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -471,6 +485,16 @@ func _build_ui() -> void:
 	_hint_panel = _build_hint_panel()
 	_hint_panel.visible = false
 	bg.add_child(_hint_panel)
+
+	# ─ Popup de compostos possíveis (🧪) ──────────────────────────────────────
+	_combos_panel = _build_combos_panel()
+	_combos_panel.visible = false
+	bg.add_child(_combos_panel)
+
+	# ─ Tela de derrota (Tente Novamente) ──────────────────────────────────────
+	_defeat_panel = _build_defeat_overlay()
+	_defeat_panel.visible = false
+	bg.add_child(_defeat_panel)
 
 func _build_craft_panel() -> Control:
 	var panel := VBoxContainer.new()
@@ -583,6 +607,218 @@ func _build_hint_panel() -> Control:
 
 	return overlay
 
+## Painel que lista os compostos que o jogador pode criar (só os nomes/fórmulas,
+## sem revelar a receita). Educativo: mostra "o que dá pra fazer".
+func _build_combos_panel() -> Control:
+	var overlay := ColorRect.new()
+	overlay.color = Color(0, 0, 0, 0.6)
+	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+
+	var panel := ColorRect.new()
+	panel.color = Color(0.06, 0.12, 0.09, 0.98)
+	panel.offset_left   = 320
+	panel.offset_top    = 130
+	panel.offset_right  = 960
+	panel.offset_bottom = 560
+	overlay.add_child(panel)
+
+	var mc := MarginContainer.new()
+	mc.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	mc.add_theme_constant_override("margin_left",   30)
+	mc.add_theme_constant_override("margin_right",  30)
+	mc.add_theme_constant_override("margin_top",    24)
+	mc.add_theme_constant_override("margin_bottom", 20)
+	panel.add_child(mc)
+
+	var vb := VBoxContainer.new()
+	vb.add_theme_constant_override("separation", 10)
+	mc.add_child(vb)
+
+	var title := Label.new()
+	title.text = "🧪  Compostos que você pode criar"
+	title.add_theme_font_size_override("font_size", 24)
+	title.add_theme_color_override("font_color", Color(0.6, 0.95, 0.7))
+	vb.add_child(title)
+
+	var sep := HSeparator.new()
+	vb.add_child(sep)
+
+	# Lista repopulada toda vez que o painel abre (descobertas mudam na batalha)
+	_combos_list_vb = VBoxContainer.new()
+	_combos_list_vb.add_theme_constant_override("separation", 8)
+	vb.add_child(_combos_list_vb)
+
+	var spacer := Control.new()
+	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	vb.add_child(spacer)
+
+	var close_btn := Button.new()
+	close_btn.text = "Fechar"
+	close_btn.add_theme_font_size_override("font_size", 22)
+	close_btn.pressed.connect(func() -> void: _combos_panel.visible = false)
+	vb.add_child(close_btn)
+
+	return overlay
+
+func _on_combos_pressed() -> void:
+	_combos_panel.visible = not _combos_panel.visible
+	if _combos_panel.visible:
+		_refresh_combos_list()
+
+## Mostra só os compostos que dá pra fazer com os elementos que o jogador TEM
+## agora no inventário (sem revelar a receita). Recursivo: NaOH precisa de H2O,
+## então H2O também precisa ser fazível.
+func _refresh_combos_list() -> void:
+	for c in _combos_list_vb.get_children():
+		c.queue_free()
+
+	var any := false
+	for rid: String in ElementDatabase.recipes:
+		var r := ElementDatabase.get_recipe(rid)
+		if r.is_empty() or not _can_make_recipe(rid, []):
+			continue
+		any = true
+		var line := Label.new()
+		var formula: String = r.get("formula", rid)
+		var nome:    String = r.get("name", "")
+		line.text = "•  %s  —  %s" % [formula, nome]
+		line.add_theme_font_size_override("font_size", 22)
+		line.add_theme_color_override("font_color", Color(0.92, 0.98, 0.94))
+		_combos_list_vb.add_child(line)
+
+	if not any:
+		var empty := Label.new()
+		empty.text = "Você ainda não tem elementos suficientes para criar um composto."
+		empty.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		empty.add_theme_font_size_override("font_size", 20)
+		empty.add_theme_color_override("font_color", Color(0.7, 0.7, 0.75))
+		_combos_list_vb.add_child(empty)
+
+## true se o jogador tem, no inventário atual, todos os ingredientes da receita
+## na quantidade necessária. Ingrediente que é composto (ex.: H2O em NaOH) conta
+## se também puder ser feito. `_seen` evita recursão infinita.
+func _can_make_recipe(rid: String, _seen: Array) -> bool:
+	if rid in _seen:
+		return false
+	var r := ElementDatabase.get_recipe(rid)
+	if r.is_empty():
+		return false
+	var ings: Dictionary = r.get("ingredients", {})
+	if ings.is_empty():
+		return false
+	for ing: String in ings:
+		var need: int = int(ings[ing])
+		if int(GameState.collected_elements.get(ing, 0)) >= need:
+			continue
+		# Ingrediente é um composto? Só conta se também for fazível.
+		if ElementDatabase.recipes.has(ing) and _can_make_recipe(ing, _seen + [rid]):
+			continue
+		return false
+	return true
+
+# ── Tela de derrota / Tente Novamente ──────────────────────────────────────────
+func _build_defeat_overlay() -> Control:
+	var overlay := ColorRect.new()
+	overlay.color = Color(0.02, 0.0, 0.0, 0.88)
+	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+
+	var center := CenterContainer.new()
+	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	overlay.add_child(center)
+
+	var vb := VBoxContainer.new()
+	vb.add_theme_constant_override("separation", 24)
+	vb.alignment = BoxContainer.ALIGNMENT_CENTER
+	center.add_child(vb)
+
+	var title := Label.new()
+	title.text = "Você foi derrotado"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 46)
+	title.add_theme_color_override("font_color", Color(1.0, 0.3, 0.25))
+	vb.add_child(title)
+
+	_defeat_msg_lbl = Label.new()
+	_defeat_msg_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_defeat_msg_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_defeat_msg_lbl.custom_minimum_size = Vector2(620, 0)
+	_defeat_msg_lbl.add_theme_font_size_override("font_size", 22)
+	_defeat_msg_lbl.add_theme_color_override("font_color", Color(0.92, 0.86, 0.9))
+	vb.add_child(_defeat_msg_lbl)
+
+	# Aviso fixo — orienta o jogador a se preparar melhor antes de tentar de novo
+	var tip_lbl := Label.new()
+	tip_lbl.text = "💡 Da próxima vez, colete mais elementos antes de enfrentar o boss!"
+	tip_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	tip_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	tip_lbl.custom_minimum_size = Vector2(620, 0)
+	tip_lbl.add_theme_font_size_override("font_size", 20)
+	tip_lbl.add_theme_color_override("font_color", Color(1.0, 0.85, 0.4))
+	vb.add_child(tip_lbl)
+
+	var btn_row := HBoxContainer.new()
+	btn_row.add_theme_constant_override("separation", 20)
+	btn_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	vb.add_child(btn_row)
+
+	var retry_btn := Button.new()
+	retry_btn.text = "Tente Novamente"
+	retry_btn.add_theme_font_size_override("font_size", 26)
+	retry_btn.custom_minimum_size = Vector2(250, 60)
+	retry_btn.pressed.connect(_on_retry_pressed)
+	btn_row.add_child(retry_btn)
+
+	var menu_btn := Button.new()
+	menu_btn.text = "Menu Principal"
+	menu_btn.add_theme_font_size_override("font_size", 26)
+	menu_btn.custom_minimum_size = Vector2(250, 60)
+	menu_btn.pressed.connect(_on_menu_pressed)
+	btn_row.add_child(menu_btn)
+
+	return overlay
+
+func _show_defeat_overlay(msg: String) -> void:
+	_battle_over = true
+	_hint_panel.visible   = false
+	_combos_panel.visible = false
+	_defeat_msg_lbl.text  = msg
+	_defeat_panel.visible = true
+
+func _on_retry_pressed() -> void:
+	# Autoloads persistem no reload — restaura o estado-base da fase (saída do
+	# portal no L01) para refazer tudo idêntico. Sem snapshot, ao menos cura.
+	GameState.restore_retry_snapshot()
+	get_tree().paused = false
+	get_tree().reload_current_scene()
+
+func _on_menu_pressed() -> void:
+	get_tree().paused = false
+	get_tree().change_scene_to_file(MAIN_MENU)
+
+## true se o jogador ainda consegue agir: tem algum composto OU consegue criar
+## alguma receita com os elementos atuais. Se false → soft-lock (derrota).
+func _player_can_act() -> bool:
+	for cid: String in _battle_compounds:
+		if int(_battle_compounds[cid]) > 0:
+			return true
+	for rid: String in ElementDatabase.recipes:
+		if _can_make_recipe(rid, []):
+			return true
+	return false
+
+## Derrota por ficar sem compostos e sem elementos para criar novos.
+func _trigger_stalemate() -> void:
+	_busy = true
+	_battle_over = true
+	_attack_btn.disabled     = true
+	_mix_toggle_btn.disabled = true
+	_set_dialog("Você ficou sem compostos e sem elementos para criar novos!")
+	await get_tree().create_timer(2.2).timeout
+	_show_defeat_overlay(
+		"Você ficou sem combinações para derrotar %s." % _boss_data.get("name", "o boss"))
+
 # ── API pública ────────────────────────────────────────────────────────────────
 func show_battle(boss_id: String) -> void:
 	_boss_data = BOSSES.get(boss_id, {})
@@ -612,9 +848,24 @@ func show_battle(boss_id: String) -> void:
 	# Carrega sprite do boss (ou usa cor de fallback)
 	var sprite_path: String = _boss_data.get("sprite", "")
 	_snail_anims = _boss_data.get("anim_files", {})
+	var sprite_scene: String = _boss_data.get("sprite_scene", "")
 	if not _snail_anims.is_empty():
 		_setup_snail_anim_timer()
 		_play_snail_anim("idle", true)
+	elif sprite_scene != "" and ResourceLoader.exists(sprite_scene):
+		# Cena AnimatedSprite2D configurada à mão no editor
+		var parent := _boss_sprite.get_parent()
+		_boss_sprite.queue_free()
+		var vis: Control = (load(sprite_scene) as PackedScene).instantiate()
+		vis.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+		vis.offset_left   = -480
+		vis.offset_right  = -20
+		vis.offset_top    = 0
+		vis.offset_bottom = 320
+		parent.add_child(vis)
+		_boss_sprite = vis
+		_play_boss_anim("idle")   # garante idle mesmo sem autoplay
+		_setup_golem_idle_alt(vis)
 	elif sprite_path != "" and ResourceLoader.exists(sprite_path):
 		_start_boss_animation(sprite_path,
 			int(_boss_data.get("sprite_cols", 1)),
@@ -674,6 +925,11 @@ func show_battle(boss_id: String) -> void:
 			_set_dialog("O %s liberou elementos ao entrar no campo de batalha! Agora você pode criar compostos!" % _boss_data["name"])
 			await get_tree().create_timer(2.0).timeout
 		_refresh_element_buttons()
+
+	# Sem compostos e sem como criar nenhum logo na entrada → derrota
+	if not _player_can_act():
+		_trigger_stalemate()
+		return
 
 	# Se não tem compostos disponíveis, abre o painel de mistura automaticamente
 	if _battle_compounds.is_empty():
@@ -890,6 +1146,9 @@ func _on_attack_pressed() -> void:
 		await _flash_boss(flash)
 		var ranim: String = _boss_data.get("reaction_anims", {}).get(_selected_compound, "hurt")
 		_play_snail_anim(ranim, false)
+		# Golem: reação especial de água
+		if _selected_compound == "H2O":
+			_play_boss_anim("atack water")
 	elif dmg < 0:
 		_boss_hp = min(_boss_max_hp, _boss_hp + abs(dmg))
 		_boss_hp_bar.value = _boss_hp
@@ -960,6 +1219,7 @@ func _boss_attack() -> void:
 		return
 
 	_play_snail_anim("attack", false)
+	_play_boss_anim("atack")
 	var dmg: int = _boss_data.get("attack_dmg", 15)
 	GameState.player_health = max(0, GameState.player_health - dmg)
 	GameState.health_changed.emit(GameState.player_health, GameState.player_max_health)
@@ -971,6 +1231,7 @@ func _boss_attack() -> void:
 	tw.tween_property(_player_hp_bar, "modulate", Color.WHITE, 0.15)
 	await tw.finished
 	await get_tree().create_timer(1.2).timeout
+	_play_boss_anim("idle")   # volta ao idle após o ataque
 
 	if GameState.player_health <= 0:
 		await _end_battle(false)
@@ -986,7 +1247,48 @@ func _next_player_turn() -> void:
 	_refresh_compound_buttons()
 	_refresh_element_buttons()
 	_busy = false
+	# Sem compostos e sem como criar nenhum → derrota (evita soft-lock)
+	if not _player_can_act():
+		_trigger_stalemate()
+		return
 	_set_dialog("O que você vai fazer?")
+
+func _setup_golem_idle_alt(vis: Control) -> void:
+	_golem_anim = vis.get_node_or_null("Anim") as AnimatedSprite2D
+	if not is_instance_valid(_golem_anim):
+		return
+	# Volta ao idle normal quando "idle 2" terminar
+	if not _golem_anim.animation_finished.is_connected(_on_golem_anim_finished):
+		_golem_anim.animation_finished.connect(_on_golem_anim_finished)
+	# Timer que de vez em quando dispara o "idle 2" (braços pro alto)
+	_golem_idle_timer = Timer.new()
+	_golem_idle_timer.wait_time = 3.5
+	_golem_idle_timer.timeout.connect(_on_golem_idle_tick)
+	add_child(_golem_idle_timer)
+	_golem_idle_timer.start()
+
+func _on_golem_idle_tick() -> void:
+	if not is_instance_valid(_golem_anim):
+		return
+	# Só alterna se estiver no idle normal (não durante ataque/morte)
+	if _golem_anim.animation == "idle" and _golem_anim.sprite_frames.has_animation("idle 2"):
+		if randf() < 0.5:
+			_golem_anim.play("idle 2")
+
+func _on_golem_anim_finished() -> void:
+	if not is_instance_valid(_golem_anim):
+		return
+	# Volta ao idle após animações pontuais (não no death)
+	if _golem_anim.animation in ["idle 2", "atack water", "atack"]:
+		_golem_anim.play("idle")
+
+func _play_boss_anim(anim_name: String) -> void:
+	# Toca animação na cena AnimatedSprite2D do boss (golem), se existir
+	if not is_instance_valid(_boss_sprite):
+		return
+	var a := _boss_sprite.get_node_or_null("Anim") as AnimatedSprite2D
+	if a and a.sprite_frames and a.sprite_frames.has_animation(anim_name):
+		a.play(anim_name)
 
 func _flash_boss(color: Color) -> void:
 	if _boss_sprite is VirusBossVisual:
@@ -1006,31 +1308,33 @@ func _end_battle(won: bool) -> void:
 
 	if won:
 		_play_snail_anim("death", false)
+		_play_boss_anim("death")
 		_set_dialog(_boss_data["win"])
 		for _i: int in 3:
 			await _flash_boss(Color(2.0, 0.1, 0.1))
 		var tw := create_tween()
 		tw.tween_property(_boss_sprite, "modulate", Color(1, 1, 1, 0), 0.5)
 		await tw.finished
+		await get_tree().create_timer(2.5).timeout
+		get_tree().paused = false
+		visible = false
+		battle_finished.emit(true)
 	else:
 		_set_dialog(_boss_data["lose"])
-
-	await get_tree().create_timer(2.5).timeout
-	get_tree().paused = false
-	visible = false
-	battle_finished.emit(won)
+		await get_tree().create_timer(2.0).timeout
+		_show_defeat_overlay(_boss_data.get("lose", "Você foi derrotado..."))
 
 func _start_boss_animation(path: String, cols: int, rows: int) -> void:
 	var tex: Texture2D = load(path)
 	var fw: float = tex.get_width()  / float(cols)
 	var fh: float = tex.get_height() / float(rows)
 	_boss_anim_frames.clear()
-	for row in rows:
-		for col in cols:
-			var at := AtlasTexture.new()
-			at.atlas  = tex
-			at.region = Rect2(col * fw, row * fh, fw, fh)
-			_boss_anim_frames.append(at)
+	# Apenas a 1ª linha = animação idle (linhas seguintes são ataque/morte)
+	for col in cols:
+		var at := AtlasTexture.new()
+		at.atlas  = tex
+		at.region = Rect2(col * fw, 0.0, fw, fh)
+		_boss_anim_frames.append(at)
 	(_boss_sprite as TextureRect).texture = _boss_anim_frames[0]
 	var t := Timer.new()
 	t.wait_time = 0.18

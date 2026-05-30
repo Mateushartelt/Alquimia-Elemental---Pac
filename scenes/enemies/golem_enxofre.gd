@@ -16,6 +16,7 @@ func _ready() -> void:
 	drop_amount     = 1
 	weak_to         = ["H2O", "CO2"]
 	immune_to       = ["SO2"]
+	hp_bar_y        = -42.0
 	super._ready()
 	_sprite.play("walk")
 
@@ -35,15 +36,15 @@ func _physics_process(delta: float) -> void:
 
 	queue_redraw()
 
-func _draw() -> void:
-	if current_health <= 0:
-		return
-	var hp_r := float(current_health) / float(max_health)
-	draw_rect(Rect2(-7.0, -13.0, 14.0, 2.0), Color(0.15, 0.15, 0.15, 0.85))
-	draw_rect(Rect2(-7.0, -13.0, 14.0 * hp_r, 2.0), Color(0.9, 0.35, 0.04, 1.0))
-
 func _die() -> void:
 	_dying = true
+	estate = EState.DEAD
+	set_physics_process(false)   # para de causar dano de toque durante a morte
+	velocity = Vector2.ZERO
+	queue_redraw()               # esconde a barra de vida
+	# As frames de "death" têm a base 35px mais alta na spritesheet que as de
+	# "walk" — desce o sprite ~4.5px (35 × scale_y) pra morrer no mesmo lugar.
+	_sprite.position.y += 4.5
 	_sprite.play("death")
 	_spawn_death_label()
 	var tw := create_tween()

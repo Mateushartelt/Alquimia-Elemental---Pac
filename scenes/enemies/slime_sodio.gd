@@ -2,6 +2,8 @@ extends EnemyBase
 ## SlimeSodio — Inimigo básico do Nível 1.
 ## Fraco a H₂O (dano duplo), imune a NaCl, dropa Na ao morrer.
 
+@onready var _anim : AnimatedSprite2D = $AnimatedSprite2D
+
 func _ready() -> void:
 	max_health      = 25
 	move_speed      = 35.0
@@ -11,68 +13,50 @@ func _ready() -> void:
 	drop_amount     = 2
 	weak_to         = ["H2O"]
 	immune_to       = ["NaCl"]
+	hp_bar_y        = -42.0
 	super._ready()
+	_anim.play("walk")
 
 func _physics_process(delta: float) -> void:
 	super._physics_process(delta)
+	_anim.flip_h = facing_right
+	match estate:
+		EState.PATROL, EState.CHASE:
+			if _anim.animation != "walk": _anim.play("walk")
+		EState.HURT:
+			if _anim.animation != "hurt": _anim.play("hurt")
 	queue_redraw()
 
-func _draw() -> void:
-	# Cor base
-	var base := Color(1.0, 0.70, 0.10, 1.0)
-	# Mistura flash (imunidade = branco, fraqueza = amarelo)
-	var fa := clampf(_flash_timer / 0.15, 0.0, 1.0)
-	var col := base.lerp(_flash_color if fa > 0.0 else base, fa)
-	var dark  := Color(0.15, 0.08, 0.0, 1.0)
-	var shine := Color(1.0, 1.0, 0.6, 0.45)
-
-	if not facing_right:
-		draw_set_transform(Vector2.ZERO, 0.0, Vector2(-1.0, 1.0))
-
-	# Squash quando idle no chão
-	var bw := 5.0
-	var by := 0.5  # centro vertical levemente abaixo
-	if is_on_floor() and absf(velocity.x) < 2.0:
-		var pulse := sin(Time.get_ticks_msec() * 0.001 * 2.0) * 0.4
-		bw = 5.0 + pulse
-
-	# ── Corpo blob (dois rects ortogonais + círculo central) ──────────────
-	draw_rect(Rect2(-bw, by - 2.0, bw * 2.0, 4.0), col)          # faixa horizontal
-	draw_rect(Rect2(-bw * 0.7, by - 4.0, bw * 1.4, 8.0), col)    # faixa vertical
-	draw_circle(Vector2(0.0, by), bw * 0.85, col)                  # centro redondo
-	# Base plana (fundo do slime toca o chão)
-	draw_rect(Rect2(-bw, by + 3.0, bw * 2.0, 2.0), col)
-
-	# Contorno
-	draw_arc(Vector2(0.0, by), bw * 0.95, 0.0, TAU, 24, dark, 0.75)
-
-	# Destaque
-	draw_circle(Vector2(-bw * 0.4, by - bw * 0.55), bw * 0.22, shine)
-
-	# ── Olhos ─────────────────────────────────────────────────────────────
-	var er := 1.1 if estate != EState.CHASE else 1.5
-	draw_circle(Vector2(-2.0, by - 1.5), er, dark)
-	draw_circle(Vector2( 2.0, by - 1.5), er, dark)
-	draw_circle(Vector2(-1.5, by - 2.0), 0.4, Color.WHITE)
-	draw_circle(Vector2( 2.5, by - 2.0), 0.4, Color.WHITE)
-
-	# ── Boca ──────────────────────────────────────────────────────────────
-	if estate == EState.CHASE:
-		draw_arc(Vector2(0.0, by + 1.0), 2.0, 0.0, PI, 8, dark, 1.0)
-	else:
-		draw_arc(Vector2(0.0, by + 0.5), 1.5, 0.3, PI - 0.3, 8, dark, 0.75)
-
-	# ── HP bar ────────────────────────────────────────────────────────────
-	var hp_ratio := float(current_health) / float(max_health)
-	draw_rect(Rect2(-7.0, -8.0, 14.0, 2.0), Color(0.15, 0.15, 0.15, 0.8))
-	draw_rect(Rect2(-7.0, -8.0, 14.0 * hp_ratio, 2.0), Color(0.9, 0.15, 0.15, 1.0))
-
-	if not facing_right:
-		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+# position.y por frame de "death" — alinha a base de cada frame à do "walk"
+# (as poças ficam ~6.7px mais altas na folha; valores medidos por pixel).
+const _DEATH_OFFY := [3.5, 10.4, 11.2, 10.7]
 
 func _die() -> void:
+	estate = EState.DEAD
+	set_physics_process(false)
+	queue_redraw()   # esconde a barra de vida
+	_anim.play("death")
+	if not _anim.frame_changed.is_connected(_on_death_frame):
+		_anim.frame_changed.connect(_on_death_frame)
+	_on_death_frame()   # alinha o frame inicial
 	_spawn_curiosity_label()
-	super._die()
+	died.emit(self)
+	_drop_element()
+	await _anim.animation_finished
+	queue_free()
+
+func _on_death_frame() -> void:
+	var f: int = _anim.frame
+	if f >= 0 and f < _DEATH_OFFY.size():
+		_anim.position.y = _DEATH_OFFY[f]
+
+func _drop_element() -> void:
+	if element_drop == "":
+		return
+	var pickup := PICKUP_SCENE.instantiate()
+	pickup.element_id      = element_drop
+	pickup.global_position = global_position + Vector2(0, -34)
+	get_tree().current_scene.add_child(pickup)
 
 func _spawn_curiosity_label() -> void:
 	var lbl := Label.new()

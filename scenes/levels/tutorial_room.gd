@@ -14,18 +14,38 @@ var _tutorial_h2o_triggered := false
 var _alchemy_done            := false
 var _h2o_done                := false
 var _seen_elements : Array[String] = []
+var _portal       : AnimatedSprite2D  = null
 
 func _ready() -> void:
-	# Limpa inventário para garantir tutorial limpo
 	GameState.collected_elements.clear()
 	GameState.active_compound = ""
-
+	_setup_background()
+	$DoorVisual.visible = false
+	_portal = get_node_or_null("AnimatedSprite2D") as AnimatedSprite2D
+	if is_instance_valid(_portal):
+		_portal.play("Closed")
 	get_tree().create_timer(0.5).timeout.connect(_show_intro)
 	GameState.element_collected.connect(_on_element_collected)
 	GameState.compound_created.connect(_on_compound_created)
 	_alchemy.panel_opened.connect(_on_alchemy_open)
 	_dialog.dialog_queue_finished.connect(_on_dialog_closed)
 	$ReturnDoor.body_entered.connect(_on_return_door_entered)
+
+func _setup_background() -> void:
+	$BgLab.visible = false
+	var tex: Texture2D = load("res://scenes/world/assets/bg_lab.png")
+	if not tex:
+		return
+	var sp := Sprite2D.new()
+	sp.texture        = tex
+	sp.centered       = true
+	sp.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	sp.z_index        = -1
+	# Escala para cobrir a altura da sala (160px) mantendo proporção
+	sp.scale    = Vector2(160.0 / tex.get_height(), 160.0 / tex.get_height())
+	sp.position = Vector2(200, 80)
+	add_child(sp)
+	move_child(sp, 0)
 
 func _show_intro() -> void:
 	_dialog.queue_dialogs([
@@ -69,7 +89,8 @@ func _on_compound_created(compound_id: String) -> void:
 		_alchemy.panel_unlocked = true
 		_dialog.show_dialog(ELARA,
 			"Perfeito! H₂O criado! Agora volte pelo portal — atire no Fogo (J) para abrir o corredor!")
-		$DoorVisual.color = Color(0.1, 1.0, 0.4, 0.9)
+		if is_instance_valid(_portal):
+			_portal.play("open")
 
 func _on_return_door_entered(body: Node) -> void:
 	if not body.is_in_group("player"):
