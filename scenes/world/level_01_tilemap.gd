@@ -4,9 +4,11 @@ extends Node2D
 ## @tool = visualiza no editor sem precisar rodar o jogo.
 
 const TILE     := 16
-const C_SOIL   := Color(0.32, 0.24, 0.15)
-const C_ACCENT := Color(0.55, 0.44, 0.28)
+const C_SOIL   := Color(0.12, 0.15, 0.22)   # azul-escuro caverna
+const C_ACCENT := Color(0.22, 0.28, 0.42)   # destaque topo mais claro
 const ACCENT_H := 4
+const TILE_TEX := "res://scenes/world/assets/cave_tiles.png"
+const TILE_COLS := 12
 
 const TILES: Array = [
 	# ━━ TÚNEL (x:0-800, y:240-368) + HUB (x:800-1760, y:112-368) ━━━━━━━━━━━━
@@ -83,8 +85,13 @@ const TILES: Array = [
 	[-1, -30,   1,  80], # parede esq  x:-16  y=-480→640
 ]
 
+@export var rebuild_tiles: bool = false:
+	set(_v):
+		if Engine.is_editor_hint():
+			_rebuild()
+
 func _ready() -> void:
-	pass  # blocos já estão salvos no .tscn; chamar _rebuild() manualmente só quando mudar TILES
+	pass
 
 func _rebuild() -> void:
 	for c in get_children():

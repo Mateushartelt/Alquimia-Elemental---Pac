@@ -17,7 +17,7 @@
 size = Vector2(32, 378)
 
 [sub_resource type="RectangleShape2D" id="barrier_hit_shape"]
-size = Vector2(33, 261)
+size = Vector2(33, 252)
 
 [sub_resource type="RectangleShape2D" id="barrier2_wall_shape"]
 size = Vector2(32, 338)
@@ -26,10 +26,13 @@ size = Vector2(32, 338)
 size = Vector2(48, 338)
 
 [sub_resource type="RectangleShape2D" id="lava_hazard_shape"]
-size = Vector2(760, 80)
+size = Vector2(797, 79)
 
 [sub_resource type="RectangleShape2D" id="fog_trigger_shape"]
 size = Vector2(1648, 160)
+
+[sub_resource type="RectangleShape2D" id="arena_gate_shape"]
+size = Vector2(24, 256)
 
 [node name="Level02" type="Node2D" unique_id=481213255]
 script = ExtResource("1_lvl")
@@ -88,40 +91,12 @@ width_tiles = 2
 
 [node name="SalaAltaPlats" type="Node2D" parent="Platforms" unique_id=1000000007]
 
-[node name="SA_A" parent="Platforms/SalaAltaPlats" unique_id=1000000008 instance=ExtResource("14_platblock")]
-position = Vector2(32, -288)
-width_tiles = 3
-
-[node name="SA_B" parent="Platforms/SalaAltaPlats" unique_id=1000000009 instance=ExtResource("14_platblock")]
-position = Vector2(128, -256)
-width_tiles = 3
-
-[node name="SA_C" parent="Platforms/SalaAltaPlats" unique_id=1000000010 instance=ExtResource("14_platblock")]
-position = Vector2(208, -288)
-width_tiles = 3
-
-[node name="SA_D" parent="Platforms/SalaAltaPlats" unique_id=1000000011 instance=ExtResource("14_platblock")]
-position = Vector2(320, -272)
-width_tiles = 3
-
-[node name="SA_E" parent="Platforms/SalaAltaPlats" unique_id=1000000012 instance=ExtResource("14_platblock")]
-position = Vector2(400, -304)
-width_tiles = 3
-
-[node name="SA_F" parent="Platforms/SalaAltaPlats" unique_id=1000000013 instance=ExtResource("14_platblock")]
-position = Vector2(480, -272)
-width_tiles = 3
-
 [node name="SA_G" parent="Platforms/SalaAltaPlats" unique_id=1000000014 instance=ExtResource("14_platblock")]
 position = Vector2(560, -240)
 width_tiles = 3
 
-[node name="SA_H" parent="Platforms/SalaAltaPlats" unique_id=1000000015 instance=ExtResource("14_platblock")]
-position = Vector2(624, -288)
-width_tiles = 3
-
 [node name="SA_I" parent="Platforms/SalaAltaPlats" unique_id=1000000016 instance=ExtResource("14_platblock")]
-position = Vector2(640, -208)
+position = Vector2(628, -200)
 width_tiles = 3
 
 [node name="Zona1Plats" type="Node2D" parent="Platforms" unique_id=1000000017]
@@ -200,7 +175,7 @@ position = Vector2(110, -221)
 element_id = "O"
 
 [node name="O_02" parent="Pickups" unique_id=761852596 instance=ExtResource("3_pickup")]
-position = Vector2(562, -231)
+position = Vector2(582, -250)
 element_id = "O"
 
 [node name="Si_01" parent="Pickups" unique_id=241317478 instance=ExtResource("3_pickup")]
@@ -208,8 +183,65 @@ position = Vector2(426, -232)
 element_id = "Si"
 
 [node name="C_hidden" parent="Pickups" unique_id=2023525309 instance=ExtResource("3_pickup")]
-position = Vector2(658, -230)
+position = Vector2(664, -232)
 element_id = "C"
+
+[node name="H_03" parent="Pickups" unique_id=1800000001 instance=ExtResource("3_pickup")]
+position = Vector2(96, 354)
+
+[node name="O_03" parent="Pickups" unique_id=1800000002 instance=ExtResource("3_pickup")]
+position = Vector2(220, -224)
+element_id = "O"
+
+[node name="Na_01" parent="Pickups" unique_id=1800000003 instance=ExtResource("3_pickup")]
+position = Vector2(180, 290)
+element_id = "Na"
+
+[node name="Cl_01" parent="Pickups" unique_id=1800000004 instance=ExtResource("3_pickup")]
+position = Vector2(420, 264)
+element_id = "Cl"
+
+[node name="C_01" parent="Pickups" unique_id=1800000005 instance=ExtResource("3_pickup")]
+position = Vector2(540, 210)
+element_id = "C"
+
+[node name="H_04" parent="Pickups" unique_id=1800000006 instance=ExtResource("3_pickup")]
+position = Vector2(760, 258)
+
+[node name="O_04" parent="Pickups" unique_id=1800000007 instance=ExtResource("3_pickup")]
+position = Vector2(960, 290)
+element_id = "O"
+
+[node name="Cl_02" parent="Pickups" unique_id=1800000008 instance=ExtResource("3_pickup")]
+position = Vector2(1120, 242)
+element_id = "Cl"
+
+[node name="Na_02" parent="Pickups" unique_id=1800000009 instance=ExtResource("3_pickup")]
+position = Vector2(1340, 274)
+element_id = "Na"
+
+[node name="H_05" parent="Pickups" unique_id=1800000010 instance=ExtResource("3_pickup")]
+position = Vector2(1540, 274)
+
+[node name="O_05" parent="Pickups" unique_id=1800000011 instance=ExtResource("3_pickup")]
+position = Vector2(1760, 226)
+element_id = "O"
+
+[node name="S_03" parent="Pickups" unique_id=1800000012 instance=ExtResource("3_pickup")]
+position = Vector2(1980, 274)
+element_id = "S"
+
+[node name="C_02" parent="Pickups" unique_id=1800000013 instance=ExtResource("3_pickup")]
+position = Vector2(2240, 226)
+element_id = "C"
+
+[node name="Cl_03" parent="Pickups" unique_id=1800000014 instance=ExtResource("3_pickup")]
+position = Vector2(1640, 274)
+element_id = "Cl"
+
+[node name="Na_03" parent="Pickups" unique_id=1800000015 instance=ExtResource("3_pickup")]
+position = Vector2(2100, 226)
+element_id = "Na"
 
 [node name="Enemies" type="Node2D" parent="." unique_id=1035044088]
 
@@ -220,7 +252,10 @@ position = Vector2(200, 352)
 position = Vector2(480, 352)
 
 [node name="Golem03" parent="Enemies" unique_id=2009649144 instance=ExtResource("5_golem")]
-position = Vector2(1840, 352)
+position = Vector2(1620, 352)
+
+[node name="Golem04" parent="Enemies" unique_id=2009649145 instance=ExtResource("5_golem")]
+position = Vector2(1880, 352)
 
 [node name="LavaBarrier" type="Node2D" parent="." unique_id=1520001451]
 position = Vector2(640, 0)
@@ -248,7 +283,7 @@ collision_layer = 0
 collision_mask = 16
 
 [node name="HitShape" type="CollisionShape2D" parent="LavaBarrier/HitZone" unique_id=1574498570]
-position = Vector2(-46, -7.5)
+position = Vector2(-47, -11)
 shape = SubResource("barrier_hit_shape")
 
 [node name="LavaBarrier2" type="Node2D" parent="." unique_id=1000000050]
@@ -275,13 +310,14 @@ collision_layer = 0
 collision_mask = 16
 
 [node name="HitShape" type="CollisionShape2D" parent="LavaBarrier2/HitZone" unique_id=1000000055]
+position = Vector2(0, 3)
 shape = SubResource("barrier2_hit_shape")
 
 [node name="LavaZone2" type="Node2D" parent="." unique_id=1791881099]
 
 [node name="LavaVisual" type="ColorRect" parent="LavaZone2" unique_id=1606766484]
 z_index = -1
-offset_left = 680.0
+offset_left = 641.0
 offset_top = 368.0
 offset_right = 1440.0
 offset_bottom = 620.0
@@ -292,6 +328,7 @@ position = Vector2(1060, 408)
 collision_layer = 32
 
 [node name="LavaShape" type="CollisionShape2D" parent="LavaZone2/LavaHazard" unique_id=994916582]
+position = Vector2(-18.5, 0.5)
 shape = SubResource("lava_hazard_shape")
 
 [node name="DarkAreas" type="Node2D" parent="." unique_id=460344947]
@@ -314,11 +351,30 @@ visible = false
 position = Vector2(1, 1)
 shape = SubResource("fog_trigger_shape")
 
+[node name="ArenaGate" type="Node2D" parent="." unique_id=1700000050]
+position = Vector2(2040, 240)
+
+[node name="Visual" type="ColorRect" parent="ArenaGate" unique_id=1700000051]
+z_index = 3
+offset_left = -12.0
+offset_top = -128.0
+offset_right = 12.0
+offset_bottom = 128.0
+color = Color(1, 0.55, 0, 1)
+
+[node name="Wall" type="StaticBody2D" parent="ArenaGate" unique_id=1700000052]
+collision_layer = 2
+collision_mask = 0
+
+[node name="WallShape" type="CollisionShape2D" parent="ArenaGate/Wall" unique_id=1700000053]
+shape = SubResource("arena_gate_shape")
+
+[node name="BossPortalSpawn" type="Marker2D" parent="." unique_id=1700000001]
+position = Vector2(2143, 338)
+
 [node name="BossBattle" parent="." unique_id=1908681030 instance=ExtResource("13_boss")]
-visible = false
 
 [node name="HUD" parent="." unique_id=517223055 instance=ExtResource("4_hud")]
-visible = false
 
 [node name="AlchemyPanel" parent="." unique_id=1138282792 instance=ExtResource("6_alchemy")]
 visible = false

@@ -28,6 +28,9 @@ var _enemies_killed    := 0
 var _boss_portal       : BossPortal = null
 
 func _ready() -> void:
+	# Snapshot da entrada da fase — estado-base do "Tente Novamente"
+	if GameState.retry_snapshot.is_empty():
+		GameState.save_retry_snapshot()
 	_cam.zoom                       = Vector2(3, 3)
 	_cam.limit_left                 = 0
 	_cam.limit_top                  = 60

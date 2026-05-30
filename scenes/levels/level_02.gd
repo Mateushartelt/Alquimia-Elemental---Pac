@@ -21,8 +21,11 @@ const ENCYCLOPEDIA  := "Enciclopédia"
 @onready var _barrier2_visual : ColorRect    = $LavaBarrier2/Visual
 @onready var _barrier2_wall   : StaticBody2D = $LavaBarrier2/Wall
 
-const TOTAL_ENEMIES := 3
+const TOTAL_ENEMIES := 4
+const ARENA_X       := 1440.0   # x ≥ isto = arena do boss
+const ARENA_GUARDS  := 2        # golems que travam o portão da arena
 
+var _arena_kills       := 0
 var _respawning        := false
 var _seen_elements     : Array[String] = []
 var _fog_cleared       := false
@@ -36,6 +39,9 @@ var _enemies_killed    := 0
 var _boss_portal       : BossPortal = null
 
 func _ready() -> void:
+	# Snapshot da entrada da fase — estado-base do "Tente Novamente"
+	if GameState.retry_snapshot.is_empty():
+		GameState.save_retry_snapshot()
 	_cam.zoom                       = Vector2(3, 3)
 	_cam.limit_left                 = 0
 	_cam.limit_top                  = 60
@@ -55,6 +61,7 @@ func _ready() -> void:
 	for enemy in get_tree().get_nodes_in_group("enemies"):
 		if enemy.has_signal("died"):
 			enemy.connect("died", _on_enemy_died)
+	_boss.battle_finished.connect(_on_boss_finished)
 
 func _process(_delta: float) -> void:
 	if not _respawning and player.global_position.y > KILL_PLANE_Y:
@@ -157,10 +164,16 @@ func _on_lava_barrier2_hit(area: Node) -> void:
 		_dialog.show_dialog(ELARA, "Obsidiana! A Arena está aberta — cuidado com o Golem de Lava!"))
 
 func _on_lava_entered(body: Node2D) -> void:
-	if body.is_in_group("player"):
-		_respawn()
+	if not body.is_in_group("player") or _respawning:
+		return
+	_respawning = true
+	GameState.take_damage(34)   # lava queima — 3 toques = morte
+	player.global_position = SPAWN_POS
+	player.reset_state()
+	await get_tree().process_frame
+	_respawning = false
 
-func _on_enemy_died(_enemy: Node) -> void:
+func _on_enemy_died(enemy: Node) -> void:
 	_enemies_killed += 1
 	if not _enemy_dialog_done:
 		_enemy_dialog_done = true
@@ -169,15 +182,41 @@ func _on_enemy_died(_enemy: Node) -> void:
 	else:
 		_dialog.show_dialog(ELARA,
 			"%d/%d Golems eliminados!" % [_enemies_killed, TOTAL_ENEMIES])
-	if _enemies_killed >= TOTAL_ENEMIES:
-		_spawn_boss_portal()
+	# Golem da arena (x ≥ ARENA_X) morto → conta pro portão
+	var in_arena := enemy is Node2D and (enemy as Node2D).global_position.x >= ARENA_X
+	if in_arena:
+		_arena_kills += 1
+		if _arena_kills >= ARENA_GUARDS:
+			_open_arena_gate()
+			_spawn_boss_portal()
+		else:
+			_dialog.show_dialog(ELARA,
+				"Mais um guardião resta na arena! Elimine-o para liberar o portal.")
+
+func _open_arena_gate() -> void:
+	var gate := get_node_or_null("ArenaGate")
+	if not gate:
+		return
+	var wall := gate.get_node_or_null("Wall")
+	if wall:
+		wall.process_mode = Node.PROCESS_MODE_DISABLED
+	var vis := gate.get_node_or_null("Visual")
+	if vis:
+		var tw := create_tween()
+		tw.tween_property(vis, "color", Color(0.2, 0.1, 0.4, 0.0), 0.8)
+		tw.tween_callback(func() -> void: vis.visible = false)
 
 func _spawn_boss_portal() -> void:
+	if is_instance_valid(_boss_portal):
+		return   # já existe
 	await get_tree().create_timer(1.2).timeout
+	if is_instance_valid(_boss_portal):
+		return
 	_dialog.show_dialog(ELARA,
 		"Todos os Golems eliminados! Um portal surgiu na Arena — enfrente o Golem de Lava!")
 	_boss_portal = BossPortal.new()
-	_boss_portal.position = Vector2(2200, 320)
+	var spawn := get_node_or_null("BossPortalSpawn") as Marker2D
+	_boss_portal.position = spawn.position if spawn else Vector2(2200, 320)
 	_boss_portal.player_entered.connect(_on_portal_entered)
 	add_child(_boss_portal)
 

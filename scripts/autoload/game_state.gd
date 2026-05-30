@@ -45,6 +45,11 @@ var unlocked_abilities: Array[String] = []   # ex: ["double_jump", "dash"]
 # ── Estado do Fogo (Level 01) ────────────────────────────────────────────────
 var fire_next_x: float = -1.0  # -1 = fogo ainda não iniciou
 
+# ── Snapshot de Retry ─────────────────────────────────────────────────────────
+## Estado salvo no início "jogável" da fase (ex.: saída do portal no Level 01).
+## Restaurado ao clicar "Tente Novamente" para refazer a fase idêntica.
+var retry_snapshot: Dictionary = {}
+
 # ══════════════════════════════════════════════════════════════════════════════
 #  Saúde
 # ══════════════════════════════════════════════════════════════════════════════
@@ -64,6 +69,23 @@ func reset_player() -> void:
 func heal(amount: int) -> void:
 	player_health = min(player_max_health, player_health + amount)
 	health_changed.emit(player_health, player_max_health)
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  Retry (Tente Novamente) — restaura a fase ao estado inicial jogável
+# ══════════════════════════════════════════════════════════════════════════════
+## Guarda o estado atual como ponto de retorno da fase. Só salva uma vez por
+## fase (a primeira chamada vence) — chame no ponto "início jogável".
+func save_retry_snapshot() -> void:
+	retry_snapshot = to_dict()
+
+## Restaura o snapshot da fase (vida, elementos, fogo, descobertas — tudo).
+## Se não houver snapshot, ao menos devolve vida cheia para não reiniciar morto.
+func restore_retry_snapshot() -> void:
+	if retry_snapshot.is_empty():
+		player_health = player_max_health
+		health_changed.emit(player_health, player_max_health)
+		return
+	from_dict(retry_snapshot.duplicate(true))
 
 func add_charge(amount: float) -> void:
 	charge = minf(charge + amount, charge_max)
@@ -154,6 +176,9 @@ func reach_checkpoint(checkpoint_id: String, pos: Vector2) -> void:
 func complete_level(level_id: int) -> void:
 	if level_id >= current_level:
 		current_level = level_id + 1
+	player_health = player_max_health   # próxima fase começa com vida cheia
+	health_changed.emit(player_health, player_max_health)
+	retry_snapshot.clear()   # a próxima fase grava seu próprio ponto de retry
 	level_completed.emit(level_id)
 	SaveManager.save_game()
 
@@ -179,6 +204,7 @@ func to_dict() -> Dictionary:
 		"discovered_compounds": discovered_compounds.duplicate(),
 		"active_compound": active_compound,
 		"unlocked_abilities": unlocked_abilities.duplicate(),
+		"fire_next_x": fire_next_x,
 	}
 
 func from_dict(data: Dictionary) -> void:
@@ -196,4 +222,5 @@ func from_dict(data: Dictionary) -> void:
 	active_compound = data.get("active_compound", "")
 	var ua: Array = data.get("unlocked_abilities", [])
 	unlocked_abilities.assign(ua)
+	fire_next_x = data.get("fire_next_x", -1.0)
 	health_changed.emit(player_health, player_max_health)

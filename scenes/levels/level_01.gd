@@ -15,6 +15,7 @@ const ENCYCLOPEDIA := "Enciclopédia"
 @onready var _door_in      : Area2D        = $DoorIn
 @onready var _cam          : Camera2D      = $Player/Camera2D
 
+var _portal_barrier : StaticBody2D = null
 var _respawning             := false
 var _h2o_dialog_done   := false
 var _enemy_dialog_done := false
@@ -71,10 +72,18 @@ func _ready() -> void:
 	_cam.drag_horizontal_enabled    = false   # POV fixo: sem drag acumulado
 	_cam.position_smoothing_enabled = false   # POV fixo: sem lag de smoothing
 	if "H2O" in GameState.discovered_compounds:
+		# Snapshot da saída do portal — estado-base do "Tente Novamente" (só 1ª vez)
+		if GameState.retry_snapshot.is_empty():
+			GameState.save_retry_snapshot()
 		_came_from_tutorial = true
 		_cinematic_done     = true
 		_h2o_dialog_done    = true
 		_portal_hint_done   = true
+		# Portal fecha e vira barreira
+		var dp := get_node_or_null("DoorPortal") as AnimatedSprite2D
+		if dp:
+			dp.play("Closed")
+		_spawn_portal_barrier()
 		# Spawn próximo ao portal no túnel (não no hub)
 		player.global_position = Vector2(300, 310)
 		_in_tunnel = true
@@ -211,15 +220,8 @@ func _process(delta: float) -> void:
 		_cam.limit_top    = -500
 		_cam.limit_bottom = 680
 		_set_zoom(Vector2(5, 5), 0.5)
-	# Lookahead horizontal no túnel
-	var target_look_x := 0.0
-	if _in_tunnel:
-		if player.velocity.x < -5.0 and _portal_exploded:
-			target_look_x = -80.0  # esquerda só após portal explodir
-		elif player.velocity.x > 5.0:
-			target_look_x = 80.0
-	_cam_look_x = lerp(_cam_look_x, target_look_x, delta * 3.0)
-	_cam.offset = Vector2(_cam_look_x, -20)
+	# Sem lookahead horizontal: offset extrapola os limits e revela o vazio fora da parede
+	_cam.offset = Vector2(0, -20)
 
 func _cine_begin() -> void:
 	if _zoom_tween:
@@ -422,6 +424,10 @@ func _on_fire_extinguished() -> void:
 
 func _run_portal_explosion() -> void:
 	_portal_exploded = true
+	if is_instance_valid(_portal_barrier):
+		_portal_barrier.queue_free()
+		_portal_barrier = null
+	var dp := get_node_or_null("DoorPortal") as AnimatedSprite2D
 	_cam.limit_left  = 0
 	_cam.limit_right = 3200
 	_cam.zoom        = Vector2(3, 3)
@@ -453,8 +459,14 @@ func _run_portal_explosion() -> void:
 	flash_tw.tween_property(flash, "scale",    Vector2(4, 4),                0.6)
 	flash_tw.tween_property(flash, "color",    Color(1.0, 0.55, 0.1, 0.0),  0.6)
 	flash_tw.tween_property(flash, "position", Vector2(226 - 48, 288 - 120), 0.6)
+	# Portal explode junto: cresce e some
+	if is_instance_valid(dp):
+		flash_tw.tween_property(dp, "scale",    dp.scale * 1.8,                  0.6)
+		flash_tw.tween_property(dp, "modulate", Color(1, 1, 1, 0),               0.6)
 	await flash_tw.finished
 	flash.queue_free()
+	if is_instance_valid(dp):
+		dp.visible = false
 
 	var tw2 := create_tween()
 	tw2.set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
@@ -588,31 +600,52 @@ func _on_boss_trigger_entered(_body: Node2D) -> void:
 	_boss_battle.show_battle("snail")
 	_boss_battle.battle_finished.connect(_on_boss_battle_finished, CONNECT_ONE_SHOT)
 
+func _spawn_portal_barrier() -> void:
+	_portal_barrier                  = StaticBody2D.new()
+	_portal_barrier.collision_layer  = 2
+	_portal_barrier.collision_mask   = 0
+	_portal_barrier.position         = Vector2(234, 288)
+	var cs := CollisionShape2D.new()
+	var rs := RectangleShape2D.new()
+	rs.size     = Vector2(16, 160)
+	cs.position = Vector2(0, 80)
+	cs.shape    = rs
+	_portal_barrier.add_child(cs)
+	add_child(_portal_barrier)
+
 func _setup_background() -> void:
 	$BgSky.visible = false
 	var bg_tex: Texture2D = load("res://scenes/world/assets/bg_cave_far.png")
 	if not bg_tex:
 		return
 
-	var parallax := ParallaxBackground.new()
-	parallax.layer = -10
-	add_child(parallax)
+	# Fundo fixo no mundo — cobre toda a fase: x:-16→3200, y:-480→680
+	var img_w  := bg_tex.get_width()
+	var img_h  := bg_tex.get_height()
+	const LV_LEFT   := -16.0
+	const LV_TOP    := -480.0
+	const LV_RIGHT  := 3200.0
+	const LV_BOTTOM := 680.0
+	var s      := 320.0 / img_h            # escala (cada tile = 320px de altura)
+	var tile_w := img_w * s
+	var tile_h := img_h * s
+	var cols   := ceili((LV_RIGHT - LV_LEFT) / tile_w)
+	var rows   := ceili((LV_BOTTOM - LV_TOP) / tile_h)
 
-	var layer := ParallaxLayer.new()
-	layer.motion_scale     = Vector2(0.3, 0.1)
-	layer.motion_mirroring = Vector2(bg_tex.get_width(), 0.0)
-	parallax.add_child(layer)
+	var bg_root := Node2D.new()
+	bg_root.z_index = -10
+	add_child(bg_root)
+	move_child(bg_root, 0)
 
-	var img_w := bg_tex.get_width()
-	var img_h := bg_tex.get_height()
-	for i in 4:
-		var sp := Sprite2D.new()
-		sp.texture        = bg_tex
-		sp.centered       = false
-		sp.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
-		sp.position       = Vector2(i * img_w, 80)
-		sp.scale          = Vector2(1.0, 400.0 / img_h)
-		layer.add_child(sp)
+	for r in rows:
+		for c in cols:
+			var sp := Sprite2D.new()
+			sp.texture        = bg_tex
+			sp.centered       = false
+			sp.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+			sp.scale          = Vector2(s, s)
+			sp.position       = Vector2(LV_LEFT + c * tile_w, LV_TOP + r * tile_h)
+			bg_root.add_child(sp)
 
 func _on_boss_battle_finished(won: bool) -> void:
 	if won:
