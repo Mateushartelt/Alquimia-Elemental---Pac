@@ -785,6 +785,7 @@ func _show_defeat_overlay(msg: String) -> void:
 	_combos_panel.visible = false
 	_defeat_msg_lbl.text  = msg
 	_defeat_panel.visible = true
+	AudioManager.play_sfx("game_over")
 
 func _on_retry_pressed() -> void:
 	# Autoloads persistem no reload — restaura o estado-base da fase (saída do
@@ -1143,6 +1144,7 @@ func _on_attack_pressed() -> void:
 	if dmg > 0:
 		_boss_hp = max(0, _boss_hp - dmg)
 		_boss_hp_bar.value = _boss_hp
+		AudioManager.play_sfx("boss_hit")
 		await _flash_boss(flash)
 		var ranim: String = _boss_data.get("reaction_anims", {}).get(_selected_compound, "hurt")
 		_play_snail_anim(ranim, false)
@@ -1152,6 +1154,7 @@ func _on_attack_pressed() -> void:
 	elif dmg < 0:
 		_boss_hp = min(_boss_max_hp, _boss_hp + abs(dmg))
 		_boss_hp_bar.value = _boss_hp
+		AudioManager.play_sfx("boss_heal")
 		await _flash_boss(flash)
 		var ranim: String = _boss_data.get("reaction_anims", {}).get(_selected_compound, "idle")
 		_play_snail_anim(ranim, false)
@@ -1221,6 +1224,7 @@ func _boss_attack() -> void:
 	_play_snail_anim("attack", false)
 	_play_boss_anim("atack")
 	var dmg: int = _boss_data.get("attack_dmg", 15)
+	AudioManager.play_sfx("hurt_player")
 	GameState.player_health = max(0, GameState.player_health - dmg)
 	GameState.health_changed.emit(GameState.player_health, GameState.player_max_health)
 	_player_hp_bar.value = GameState.player_health
@@ -1307,6 +1311,7 @@ func _end_battle(won: bool) -> void:
 	_mix_toggle_btn.disabled = true
 
 	if won:
+		AudioManager.play_sfx("victory")
 		_play_snail_anim("death", false)
 		_play_boss_anim("death")
 		_set_dialog(_boss_data["win"])

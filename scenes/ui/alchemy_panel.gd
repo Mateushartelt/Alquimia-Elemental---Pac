@@ -81,6 +81,7 @@ func _open() -> void:
 	_is_open = true
 	visible  = true
 	get_tree().paused = true
+	AudioManager.play_sfx("ui_open")
 	panel_opened.emit()
 	_tut_label.visible = false
 	_refresh_inventory()
@@ -94,6 +95,7 @@ func _close() -> void:
 	_is_open = false
 	visible  = false
 	get_tree().paused = false
+	AudioManager.play_sfx("ui_close")
 
 func _on_bg_input(event: InputEvent) -> void:
 	if _tut_step != TutStep.NONE:
@@ -297,6 +299,7 @@ func _on_mix() -> void:
 	_slots = []
 	for i: int in _slot_count:
 		_slots.append({})
+	AudioManager.play_sfx("craft_success")
 	_close()                               # fecha e despausa PRIMEIRO
 	GameState.compound_created.emit(rid)   # depois emite (dialog pode pausar)
 

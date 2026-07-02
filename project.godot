@@ -25,6 +25,7 @@ config/icon="res://icon.svg"
 GameState="*res://scripts/autoload/game_state.gd"
 ElementDatabase="*res://scripts/autoload/element_database.gd"
 SaveManager="*res://scripts/autoload/save_manager.gd"
+AudioManager="*res://scripts/autoload/audio_manager.gd"
 
 [display]
 

@@ -110,6 +110,7 @@ func take_damage(amount: int, compound_id: String = "") -> void:
 	estate          = EState.HURT
 	velocity.x      = -200.0 * (1.0 if facing_right else -1.0)
 	velocity.y      = -80.0
+	AudioManager.play_sfx("hit_enemy")
 	if current_health <= 0:
 		_die()
 

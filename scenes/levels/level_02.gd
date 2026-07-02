@@ -140,6 +140,7 @@ func _on_lava_barrier_hit(area: Node) -> void:
 		_dialog.show_dialog(ELARA, "A lava resiste! Use H₂O (2×H + 1×O) para solidificá-la.")
 		return
 	_barrier_dissolved = true
+	AudioManager.play_sfx("door_open")
 	var tw := create_tween()
 	tw.tween_property(_barrier_visual, "color", Color(0.2, 0.1, 0.4, 0.0), 0.8)
 	tw.tween_callback(func() -> void:
@@ -155,6 +156,7 @@ func _on_lava_barrier2_hit(area: Node) -> void:
 		_dialog.show_dialog(ELARA, "A lava resiste novamente! H₂O (2×H + 1×O) para solidificá-la.")
 		return
 	_barrier2_dissolved = true
+	AudioManager.play_sfx("door_open")
 	var tw := create_tween()
 	tw.tween_property(_barrier2_visual, "color", Color(0.2, 0.1, 0.4, 0.0), 0.8)
 	tw.tween_callback(func() -> void:
@@ -197,6 +199,7 @@ func _open_arena_gate() -> void:
 	var gate := get_node_or_null("ArenaGate")
 	if not gate:
 		return
+	AudioManager.play_sfx("door_open")
 	var wall := gate.get_node_or_null("Wall")
 	if wall:
 		wall.process_mode = Node.PROCESS_MODE_DISABLED

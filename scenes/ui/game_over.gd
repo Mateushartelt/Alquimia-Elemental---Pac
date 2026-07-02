@@ -11,6 +11,7 @@ func _ready() -> void:
 func _show() -> void:
 	visible = true
 	get_tree().paused = true
+	AudioManager.play_sfx("game_over")
 
 func _on_retry_pressed() -> void:
 	get_tree().paused = false

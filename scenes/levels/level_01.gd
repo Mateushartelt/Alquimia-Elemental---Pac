@@ -424,6 +424,7 @@ func _on_fire_extinguished() -> void:
 
 func _run_portal_explosion() -> void:
 	_portal_exploded = true
+	AudioManager.play_sfx("door_open")
 	if is_instance_valid(_portal_barrier):
 		_portal_barrier.queue_free()
 		_portal_barrier = null
@@ -514,6 +515,13 @@ func _spawn_fire_segment(at_x: float) -> void:
 	add_child(seg)
 	_fire_segments.append(seg)
 	_fire_occupied[at_x] = true
+
+	# Player posicional precisa entrar na árvore (seg já adicionado acima) antes de tocar.
+	var fire_amb := AudioManager.make_positional_loop("fire_burn")
+	if fire_amb:
+		fire_amb.position = Vector2(FIRE_SEG_W / 2.0, 128.0)   # centro local do segmento
+		seg.add_child(fire_amb)
+		fire_amb.play()
 	# Limita câmera ao edge direito do fogo
 	var right_edge := int(at_x) + FIRE_SEG_W
 	if right_edge > _cam.limit_right:
@@ -530,6 +538,7 @@ func _spawn_fire_segment(at_x: float) -> void:
 func _extinguish_segment(seg: Node2D) -> void:
 	if not is_instance_valid(seg):
 		return
+	AudioManager.play_sfx("fire_extinguish")
 	_fire_occupied.erase(seg.position.x)
 	_fire_segments.erase(seg)
 	_fire_timer = 0.0   # reseta o intervalo — dá mais tempo antes da próxima expansão

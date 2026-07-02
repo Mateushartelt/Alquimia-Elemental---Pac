@@ -81,12 +81,14 @@ func _handle_jump() -> void:
 		_jump_buffer  =  0.0
 		_coyote_timer =  0.0
 		_set_state(State.JUMP)
+		AudioManager.play_sfx("jump")
 		return
 	var can_jump := is_on_floor() or _coyote_timer > 0.0
 	if _jump_buffer > 0.0 and can_jump:
 		velocity.y    = jump_force
 		_jump_buffer  = 0.0
 		_coyote_timer = 0.0
+		AudioManager.play_sfx("jump")
 	if Input.is_action_just_released("jump") and velocity.y < 0.0:
 		velocity.y *= 0.45
 
@@ -105,6 +107,7 @@ func _handle_attack() -> void:
 	proj.global_position = attack_point.global_position
 	get_tree().current_scene.add_child(proj)
 	_attack_cooldown = ATTACK_COOLDOWN
+	AudioManager.play_sfx("attack")
 	attacked.emit(GameState.active_compound, proj.direction, attack_point.global_position)
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -128,6 +131,7 @@ func _try_special() -> void:
 	proj.direction       = Vector2.RIGHT if _facing_right else Vector2.LEFT
 	proj.global_position = attack_point.global_position
 	get_tree().current_scene.add_child(proj)
+	AudioManager.play_sfx("special")
 	GameState.use_charge()
 
 func _update_coyote() -> void:
@@ -331,6 +335,7 @@ func receive_damage(amount: int, _direction: Vector2 = Vector2.ZERO) -> void:
 	_invincible_timer = INVINCIBLE_TIME
 	_hurt_timer = HURT_DURATION
 	_set_state(State.HURT)
+	AudioManager.play_sfx("hurt_player")
 	GameState.take_damage(amount)
 
 signal attacked(compound_id: String, direction: Vector2, origin: Vector2)

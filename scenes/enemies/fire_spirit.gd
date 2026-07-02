@@ -49,6 +49,8 @@ func _check_player_touch() -> void:
 
 ## Quando em CHASE (prestes a explodir), qualquer hit mata instantaneamente
 func take_damage(amount: int, compound_id: String = "") -> void:
+	if compound_id == "H2O":
+		AudioManager.play_sfx("fire_extinguish", -14.0)   # bem baixo — chiado sutil ao levar água
 	if estate == EState.CHASE or _exploding:
 		super.take_damage(current_health, compound_id)
 	else:

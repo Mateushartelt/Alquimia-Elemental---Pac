@@ -28,6 +28,7 @@ func _on_body_entered(body: Node) -> void:
 
 func _activate(player_pos: Vector2) -> void:
 	_activated = true
+	AudioManager.play_sfx("checkpoint")
 	GameState.reach_checkpoint(checkpoint_id, player_pos)
 	_activate_visual()
 	_show_message()

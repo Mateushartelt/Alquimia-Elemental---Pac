@@ -60,5 +60,6 @@ func _on_body_entered(body: Node) -> void:
 	if not body is Player:
 		return
 	_collected = true
+	AudioManager.play_sfx("pickup")
 	body.collect(element_id)
 	queue_free()
