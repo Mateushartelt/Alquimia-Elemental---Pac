@@ -457,6 +457,7 @@ func _blink(node: CanvasItem) -> void:
 
 # ── Ações ────────────────────────────────────────────────────────────────────
 func _on_play_pressed() -> void:
+	GameState.reset_new_game()
 	get_tree().change_scene_to_file(LEVEL_01)
 
 func _on_quit_pressed() -> void:

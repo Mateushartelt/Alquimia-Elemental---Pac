@@ -15,7 +15,6 @@ var _tooltip      : PanelContainer
 var _tooltip_lbl  : Label
 var _toast        : PanelContainer
 var _toast_lbl    : Label
-var _announced    : Array[String] = []
 
 func _ready() -> void:
 	layer        = 20
@@ -252,15 +251,15 @@ func _on_state_changed(sym: String, _amt: int = 0) -> void:
 	if _is_open:
 		_refresh()
 
-	# Só notifica na primeira vez que o elemento é coletado
-	if sym in _announced:
+	# Só notifica na primeira vez que o elemento é coletado (persistente entre fases)
+	if sym in GameState.announced_elements:
 		return
-	_announced.append(sym)
+	GameState.announced_elements.append(sym)
 
 	var el: Dictionary = ElementDatabase.get_element(sym)
 	var el_name: String = el.get("name", sym)
 
-	var is_first := _announced.size() == 1
+	var is_first := GameState.announced_elements.size() == 1
 
 	if is_first:
 		_show_toast("Novo elemento: %s (%s)!\nPressione TAB para ver sua Tabela Periódica." % [el_name, sym], 4.0)

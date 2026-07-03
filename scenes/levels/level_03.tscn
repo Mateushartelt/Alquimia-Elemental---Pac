@@ -117,6 +117,18 @@ position = Vector2(1200, 355)
 [node name="Virus03" parent="Enemies" unique_id=1485872683 instance=ExtResource("5_virus")]
 position = Vector2(1800, 355)
 
+[node name="Virus04" parent="Enemies" instance=ExtResource("5_virus")]
+position = Vector2(160, 243)
+
+[node name="Virus05" parent="Enemies" instance=ExtResource("5_virus")]
+position = Vector2(1024, 275)
+
+[node name="Virus06" parent="Enemies" instance=ExtResource("5_virus")]
+position = Vector2(1670, 275)
+
+[node name="Virus07" parent="Enemies" instance=ExtResource("5_virus")]
+position = Vector2(688, -237)
+
 [node name="DarkAreas" type="Node2D" parent="." unique_id=188435556]
 
 [node name="SalaAltaFog" type="ColorRect" parent="DarkAreas" unique_id=2044437897]

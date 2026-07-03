@@ -61,6 +61,36 @@ var pending_enemy_hint: String = ""
 ## valer pickup_multiplier unidades, facilitando a próxima tentativa.
 var pickup_multiplier: int = 1
 
+# ── Elementos já anunciados na Tabela Periódica ──────────────────────────────
+## Evita reexibir o toast "Novo elemento!" ao coletar um elemento já conhecido
+## numa fase diferente — precisa ser persistente (não local a PeriodicTable,
+## que é reinstanciada em cada fase).
+var announced_elements: Array[String] = []
+
+## Reseta todo o estado da partida para os valores iniciais. Chamado ao clicar
+## "JOGAR" no menu principal — sem isso, terminar o jogo e jogar de novo (no
+## mesmo processo) faz o Level 01 pensar que o jogador já sabe H2O/já passou
+## do túnel (GameState é autoload e não reseta sozinho entre partidas), o que
+## trava a fase logo na saída do portal.
+func reset_new_game() -> void:
+	charge                   = 0.0
+	player_max_health        = 100
+	player_health             = 100
+	player_position           = Vector2.ZERO
+	current_level             = 1
+	last_checkpoint_id        = ""
+	last_checkpoint_position  = Vector2.ZERO
+	collected_elements        = {}
+	discovered_elements       = []
+	discovered_compounds      = []
+	active_compound           = ""
+	unlocked_abilities        = []
+	fire_next_x               = -1.0
+	retry_snapshot            = {}
+	pending_enemy_hint        = ""
+	pickup_multiplier         = 1
+	announced_elements        = []
+
 # ══════════════════════════════════════════════════════════════════════════════
 #  Saúde
 # ══════════════════════════════════════════════════════════════════════════════

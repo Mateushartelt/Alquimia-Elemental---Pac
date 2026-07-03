@@ -122,7 +122,7 @@ func _on_enemy_died(_enemy: Node) -> void:
 func _spawn_boss_portal() -> void:
 	await get_tree().create_timer(1.2).timeout
 	_dialog.show_dialog(ELARA,
-		"Todos os vírus eliminados! Um portal surgiu no centro do complexo — enfrente o Vírus Mutante!")
+		"Vírus suficientes eliminados! Um portal surgiu no centro do complexo — enfrente o Vírus Mutante!")
 	_boss_portal = BossPortal.new()
 	_boss_portal.position = Vector2(600, 320)
 	_boss_portal.player_entered.connect(_on_portal_entered)
