@@ -50,6 +50,17 @@ var fire_next_x: float = -1.0  # -1 = fogo ainda não iniciou
 ## Restaurado ao clicar "Tente Novamente" para refazer a fase idêntica.
 var retry_snapshot: Dictionary = {}
 
+# ── Dica de Inimigo Pendente ─────────────────────────────────────────────────
+## Setado ao acertar um inimigo 3 vezes seguidas com algo que não causa dano;
+## mostrado no AlchemyPanel na próxima vez que o jogador o abrir.
+var pending_enemy_hint: String = ""
+
+# ── Multiplicador de Coleta ──────────────────────────────────────────────────
+## Dobrado a cada derrota por falta de compostos/elementos numa luta de boss
+## (ver boss_battle.gd::_trigger_stalemate). Cada elemento coletado passa a
+## valer pickup_multiplier unidades, facilitando a próxima tentativa.
+var pickup_multiplier: int = 1
+
 # ══════════════════════════════════════════════════════════════════════════════
 #  Saúde
 # ══════════════════════════════════════════════════════════════════════════════
@@ -179,6 +190,7 @@ func complete_level(level_id: int) -> void:
 	player_health = player_max_health   # próxima fase começa com vida cheia
 	health_changed.emit(player_health, player_max_health)
 	retry_snapshot.clear()   # a próxima fase grava seu próprio ponto de retry
+	pickup_multiplier = 1    # o reforço de coleta só vale até vencer a fase atual
 	level_completed.emit(level_id)
 	SaveManager.save_game()
 

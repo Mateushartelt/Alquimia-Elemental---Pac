@@ -87,6 +87,7 @@ func _open() -> void:
 	_refresh_inventory()
 	_refresh_slots_ui()
 	_refresh_result()
+	_show_pending_enemy_hint()
 
 func _close() -> void:
 	if _tut_step != TutStep.NONE:
@@ -96,6 +97,15 @@ func _close() -> void:
 	visible  = false
 	get_tree().paused = false
 	AudioManager.play_sfx("ui_close")
+	_tut_label.visible = false
+
+## Mostra a dica de inimigo pendente (após 3 acertos sem dano) no lugar do label de tutorial.
+func _show_pending_enemy_hint() -> void:
+	if GameState.pending_enemy_hint == "" or _tut_step != TutStep.NONE:
+		return
+	_tut_label.visible = true
+	_tut_label.text    = "💡 " + GameState.pending_enemy_hint
+	GameState.pending_enemy_hint = ""
 
 func _on_bg_input(event: InputEvent) -> void:
 	if _tut_step != TutStep.NONE:

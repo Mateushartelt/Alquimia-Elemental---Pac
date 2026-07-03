@@ -63,7 +63,6 @@ func _ready() -> void:
 		enemy.visible      = false
 		enemy.process_mode = Node.PROCESS_MODE_DISABLED
 	_setup_background()
-	_make_debug_label()
 	_cam.limit_left                 = 800
 	_cam.limit_right                = int(FIRE_ORIGIN_X) + FIRE_SEG_W
 	_cam.limit_top                  = 80
@@ -122,18 +121,7 @@ func _ready() -> void:
 	for enemy in get_tree().get_nodes_in_group("enemies"):
 		enemy.connect("died", _on_enemy_died)
 
-var _debug_zoom : Label
-
-func _make_debug_label() -> void:
-	var layer := CanvasLayer.new()
-	add_child(layer)
-	_debug_zoom = Label.new()
-	_debug_zoom.position = Vector2(8, 8)
-	_debug_zoom.add_theme_font_size_override("font_size", 16)
-	layer.add_child(_debug_zoom)
-
 func _process(delta: float) -> void:
-	_debug_zoom.text = "zoom: %.0f  %s" % [_cam.zoom.x, "TUNEL" if _in_tunnel else "HUB"]
 	# Pulso suave nos segmentos de fogo (roda mesmo pausado)
 	var t := Time.get_ticks_msec() * 0.001
 	for seg in _fire_segments:

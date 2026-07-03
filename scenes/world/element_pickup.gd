@@ -61,5 +61,5 @@ func _on_body_entered(body: Node) -> void:
 		return
 	_collected = true
 	AudioManager.play_sfx("pickup")
-	body.collect(element_id)
+	body.collect(element_id, GameState.pickup_multiplier)
 	queue_free()

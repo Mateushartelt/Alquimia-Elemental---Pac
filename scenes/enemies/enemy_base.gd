@@ -19,6 +19,7 @@ var current_health: int
 var origin_position: Vector2
 var facing_right := true
 var hurt_timer   := 0.0
+var _immune_streak: int = 0   # acertos seguidos com composto imune (sem dano)
 
 # Flash visual — subclasses leem em _draw()
 var _flash_color: Color = Color.TRANSPARENT
@@ -100,7 +101,12 @@ func take_damage(amount: int, compound_id: String = "") -> void:
 		return
 	if compound_id in immune_to:
 		_show_immune()
+		_immune_streak += 1
+		if _immune_streak >= 3:
+			_immune_streak = 0
+			GameState.pending_enemy_hint = _build_weak_hint(compound_id)
 		return
+	_immune_streak = 0
 	var final_damage := amount
 	if compound_id in weak_to:
 		final_damage = int(amount * 2.0)
@@ -135,6 +141,13 @@ func _on_player_detected(body: Node) -> void:
 func _on_player_left(body: Node) -> void:
 	if body.is_in_group("player"):
 		estate = EState.PATROL
+
+## Monta uma dica genérica a partir de weak_to/immune_to para o jogador.
+func _build_weak_hint(compound_id: String) -> String:
+	var hint := "Dica: %s não causa dano nesse inimigo." % compound_id
+	if not weak_to.is_empty():
+		hint += " Tente %s!" % " ou ".join(weak_to)
+	return hint
 
 func _show_immune() -> void:
 	_flash_color = Color.WHITE

@@ -145,7 +145,7 @@ func _on_sala_alta_fog_entered(body: Node2D) -> void:
 	tw.tween_property(_fog, "color", Color(0, 0, 0, 0), 1.2)
 	get_tree().create_timer(0.4).timeout.connect(func() -> void:
 		_dialog.show_dialog(ELARA,
-			"O Núcleo de Controle! O Vírus Mutante habita aqui — use Etanol (3× dano) ou HCl!"))
+			"O Núcleo de Controle! O Vírus Mutante habita aqui — 3× Etanol + 1× HCl o derrotam de uma vez!"))
 
 
 func _on_boss_finished(won: bool) -> void:
@@ -160,7 +160,7 @@ func _on_boss_finished(won: bool) -> void:
 		var tw := create_tween()
 		tw.tween_property(_fade, "color", Color(0, 0, 0, 1), 1.2)
 		await tw.finished
-		get_tree().change_scene_to_file("res://scenes/levels/level_03.tscn")
+		get_tree().change_scene_to_file("res://scenes/ui/victory_screen.tscn")
 	else:
 		_dialog.show_dialog(ELARA,
-			"O vírus foi forte demais... Crie Etanol (C+H+H+O) — supera qualquer composto contra vírus!")
+			"O vírus foi forte demais... Junte elementos para 3× Etanol + 1× HCl — a combinação ideal!")

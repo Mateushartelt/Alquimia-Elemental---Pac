@@ -326,8 +326,8 @@ func reset_state() -> void:
 	velocity          = Vector2.ZERO
 	_invincible_timer = 0.0
 
-func collect(element_id: String) -> void:
-	GameState.collect_element(element_id)
+func collect(element_id: String, amount: int = 1) -> void:
+	GameState.collect_element(element_id, amount)
 
 func receive_damage(amount: int, _direction: Vector2 = Vector2.ZERO) -> void:
 	if _invincible_timer > 0.0:

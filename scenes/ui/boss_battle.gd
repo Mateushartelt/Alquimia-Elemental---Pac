@@ -86,28 +86,28 @@ const BOSSES: Dictionary = {
 		"sprite":      "",
 		"sprite_cols": 1,
 		"sprite_rows": 1,
-		"max_hp":      8,
+		"max_hp":      18,
 		"attack_dmg":  15,
 		"intro":       "Um Vírus Mutante colossal contaminou o Núcleo de Controle!",
-		"hint":        "Dica: álcool etílico (Etanol) desnatura proteínas virais — é a fraqueza dele!",
-		"hint_detail": "O Vírus Mutante possui proteínas de superfície que o protegem.\nEtanol (C+2H+O) desnatura essas proteínas — dano triplo!\nHCl corrói a cápsula viral (2× dano)\n\nCuidado: H₂O CURA o vírus — ele adora umidade!\nAprendizado: por isso lavamos mãos com álcool, não só com água!",
+		"hint":        "Dica: 3× Etanol + 1× HCl derrotam o vírus de uma vez — são a combinação ideal!",
+		"hint_detail": "O Vírus Mutante possui proteínas de superfície que o protegem.\nEtanol (C+2H+O) desnatura essas proteínas — dano alto!\nHCl corrói a cápsula viral — dano alto!\n\nCombinação ideal: 3× Etanol + 1× HCl derrota o vírus de uma só vez!\nSO₂ e NaOH também causam dano, se faltar Etanol/HCl.\n\nCuidado: H₂O CURA o vírus — ele adora umidade!\nAprendizado: por isso lavamos mãos com álcool, não só com água!",
 		"boss_atk":    "O Vírus Mutante injeta RNA viral!",
 		"no_reaction": "O composto não causou reação perceptível no vírus...",
 		"win":         "Vitória! Etanol desnaturou as proteínas virais — o vírus se desintegrou!",
-		"lose":        "O Vírus Mutante foi forte demais... Crie Etanol (C+H+H+O) no painel!",
+		"lose":        "O Vírus Mutante foi forte demais... Varie os compostos: Etanol, HCl, SO₂ e NaOH todos causam dano!",
 		"draw_mode":        "virus_proc",
 		"smart_drop_recipe":"Etanol",
-		"drops":            ["C", "H", "O"],
+		"drops":            ["C", "H", "O", "Na", "Cl", "S"],
 		"drop_msg":         "O vírus liberou %s ao se desintegrar! (+1 %s)",
 		"reactions": {
 			"Etanol": {
-				"damage":  3,
+				"damage":  5,
 				"message": "O Etanol desnatura as proteínas de superfície! Triplo dano!",
 				"effect":  "stun",
 				"flash":   Color(0.5, 2.0, 0.8),
 			},
 			"HCl": {
-				"damage":  2,
+				"damage":  3,
 				"message": "O ácido clorídrico corrói a cápsula viral! Dano duplo!",
 				"effect":  "none",
 				"flash":   Color(0.5, 2.0, 0.3),
@@ -119,25 +119,25 @@ const BOSSES: Dictionary = {
 				"flash":   Color(0.3, 0.8, 2.0),
 			},
 			"NaCl": {
-				"damage":  1,
+				"damage":  2,
 				"message": "O sal resseca a membrana viral por osmose!",
 				"effect":  "none",
 				"flash":   Color(2.0, 1.5, 1.0),
 			},
 			"CO2": {
-				"damage":  1,
+				"damage":  2,
 				"message": "O CO₂ acidifica o meio intracelular do vírus!",
 				"effect":  "none",
 				"flash":   Color(0.7, 0.8, 2.0),
 			},
 			"NaOH": {
-				"damage":  1,
+				"damage":  2,
 				"message": "A base forte destrói o envelope lipídico viral!",
 				"effect":  "none",
 				"flash":   Color(0.8, 0.5, 2.0),
 			},
 			"SO2": {
-				"damage":  1,
+				"damage":  2,
 				"message": "O gás tóxico atordoa o vírus!",
 				"effect":  "stun",
 				"flash":   Color(2.0, 2.0, 0.2),
@@ -810,15 +810,18 @@ func _player_can_act() -> bool:
 	return false
 
 ## Derrota por ficar sem compostos e sem elementos para criar novos.
+## Dobra a quantidade que cada pickup vai dar na próxima tentativa (GameState.pickup_multiplier),
+## pra facilitar juntar o suficiente sem precisar re-explorar a fase inteira de novo.
 func _trigger_stalemate() -> void:
 	_busy = true
 	_battle_over = true
 	_attack_btn.disabled     = true
 	_mix_toggle_btn.disabled = true
+	GameState.pickup_multiplier *= 2
 	_set_dialog("Você ficou sem compostos e sem elementos para criar novos!")
 	await get_tree().create_timer(2.2).timeout
 	_show_defeat_overlay(
-		"Você ficou sem combinações para derrotar %s." % _boss_data.get("name", "o boss"))
+		"Você ficou sem combinações para derrotar %s. Na próxima tentativa, cada elemento coletado vale o dobro!" % _boss_data.get("name", "o boss"))
 
 # ── API pública ────────────────────────────────────────────────────────────────
 func show_battle(boss_id: String) -> void:

@@ -27,9 +27,9 @@ const SFX := {
 ## Ajuste um valor aqui para deixar aquele som específico mais alto (positivo) ou
 ## mais baixo (negativo) sem afetar os demais. 0.0 = sem ajuste.
 const SFX_VOLUME_DB := {
-	"jump":            -10.0,
-	"attack":          0.0,
-	"hit_enemy":       0.0,
+	"jump":            -12.0,
+	"attack":          -10.0,
+	"hit_enemy":       -4.0,
 	"hurt_player":     0.0,
 	"pickup":          0.0,
 	"craft_success":   0.0,
